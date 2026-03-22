@@ -1,4 +1,3 @@
-
 import * as Tabs from '@radix-ui/react-tabs';
 import { getAll, StorageKey, createAuditEntry } from '../../services/storage';
 import type { MedicationRequisition, Encounter, AuditLog } from '../../types/types';
