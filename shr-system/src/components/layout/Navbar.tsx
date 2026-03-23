@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Bell, ChevronDown, LogOut, UserCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getAll } from '../../services/storage';
 import { StorageKey } from '../../services/storage';
-import type { SystemAlert } from '../../types/types';
+import type { SystemAlert, SystemUser } from '../../types/types';
 
 const ROLE_LABELS: Record<string, string> = {
   student: 'Student',
@@ -15,16 +15,54 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export function Navbar() {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [switchUserOpen, setSwitchUserOpen] = useState(false);
+  const [switchingUserId, setSwitchingUserId] = useState<string | null>(null);
 
   const alerts = getAll<SystemAlert>(StorageKey.ALERTS).filter((a) => !a.isResolved);
+  const demoUsers = getAll<SystemUser>(StorageKey.USERS).filter((u) => u.isActive);
   const alertCount = alerts.length;
 
   function handleLogout() {
     logout();
     navigate('/login', { replace: true });
+  }
+
+  async function handleSwitchUser(userId: string) {
+    setSwitchingUserId(userId);
+    const user = await login(userId);
+    setSwitchingUserId(null);
+    setSwitchUserOpen(false);
+    if (!user) return;
+    const rolePath: Record<string, string> = {
+      student: '/student/dashboard',
+      medical_staff: '/staff/dashboard',
+      technician: '/technician/upload',
+      pharmacy: '/pharmacy/queue',
+      admin: '/admin/dashboard',
+    };
+    navigate(rolePath[user.role] ?? '/');
+  }
+
+  function getPageTitle(pathname: string): string {
+    if (pathname.startsWith('/student/dashboard')) return 'Student Dashboard';
+    if (pathname.startsWith('/student/profile')) return 'My Profile';
+    if (pathname.startsWith('/student/submit-symptom')) return 'Submit Symptom Report';
+    if (pathname.startsWith('/student/my-requisitions')) return 'My Requisitions';
+    if (pathname.startsWith('/staff/dashboard')) return 'Medical Staff Dashboard';
+    if (pathname.startsWith('/staff/search')) return 'Student Search';
+    if (pathname.startsWith('/staff/review-queue')) return 'Doctor Review Queue';
+    if (pathname.startsWith('/staff/patient/')) return 'Patient Profile';
+    if (pathname.startsWith('/technician/upload')) return 'Technician Upload Portal';
+    if (pathname.startsWith('/pharmacy/queue')) return 'Pharmacy Queue';
+    if (pathname.startsWith('/admin/dashboard')) return 'Admin Dashboard';
+    if (pathname.startsWith('/admin/users')) return 'User Management';
+    if (pathname.startsWith('/admin/audit-logs')) return 'Audit Logs';
+    if (pathname.startsWith('/admin/reports')) return 'System Reports';
+    return 'SHR System';
   }
 
   return (
@@ -40,17 +78,19 @@ export function Navbar() {
           </span>
         </div>
 
-        {/* Page title placeholder — filled by each page if needed */}
-        <div className="hidden md:block" />
+        {/* Page title */}
+        <div className="hidden md:block">
+          <h1 className="text-sm font-semibold text-gray-700">{getPageTitle(location.pathname)}</h1>
+        </div>
 
         {/* Right actions */}
         <div className="flex items-center gap-3">
           {/* Notification bell */}
-          <button
-            type="button"
-            className="relative p-2 rounded-full hover:bg-gray-100 transition-colors"
-            aria-label={`${alertCount} unresolved alerts`}
-          >
+            <button
+              type="button"
+              className="relative p-2 rounded-full hover:bg-gray-100 transition-colors"
+              aria-label={`${alertCount} unresolved alerts`}
+            >
             <Bell className="w-5 h-5 text-gray-600" />
             {alertCount > 0 && (
               <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5">
@@ -99,7 +139,7 @@ export function Navbar() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => { setDropdownOpen(false); logout(); navigate('/login'); }}
+                    onClick={() => { setDropdownOpen(false); setSwitchUserOpen(true); }}
                     className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     <UserCircle className="w-4 h-4" />
@@ -119,6 +159,28 @@ export function Navbar() {
           </div>
         </div>
       </div>
+      {switchUserOpen && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setSwitchUserOpen(false)} />
+          <div className="relative z-50 w-full max-w-md rounded-xl bg-white shadow-xl border border-gray-200 p-4">
+            <h2 className="text-base font-semibold text-gray-900 mb-3">Switch Demo User</h2>
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {demoUsers.map((user) => (
+                <button
+                  key={user.id}
+                  type="button"
+                  onClick={() => void handleSwitchUser(user.id)}
+                  disabled={switchingUserId !== null}
+                  className="w-full text-left px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-60"
+                >
+                  <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                  <div className="text-xs text-gray-500">{ROLE_LABELS[user.role]} • {user.email}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
