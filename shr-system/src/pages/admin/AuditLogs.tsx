@@ -5,13 +5,13 @@ import type { AuditLog, UserRole, AuditAction } from '../../types/types';
 import { useToast } from '../../components/shared/Toast';
 import { PageHeader } from '../../components/shared/PageHeader';
 
-const ROLES: UserRole[] = ['student','medical_staff','technician','pharmacy','admin'];
-const ROLE_LABELS: Record<UserRole, string> = { student:'Student', medical_staff:'Medical Staff', technician:'Technician', pharmacy:'Pharmacy', admin:'Admin' };
-const ROLE_COLORS: Record<UserRole, string> = { student:'bg-blue-100 text-blue-700', medical_staff:'bg-green-100 text-green-700', technician:'bg-purple-100 text-purple-700', pharmacy:'bg-orange-100 text-orange-700', admin:'bg-red-100 text-red-700' };
-const ALL_ACTIONS: AuditAction[] = ['LOGIN','LOGOUT','VIEW_RECORD','EDIT_RECORD','CREATE_RECORD','APPROVE_REQUISITION','REJECT_REQUISITION','UPLOAD_RESULT','DISPENSE_MEDICATION','CREATE_USER','DEACTIVATE_USER','RESET_PASSWORD','EXPORT_REPORT','VIEW_AUDIT_LOG'];
-const ACTION_COLORS: Record<string, string> = { LOGIN:'bg-blue-100 text-blue-700', LOGOUT:'bg-gray-100 text-gray-600', VIEW_RECORD:'bg-cyan-100 text-cyan-700', EDIT_RECORD:'bg-yellow-100 text-yellow-700', CREATE_RECORD:'bg-green-100 text-green-700', APPROVE_REQUISITION:'bg-green-100 text-green-700', REJECT_REQUISITION:'bg-red-100 text-red-700', UPLOAD_RESULT:'bg-purple-100 text-purple-700', DISPENSE_MEDICATION:'bg-orange-100 text-orange-700', CREATE_USER:'bg-green-100 text-green-700', DEACTIVATE_USER:'bg-red-100 text-red-700', RESET_PASSWORD:'bg-yellow-100 text-yellow-700', EXPORT_REPORT:'bg-blue-100 text-blue-700', VIEW_AUDIT_LOG:'bg-gray-100 text-gray-600' };
+const ROLES: UserRole[] = ['student','medical_staff','technician','pharmacy','specialist','admin'];
+const ROLE_LABELS: Record<UserRole, string> = { student:'Student', medical_staff:'Medical Staff', technician:'Technician', pharmacy:'Pharmacy', specialist:'Specialist', admin:'Admin' };
+const ROLE_COLORS: Record<UserRole, string> = { student:'bg-blue-100 text-blue-700', medical_staff:'bg-green-100 text-green-700', technician:'bg-purple-100 text-purple-700', pharmacy:'bg-orange-100 text-orange-700', specialist:'bg-indigo-100 text-indigo-700', admin:'bg-red-100 text-red-700' };
+const ALL_ACTIONS: AuditAction[] = ['LOGIN','LOGOUT','VIEW_RECORD','EDIT_RECORD','CREATE_RECORD','APPROVE_REQUISITION','REJECT_REQUISITION','UPLOAD_RESULT','DISPENSE_MEDICATION','CREATE_USER','DEACTIVATE_USER','RESET_PASSWORD','EXPORT_REPORT','VIEW_AUDIT_LOG','CREATE_REFERRAL','ACCEPT_REFERRAL','COMPLETE_REFERRAL','DECLINE_REFERRAL'];
+const ACTION_COLORS: Record<string, string> = { LOGIN:'bg-blue-100 text-blue-700', LOGOUT:'bg-gray-100 text-gray-600', VIEW_RECORD:'bg-cyan-100 text-cyan-700', EDIT_RECORD:'bg-yellow-100 text-yellow-700', CREATE_RECORD:'bg-green-100 text-green-700', APPROVE_REQUISITION:'bg-green-100 text-green-700', REJECT_REQUISITION:'bg-red-100 text-red-700', UPLOAD_RESULT:'bg-purple-100 text-purple-700', DISPENSE_MEDICATION:'bg-orange-100 text-orange-700', CREATE_USER:'bg-green-100 text-green-700', DEACTIVATE_USER:'bg-red-100 text-red-700', RESET_PASSWORD:'bg-yellow-100 text-yellow-700', EXPORT_REPORT:'bg-blue-100 text-blue-700', VIEW_AUDIT_LOG:'bg-gray-100 text-gray-600', CREATE_REFERRAL:'bg-indigo-100 text-indigo-700', ACCEPT_REFERRAL:'bg-blue-100 text-blue-700', COMPLETE_REFERRAL:'bg-green-100 text-green-700', DECLINE_REFERRAL:'bg-red-100 text-red-700' };
 const PAGE_SIZE = 20;
-const RESOURCE_TYPES = ['Student','Requisition','DiagnosticResult','User','System','Report'] as const;
+const RESOURCE_TYPES = ['Student','Requisition','DiagnosticResult','User','System','Report','Referral'] as const;
 
 type SortCol = 'timestamp' | 'userName' | 'action';
 type SortDir = 'asc' | 'desc';

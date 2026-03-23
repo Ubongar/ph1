@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Search, ClipboardList,
-  ShoppingBag, Users, FileText, BarChart3, Upload,
+  ShoppingBag, Users, FileText, BarChart3, Upload, Stethoscope,
   ChevronLeft, ChevronRight, UserCircle, PlusCircle,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -31,6 +31,10 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   ],
   pharmacy: [
     { label: 'Dispensing Queue', to: '/pharmacy/queue', icon: <ShoppingBag className="w-5 h-5" /> },
+  ],
+  specialist: [
+    { label: 'Dashboard', to: '/specialist/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
+    { label: 'Referrals', to: '/specialist/referrals', icon: <Stethoscope className="w-5 h-5" /> },
   ],
   admin: [
     { label: 'Dashboard', to: '/admin/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },

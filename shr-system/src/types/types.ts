@@ -1,4 +1,4 @@
-export type UserRole = 'student' | 'medical_staff' | 'technician' | 'pharmacy' | 'admin';
+export type UserRole = 'student' | 'medical_staff' | 'technician' | 'pharmacy' | 'specialist' | 'admin';
 
 export interface User {
   id: string; name: string; role: UserRole; email: string;
@@ -58,6 +58,25 @@ export interface MedicationRequisition {
 export interface ApprovedMedication {
   name: string; dosage: string; quantity: number; frequency: string; duration: string;
 }
+export type ReferralPriority = 'Routine' | 'Urgent' | 'Emergency';
+export type ReferralStatus = 'Requested' | 'Under Review' | 'Accepted' | 'Declined' | 'In Consultation' | 'Completed' | 'Cancelled';
+export interface Referral {
+  id: string;
+  studentId: string;
+  studentName: string;
+  requestingStaffId: string;
+  requestingStaffName: string;
+  specialistId?: string;
+  specialistName?: string;
+  specialty: string;
+  reason: string;
+  priority: ReferralPriority;
+  status: ReferralStatus;
+  requestedAt: string;
+  reviewedAt?: string;
+  consultationDate?: string;
+  consultationNotes?: string;
+}
 export type ResultType = 'Blood Test' | 'Urinalysis' | 'Imaging' | 'Microbiology' | 'Histology' | 'ECG' | 'Other';
 export type ResultStatus = 'Pending' | 'Processing' | 'Completed' | 'Flagged' | 'Requires Review';
 export interface DiagnosticResult {
@@ -72,11 +91,12 @@ export type AuditAction =
   'LOGIN' | 'LOGOUT' | 'VIEW_RECORD' | 'EDIT_RECORD' | 'CREATE_RECORD'
   | 'APPROVE_REQUISITION' | 'REJECT_REQUISITION' | 'UPLOAD_RESULT'
   | 'DISPENSE_MEDICATION' | 'CREATE_USER' | 'DEACTIVATE_USER'
-  | 'RESET_PASSWORD' | 'EXPORT_REPORT' | 'VIEW_AUDIT_LOG';
+  | 'RESET_PASSWORD' | 'EXPORT_REPORT' | 'VIEW_AUDIT_LOG'
+  | 'CREATE_REFERRAL' | 'ACCEPT_REFERRAL' | 'COMPLETE_REFERRAL' | 'DECLINE_REFERRAL';
 export interface AuditLog {
   id: string; timestamp: string; userId: string; userName: string;
   userRole: UserRole; action: AuditAction;
-  resourceType: 'Student' | 'Requisition' | 'DiagnosticResult' | 'User' | 'System' | 'Report';
+  resourceType: 'Student' | 'Requisition' | 'DiagnosticResult' | 'User' | 'System' | 'Report' | 'Referral';
   resourceId?: string; resourceDescription: string;
   ipAddress: string; sessionId: string; changeDetails?: string;
   status: 'Success' | 'Failed' | 'Suspicious';

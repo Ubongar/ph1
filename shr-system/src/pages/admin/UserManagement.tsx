@@ -7,13 +7,14 @@ import { useToast } from '../../components/shared/Toast';
 import { ConfirmDialog } from '../../components/shared/ConfirmDialog';
 import { PageHeader } from '../../components/shared/PageHeader';
 
-const ROLES: UserRole[] = ['student','medical_staff','technician','pharmacy','admin'];
-const ROLE_LABELS: Record<UserRole, string> = { student:'Student', medical_staff:'Medical Staff', technician:'Technician', pharmacy:'Pharmacy', admin:'Admin' };
+const ROLES: UserRole[] = ['student','medical_staff','technician','pharmacy','specialist','admin'];
+const ROLE_LABELS: Record<UserRole, string> = { student:'Student', medical_staff:'Medical Staff', technician:'Technician', pharmacy:'Pharmacy', specialist:'Specialist', admin:'Admin' };
 const ROLE_COLORS: Record<UserRole, string> = {
   student: 'bg-blue-100 text-blue-700',
   medical_staff: 'bg-green-100 text-green-700',
   technician: 'bg-purple-100 text-purple-700',
   pharmacy: 'bg-orange-100 text-orange-700',
+  specialist: 'bg-indigo-100 text-indigo-700',
   admin: 'bg-red-100 text-red-700',
 };
 const PAGE_SIZE = 15;

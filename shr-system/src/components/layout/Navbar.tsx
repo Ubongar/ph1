@@ -11,6 +11,7 @@ const ROLE_LABELS: Record<string, string> = {
   medical_staff: 'Medical Staff',
   technician: 'Technician',
   pharmacy: 'Pharmacist',
+  specialist: 'Specialist',
   admin: 'Administrator',
 };
 
@@ -42,6 +43,7 @@ export function Navbar() {
       medical_staff: '/staff/dashboard',
       technician: '/technician/upload',
       pharmacy: '/pharmacy/queue',
+      specialist: '/specialist/dashboard',
       admin: '/admin/dashboard',
     };
     navigate(rolePath[user.role] ?? '/');
@@ -58,6 +60,9 @@ export function Navbar() {
     if (pathname.startsWith('/staff/patient/')) return 'Patient Profile';
     if (pathname.startsWith('/technician/upload')) return 'Technician Upload Portal';
     if (pathname.startsWith('/pharmacy/queue')) return 'Pharmacy Queue';
+    if (pathname.startsWith('/specialist/dashboard')) return 'Specialist Dashboard';
+    if (pathname.startsWith('/specialist/referrals')) return 'Referrals';
+    if (pathname.startsWith('/specialist/referral/')) return 'Referral Detail';
     if (pathname.startsWith('/admin/dashboard')) return 'Admin Dashboard';
     if (pathname.startsWith('/admin/users')) return 'User Management';
     if (pathname.startsWith('/admin/audit-logs')) return 'Audit Logs';

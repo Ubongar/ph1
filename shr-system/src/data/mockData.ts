@@ -1,13 +1,51 @@
 import type {
   Student, SystemUser, Encounter, MedicationRequisition,
-  DiagnosticResult, AuditLog, SystemAlert,
+  DiagnosticResult, AuditLog, SystemAlert, Referral,
 } from '../types/types';
 import { StorageKey } from '../services/storage';
 
 const INITIALIZED_KEY = 'shr_initialized';
+const SPECIALIST_USER_ID = 'specialist-001';
 
 export function initializeMockData(): void {
-  if (localStorage.getItem(INITIALIZED_KEY)) return;
+  if (localStorage.getItem(INITIALIZED_KEY)) {
+    const users = JSON.parse(localStorage.getItem(StorageKey.USERS) ?? '[]') as SystemUser[];
+    if (!users.some((u) => u.id === SPECIALIST_USER_ID)) {
+      users.push({
+        id: SPECIALIST_USER_ID,
+        name: 'Dr. Nnenna Udeh',
+        email: 'specialist@babcock.edu.ng',
+        role: 'specialist',
+        department: 'Cardiology',
+        staffId: 'BU-SPC-001',
+        isActive: true,
+        createdAt: '2020-04-12T08:00:00Z',
+        lastLogin: '2024-01-15T08:45:00Z',
+        createdBy: 'admin-001',
+      });
+      localStorage.setItem(StorageKey.USERS, JSON.stringify(users));
+    }
+    if (!localStorage.getItem(StorageKey.REFERRALS)) {
+      const referrals: Referral[] = [
+        {
+          id: 'ref-001',
+          studentId: 'stu-002',
+          studentName: 'Emeka Nwosu',
+          requestingStaffId: 'staff-001',
+          requestingStaffName: 'Dr. Olusegun Bello',
+          specialistId: SPECIALIST_USER_ID,
+          specialistName: 'Dr. Nnenna Udeh',
+          specialty: 'Cardiology',
+          reason: 'Persistent hypertension with LVH pattern on ECG requiring specialist evaluation.',
+          priority: 'Urgent',
+          status: 'Requested',
+          requestedAt: '2024-01-15T09:20:00Z',
+        },
+      ];
+      localStorage.setItem(StorageKey.REFERRALS, JSON.stringify(referrals));
+    }
+    return;
+  }
 
   const students: Student[] = [
     {
@@ -122,6 +160,12 @@ export function initializeMockData(): void {
       id: 'admin-001', name: 'Chidi Okwu', email: 'admin@babcock.edu.ng',
       role: 'admin', department: 'IT Administration', staffId: 'BU-ADM-001',
       isActive: true, createdAt: '2019-05-01T08:00:00Z', lastLogin: '2024-01-15T06:00:00Z',
+      createdBy: 'admin-001',
+    },
+    {
+      id: SPECIALIST_USER_ID, name: 'Dr. Nnenna Udeh', email: 'specialist@babcock.edu.ng',
+      role: 'specialist', department: 'Cardiology', staffId: 'BU-SPC-001',
+      isActive: true, createdAt: '2020-04-12T08:00:00Z', lastLogin: '2024-01-15T08:45:00Z',
       createdBy: 'admin-001',
     },
   ];
@@ -660,11 +704,44 @@ export function initializeMockData(): void {
     },
   ];
 
+  const referrals: Referral[] = [
+    {
+      id: 'ref-001',
+      studentId: 'stu-002',
+      studentName: 'Emeka Nwosu',
+      requestingStaffId: 'staff-001',
+      requestingStaffName: 'Dr. Olusegun Bello',
+      specialistId: SPECIALIST_USER_ID,
+      specialistName: 'Dr. Nnenna Udeh',
+      specialty: 'Cardiology',
+      reason: 'Persistent hypertension with LVH pattern on ECG requiring specialist evaluation.',
+      priority: 'Urgent',
+      status: 'Requested',
+      requestedAt: '2024-01-15T09:20:00Z',
+    },
+    {
+      id: 'ref-002',
+      studentId: 'stu-008',
+      studentName: 'Seun Adeola',
+      requestingStaffId: 'staff-001',
+      requestingStaffName: 'Dr. Olusegun Bello',
+      specialistId: SPECIALIST_USER_ID,
+      specialistName: 'Dr. Nnenna Udeh',
+      specialty: 'Cardiology',
+      reason: 'Follow-up specialist review for exertional chest pain and chronic hypertension.',
+      priority: 'Routine',
+      status: 'Accepted',
+      requestedAt: '2024-01-12T12:00:00Z',
+      reviewedAt: '2024-01-13T08:15:00Z',
+    },
+  ];
+
   localStorage.setItem(StorageKey.STUDENTS, JSON.stringify(students));
   localStorage.setItem(StorageKey.USERS, JSON.stringify(systemUsers));
   localStorage.setItem(StorageKey.ENCOUNTERS, JSON.stringify(encounters));
   localStorage.setItem(StorageKey.REQUISITIONS, JSON.stringify(requisitions));
   localStorage.setItem(StorageKey.RESULTS, JSON.stringify(diagnosticResults));
+  localStorage.setItem(StorageKey.REFERRALS, JSON.stringify(referrals));
   localStorage.setItem(StorageKey.AUDIT_LOGS, JSON.stringify(auditLogs));
   localStorage.setItem(StorageKey.ALERTS, JSON.stringify(systemAlerts));
   localStorage.setItem(INITIALIZED_KEY, 'true');
