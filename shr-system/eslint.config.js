@@ -9,9 +9,9 @@ export default defineConfig([
   globalIgnores(['dist']),
   js.configs.recommended,
   ...tseslint.configs.recommended,
+  reactRefresh.configs.vite,
   {
     files: ['**/*.{ts,tsx}'],
-    ...reactRefresh.configs.vite,
     plugins: {
       'react-hooks': reactHooks,
     },
@@ -22,6 +22,7 @@ export default defineConfig([
     rules: {
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+      'react-refresh/only-export-components': 'off',
     },
   },
 ])
