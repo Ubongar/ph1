@@ -138,10 +138,14 @@ export default function ReferralDetail() {
     ) ?? fallbackSpecialist;
     const now = new Date().toISOString();
     const escalatedReferral: Omit<Referral, 'id'> = {
-      ...activeReferral,
+      studentId: activeReferral.studentId,
+      studentName: activeReferral.studentName,
+      requestingStaffId: activeReferral.requestingStaffId,
+      requestingStaffName: activeReferral.requestingStaffName,
       parentReferralId: activeReferral.id,
-      requestingStaffId: currentUser.id,
-      requestingStaffName: currentUser.name,
+      specialty: activeReferral.specialty,
+      reason: activeReferral.reason,
+      priority: activeReferral.priority,
       specialistId: matching.id,
       specialistName: matching.name,
       status: 'Requested',
