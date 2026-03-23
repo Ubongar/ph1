@@ -98,31 +98,31 @@ export function initializeMockData(): void {
       id: 'student-001', name: 'Adaeze Okonkwo', email: 'student@babcock.edu.ng',
       role: 'student', department: 'Computer Science', matricNumber: 'BU/21/CS/001',
       isActive: true, createdAt: '2023-09-01T08:00:00Z', lastLogin: '2024-01-15T09:30:00Z',
-      createdBy: 'admin-001', password: 'password',
+      createdBy: 'admin-001',
     },
     {
       id: 'staff-001', name: 'Dr. Olusegun Bello', email: 'doctor@babcock.edu.ng',
       role: 'medical_staff', department: 'Amphi Clinic', staffId: 'BU-MED-001',
       isActive: true, createdAt: '2020-01-15T08:00:00Z', lastLogin: '2024-01-15T07:45:00Z',
-      createdBy: 'admin-001', password: 'password',
+      createdBy: 'admin-001',
     },
     {
       id: 'tech-001', name: 'Amaka Okafor', email: 'technician@babcock.edu.ng',
       role: 'technician', department: 'Laboratory', staffId: 'BU-TECH-001',
       isActive: true, createdAt: '2021-03-10T08:00:00Z', lastLogin: '2024-01-14T16:00:00Z',
-      createdBy: 'admin-001', password: 'password',
+      createdBy: 'admin-001',
     },
     {
       id: 'pharm-001', name: 'Pharmacist Remi Soyinka', email: 'pharmacist@babcock.edu.ng',
       role: 'pharmacy', department: 'Pharmacy', staffId: 'BU-PHARM-001',
       isActive: true, createdAt: '2020-06-20T08:00:00Z', lastLogin: '2024-01-15T08:20:00Z',
-      createdBy: 'admin-001', password: 'password',
+      createdBy: 'admin-001',
     },
     {
       id: 'admin-001', name: 'Chidi Okwu', email: 'admin@babcock.edu.ng',
       role: 'admin', department: 'IT Administration', staffId: 'BU-ADM-001',
       isActive: true, createdAt: '2019-05-01T08:00:00Z', lastLogin: '2024-01-15T06:00:00Z',
-      createdBy: 'admin-001', password: 'password',
+      createdBy: 'admin-001',
     },
   ];
 

@@ -7,7 +7,7 @@ interface AuthContextValue {
   currentUser: SystemUser | null;
   currentStudent: Student | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<SystemUser | null>;
+  login: (userId: string) => Promise<SystemUser | null>;
   logout: () => void;
   hasRole: (role: UserRole | UserRole[]) => boolean;
 }
@@ -34,10 +34,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (savedId) resolveSession(savedId);
   }, [resolveSession]);
 
-  const login = useCallback(async (email: string, _password: string): Promise<SystemUser | null> => {
+  const login = useCallback(async (userId: string): Promise<SystemUser | null> => {
     await new Promise<void>((resolve) => setTimeout(resolve, 800));
     const users = getAll<SystemUser>(StorageKey.USERS);
-    const user = users.find((u) => u.email === email && u.isActive);
+    const user = users.find((u) => u.id === userId && u.isActive);
     if (!user) return null;
     localStorage.setItem(StorageKey.AUTH_SESSION, user.id);
     resolveSession(user.id);

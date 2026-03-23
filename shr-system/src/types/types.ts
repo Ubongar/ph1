@@ -85,7 +85,6 @@ export interface SystemUser {
   id: string; name: string; email: string; role: UserRole;
   department?: string; staffId?: string; matricNumber?: string;
   isActive: boolean; createdAt: string; lastLogin?: string; createdBy: string;
-  password: string;
 }
 export interface SystemAlert {
   id: string; type: 'Critical' | 'Warning' | 'Info';

@@ -11,6 +11,65 @@ export enum StorageKey {
   AUTH_SESSION = 'shr_auth_session',
 }
 
+type AuditResourceType = AuditLog['resourceType'];
+
+const KEY_TO_RESOURCE_TYPE: Partial<Record<StorageKey, AuditResourceType>> = {
+  [StorageKey.STUDENTS]: 'Student',
+  [StorageKey.USERS]: 'User',
+  [StorageKey.REQUISITIONS]: 'Requisition',
+  [StorageKey.RESULTS]: 'DiagnosticResult',
+  [StorageKey.ALERTS]: 'System',
+  [StorageKey.ENCOUNTERS]: 'Student',
+};
+
+function getCurrentAuditUser(): Pick<AuditLog, 'userId' | 'userName' | 'userRole'> {
+  const sessionUserId = localStorage.getItem(StorageKey.AUTH_SESSION);
+  const users = getAll<{ id: string; name: string; role: AuditLog['userRole'] }>(StorageKey.USERS);
+  const currentUser = sessionUserId ? users.find((user) => user.id === sessionUserId) : null;
+
+  if (currentUser) {
+    return {
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userRole: currentUser.role,
+    };
+  }
+
+  return {
+    userId: 'system',
+    userName: 'System',
+    userRole: 'admin',
+  };
+}
+
+function appendAuditLog(log: AuditLog): void {
+  const logs = getAll<AuditLog>(StorageKey.AUDIT_LOGS);
+  logs.push(log);
+  localStorage.setItem(StorageKey.AUDIT_LOGS, JSON.stringify(logs));
+}
+
+function createAutoAuditEntry(
+  key: StorageKey,
+  action: Extract<AuditAction, 'CREATE_RECORD' | 'EDIT_RECORD'>,
+  resourceId: string,
+  changeDetails?: string,
+): void {
+  if (key === StorageKey.AUDIT_LOGS || key === StorageKey.AUTH_SESSION) return;
+
+  const resourceType = KEY_TO_RESOURCE_TYPE[key] ?? 'System';
+  const user = getCurrentAuditUser();
+
+  createAuditEntry({
+    ...user,
+    action,
+    resourceType,
+    resourceId,
+    resourceDescription: `${action.replace('_', ' ')} on ${resourceType}`,
+    status: 'Success',
+    changeDetails,
+  });
+}
+
 export function isLocalStorageAvailable(): boolean {
   try {
     const testKey = '__shr_test__';
@@ -37,11 +96,16 @@ export function getById<T extends { id: string }>(key: StorageKey, id: string): 
   return items.find((item) => item.id === id) ?? null;
 }
 
-export function create<T extends { id: string }>(key: StorageKey, item: T): T {
+export function create<T extends { id: string }>(
+  key: StorageKey,
+  item: Omit<T, 'id'> & Partial<Pick<T, 'id'>>,
+): T {
   const items = getAll<T>(key);
-  items.push(item);
+  const newItem = { ...item, id: item.id ?? crypto.randomUUID() } as T;
+  items.push(newItem);
   localStorage.setItem(key, JSON.stringify(items));
-  return item;
+  createAutoAuditEntry(key, 'CREATE_RECORD', newItem.id);
+  return newItem;
 }
 
 export function update<T extends { id: string }>(
@@ -55,6 +119,7 @@ export function update<T extends { id: string }>(
   const updated = { ...items[index], ...updates } as T;
   items[index] = updated;
   localStorage.setItem(key, JSON.stringify(items));
+  createAutoAuditEntry(key, 'EDIT_RECORD', updated.id, JSON.stringify(updates));
   return updated;
 }
 
@@ -63,6 +128,7 @@ export function deleteById(key: StorageKey, id: string): boolean {
   const filtered = items.filter((item) => item.id !== id);
   if (filtered.length === items.length) return false;
   localStorage.setItem(key, JSON.stringify(filtered));
+  createAutoAuditEntry(key, 'EDIT_RECORD', id, JSON.stringify({ deleted: true }));
   return true;
 }
 
@@ -112,10 +178,10 @@ export function createAuditEntry(
 ): void {
   const newLog: AuditLog = {
     ...entry,
-    id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    id: crypto.randomUUID(),
     timestamp: new Date().toISOString(),
     ipAddress: `192.168.1.${Math.floor(Math.random() * 255)}`,
-    sessionId: `sess-${Date.now()}`,
+    sessionId: crypto.randomUUID(),
   };
-  create(StorageKey.AUDIT_LOGS, newLog);
+  appendAuditLog(newLog);
 }

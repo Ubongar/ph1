@@ -2,6 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { getAll, StorageKey } from '../../services/storage';
+import type { SystemUser } from '../../types/types';
 
 interface DemoCredential {
   label: string;
@@ -53,7 +55,9 @@ export default function LoginPage() {
     }
     setLoading(true);
     setError('');
-    const user = await login(email.trim(), password);
+    const users = getAll<SystemUser>(StorageKey.USERS);
+    const matchedUser = users.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
+    const user = matchedUser ? await login(matchedUser.id) : null;
     setLoading(false);
     if (!user) {
       setError('Invalid email or account not found. Try a demo credential below.');

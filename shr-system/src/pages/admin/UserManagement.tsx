@@ -73,9 +73,10 @@ export default function UserManagement() {
       createAuditEntry({ userId: currentUser.id, userName: currentUser.name, userRole: currentUser.role, action: 'EDIT_RECORD', resourceType: 'User', resourceId: editTarget.id, resourceDescription: `Edited user: ${form.name}`, status: 'Success' });
       toast('User updated', 'success');
     } else {
-      const newUser: SystemUser = { id: `user-${Date.now()}`, name: form.name, email: form.email, role: form.role, department: form.department, staffId: form.staffId || undefined, matricNumber: form.matricNumber || undefined, isActive: true, createdAt: new Date().toISOString(), createdBy: currentUser.id, password: generatedPwd };
+      const newUser: SystemUser = { id: `user-${Date.now()}`, name: form.name, email: form.email, role: form.role, department: form.department, staffId: form.staffId || undefined, matricNumber: form.matricNumber || undefined, isActive: true, createdAt: new Date().toISOString(), createdBy: currentUser.id };
       create<SystemUser>(StorageKey.USERS, newUser);
       createAuditEntry({ userId: currentUser.id, userName: currentUser.name, userRole: currentUser.role, action: 'CREATE_USER', resourceType: 'User', resourceId: newUser.id, resourceDescription: `Created user: ${form.name}`, status: 'Success' });
+      createAuditEntry({ userId: currentUser.id, userName: currentUser.name, userRole: currentUser.role, action: 'RESET_PASSWORD', resourceType: 'User', resourceId: newUser.id, resourceDescription: `Generated initial password for: ${form.name}`, status: 'Success' });
       toast('User created', 'success');
     }
     setPanelOpen(false);
@@ -103,7 +104,6 @@ export default function UserManagement() {
 
   const confirmReset = () => {
     if (!resetTarget || !currentUser) return;
-    update<SystemUser>(StorageKey.USERS, resetTarget.id, { password: resetPwd });
     createAuditEntry({ userId: currentUser.id, userName: currentUser.name, userRole: currentUser.role, action: 'RESET_PASSWORD', resourceType: 'User', resourceId: resetTarget.id, resourceDescription: `Reset password for: ${resetTarget.name}`, status: 'Success' });
     toast('Password reset', 'success');
     setResetTarget(null);
