@@ -91,7 +91,7 @@ export default function SubmitSymptomReport() {
       priority: 'Normal',
     };
 
-    create<MedicationRequisition>(StorageKey.REQUISITIONS, newReq);
+    create<MedicationRequisition>(StorageKey.REQUISITIONS, newReq, { autoAudit: false });
 
     createAuditEntry({
       userId: currentUser.id,

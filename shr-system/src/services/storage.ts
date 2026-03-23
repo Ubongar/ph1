@@ -5,10 +5,91 @@ export enum StorageKey {
   USERS = 'shr_system_users',
   ENCOUNTERS = 'shr_encounters',
   REQUISITIONS = 'shr_requisitions',
+  REFERRALS = 'shr_referrals',
   RESULTS = 'shr_diagnostic_results',
   AUDIT_LOGS = 'shr_audit_logs',
   ALERTS = 'shr_system_alerts',
   AUTH_SESSION = 'shr_auth_session',
+}
+
+type AuditResourceType = AuditLog['resourceType'];
+const MAX_AUDIT_CHANGE_DETAILS_LENGTH = 500;
+const AUDIT_CHANGE_DETAILS_ELLIPSIS = '...';
+
+const KEY_TO_RESOURCE_TYPE: Partial<Record<StorageKey, AuditResourceType>> = {
+  [StorageKey.STUDENTS]: 'Student',
+  [StorageKey.USERS]: 'User',
+  [StorageKey.REQUISITIONS]: 'Requisition',
+  [StorageKey.REFERRALS]: 'Referral',
+  [StorageKey.RESULTS]: 'DiagnosticResult',
+  [StorageKey.ALERTS]: 'System',
+  [StorageKey.ENCOUNTERS]: 'Student',
+};
+
+function getCurrentAuditUser(): Pick<AuditLog, 'userId' | 'userName' | 'userRole'> {
+  const sessionUserId = localStorage.getItem(StorageKey.AUTH_SESSION);
+  const users = getAll<{ id: string; name: string; role: AuditLog['userRole'] }>(StorageKey.USERS);
+  const currentUser = sessionUserId ? users.find((user) => user.id === sessionUserId) : null;
+
+  if (currentUser) {
+    return {
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userRole: currentUser.role,
+    };
+  }
+
+  return {
+    userId: 'system',
+    userName: 'System',
+    userRole: 'admin',
+  };
+}
+
+function appendAuditLog(log: AuditLog): void {
+  const logs = getAll<AuditLog>(StorageKey.AUDIT_LOGS);
+  logs.push(log);
+  localStorage.setItem(StorageKey.AUDIT_LOGS, JSON.stringify(logs));
+}
+
+function createAutoAuditEntry(
+  key: StorageKey,
+  action: Extract<AuditAction, 'CREATE_RECORD' | 'EDIT_RECORD'>,
+  resourceId: string,
+  changeDetails?: string,
+): void {
+  if (key === StorageKey.AUDIT_LOGS || key === StorageKey.AUTH_SESSION) return;
+
+  const resourceType = KEY_TO_RESOURCE_TYPE[key] ?? 'System';
+  const user = getCurrentAuditUser();
+
+  createAuditEntry({
+    ...user,
+    action,
+    resourceType,
+    resourceId,
+    resourceDescription: `${action.replace('_', ' ')} on ${resourceType}`,
+    status: 'Success',
+    changeDetails,
+  });
+}
+
+interface StorageMutationOptions {
+  autoAudit?: boolean;
+  auditChangeDetails?: string;
+}
+
+function toAuditChangeDetails(value: unknown): string | undefined {
+  try {
+    const raw = JSON.stringify(value);
+    if (!raw) return undefined;
+    const maxContentLength = MAX_AUDIT_CHANGE_DETAILS_LENGTH - AUDIT_CHANGE_DETAILS_ELLIPSIS.length;
+    return raw.length > MAX_AUDIT_CHANGE_DETAILS_LENGTH
+      ? `${raw.slice(0, maxContentLength)}${AUDIT_CHANGE_DETAILS_ELLIPSIS}`
+      : raw;
+  } catch {
+    return undefined;
+  }
 }
 
 export function isLocalStorageAvailable(): boolean {
@@ -37,17 +118,26 @@ export function getById<T extends { id: string }>(key: StorageKey, id: string): 
   return items.find((item) => item.id === id) ?? null;
 }
 
-export function create<T extends { id: string }>(key: StorageKey, item: T): T {
+export function create<T extends { id: string }>(
+  key: StorageKey,
+  item: Omit<T, 'id'> & Partial<Pick<T, 'id'>>,
+  options: StorageMutationOptions = {},
+): T {
   const items = getAll<T>(key);
-  items.push(item);
+  const newItem = { ...item, id: item.id ?? crypto.randomUUID() } as T;
+  items.push(newItem);
   localStorage.setItem(key, JSON.stringify(items));
-  return item;
+  if (options.autoAudit !== false) {
+    createAutoAuditEntry(key, 'CREATE_RECORD', newItem.id, options.auditChangeDetails);
+  }
+  return newItem;
 }
 
 export function update<T extends { id: string }>(
   key: StorageKey,
   id: string,
   updates: Partial<T>,
+  options: StorageMutationOptions = {},
 ): T | null {
   const items = getAll<T>(key);
   const index = items.findIndex((item) => item.id === id);
@@ -55,6 +145,10 @@ export function update<T extends { id: string }>(
   const updated = { ...items[index], ...updates } as T;
   items[index] = updated;
   localStorage.setItem(key, JSON.stringify(items));
+  if (options.autoAudit !== false) {
+    const changeDetails = options.auditChangeDetails ?? toAuditChangeDetails(updates);
+    createAutoAuditEntry(key, 'EDIT_RECORD', updated.id, changeDetails);
+  }
   return updated;
 }
 
@@ -63,6 +157,7 @@ export function deleteById(key: StorageKey, id: string): boolean {
   const filtered = items.filter((item) => item.id !== id);
   if (filtered.length === items.length) return false;
   localStorage.setItem(key, JSON.stringify(filtered));
+  createAutoAuditEntry(key, 'EDIT_RECORD', id, JSON.stringify({ deleted: true }));
   return true;
 }
 
@@ -112,10 +207,10 @@ export function createAuditEntry(
 ): void {
   const newLog: AuditLog = {
     ...entry,
-    id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    id: crypto.randomUUID(),
     timestamp: new Date().toISOString(),
     ipAddress: `192.168.1.${Math.floor(Math.random() * 255)}`,
-    sessionId: `sess-${Date.now()}`,
+    sessionId: crypto.randomUUID(),
   };
-  create(StorageKey.AUDIT_LOGS, newLog);
+  appendAuditLog(newLog);
 }

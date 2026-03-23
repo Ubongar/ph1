@@ -14,12 +14,17 @@ import StudentSearch from '../pages/staff/StudentSearch';
 import PatientProfile from '../pages/staff/PatientProfile';
 import NewEncounter from '../pages/staff/NewEncounter';
 import DoctorReviewQueue from '../pages/staff/DoctorReviewQueue';
+import ReferralFeedback from '../pages/staff/ReferralFeedback';
 import TechnicianUploadPortal from '../pages/technician/TechnicianUploadPortal';
 import PharmacyQueue from '../pages/pharmacy/PharmacyQueue';
 import AdminDashboard from '../pages/admin/AdminDashboard';
 import UserManagement from '../pages/admin/UserManagement';
 import AuditLogs from '../pages/admin/AuditLogs';
 import SystemReports from '../pages/admin/SystemReports';
+import SpecialistDashboard from '../pages/specialist/SpecialistDashboard';
+import ReferralDetail from '../pages/specialist/ReferralDetail';
+import ConsultationAnalytics from '../pages/specialist/ConsultationAnalytics';
+import ReferralCompliance from '../pages/admin/ReferralCompliance';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -41,6 +46,7 @@ function RoleRedirect() {
     case 'medical_staff': return <Navigate to="/staff/dashboard" replace />;
     case 'technician': return <Navigate to="/technician/upload" replace />;
     case 'pharmacy': return <Navigate to="/pharmacy/queue" replace />;
+    case 'specialist': return <Navigate to="/specialist/dashboard" replace />;
     case 'admin': return <Navigate to="/admin/dashboard" replace />;
     default: return <Navigate to="/login" replace />;
   }
@@ -127,6 +133,14 @@ export function AppRouter() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/staff/referral-feedback"
+        element={
+          <ProtectedRoute roles={['medical_staff']}>
+            <AppShell><ReferralFeedback /></AppShell>
+          </ProtectedRoute>
+        }
+      />
 
       {/* Technician routes */}
       <Route
@@ -144,6 +158,40 @@ export function AppRouter() {
         element={
           <ProtectedRoute roles={['pharmacy']}>
             <AppShell><PharmacyQueue /></AppShell>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Specialist routes */}
+      <Route
+        path="/specialist/dashboard"
+        element={
+          <ProtectedRoute roles={['specialist']}>
+            <AppShell><SpecialistDashboard /></AppShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/specialist/referrals"
+        element={
+          <ProtectedRoute roles={['specialist']}>
+            <AppShell><SpecialistDashboard /></AppShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/specialist/analytics"
+        element={
+          <ProtectedRoute roles={['specialist']}>
+            <AppShell><ConsultationAnalytics /></AppShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/specialist/referral/:referralId"
+        element={
+          <ProtectedRoute roles={['specialist']}>
+            <AppShell><ReferralDetail /></AppShell>
           </ProtectedRoute>
         }
       />
@@ -178,6 +226,14 @@ export function AppRouter() {
         element={
           <ProtectedRoute roles={['admin']}>
             <AppShell><SystemReports /></AppShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/referral-compliance"
+        element={
+          <ProtectedRoute roles={['admin']}>
+            <AppShell><ReferralCompliance /></AppShell>
           </ProtectedRoute>
         }
       />

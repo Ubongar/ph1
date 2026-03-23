@@ -2,6 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { getAll, StorageKey } from '../../services/storage';
+import type { SystemUser } from '../../types/types';
 
 interface DemoCredential {
   label: string;
@@ -14,6 +16,7 @@ const DEMO_CREDENTIALS: DemoCredential[] = [
   { label: 'Medical Staff', email: 'doctor@babcock.edu.ng', password: 'password' },
   { label: 'Technician', email: 'technician@babcock.edu.ng', password: 'password' },
   { label: 'Pharmacist', email: 'pharmacist@babcock.edu.ng', password: 'password' },
+  { label: 'Specialist', email: 'specialist@babcock.edu.ng', password: 'password' },
   { label: 'Administrator', email: 'admin@babcock.edu.ng', password: 'password' },
 ];
 
@@ -22,6 +25,7 @@ const ROLE_REDIRECT: Record<string, string> = {
   medical_staff: '/staff/dashboard',
   technician: '/technician/upload',
   pharmacy: '/pharmacy/queue',
+  specialist: '/specialist/dashboard',
   admin: '/admin/dashboard',
 };
 
@@ -53,7 +57,10 @@ export default function LoginPage() {
     }
     setLoading(true);
     setError('');
-    const user = await login(email.trim(), password);
+    // Demo-mode auth: password is collected for realistic UX but not verified server-side.
+    const users = getAll<SystemUser>(StorageKey.USERS);
+    const matchedUser = users.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
+    const user = matchedUser ? await login(matchedUser.id) : null;
     setLoading(false);
     if (!user) {
       setError('Invalid email or account not found. Try a demo credential below.');

@@ -13,7 +13,7 @@ import {
   Heart,
   Wind,
 } from 'lucide-react'
-import { getAll, getById, getRequisitionsByStudentId, StorageKey, createAuditEntry } from '../../services/storage'
+import { create, getAll, getById, getRequisitionsByStudentId, StorageKey, createAuditEntry } from '../../services/storage'
 import { useAuth } from '../../context/AuthContext'
 import type {
   Student,
@@ -22,6 +22,7 @@ import type {
   DiagnosticResult,
   MedicationRequisition,
   Prescription,
+  Referral,
 } from '../../types/types'
 import { StatusBadge, SeverityBadge, VitalsCard, useToast } from '../../components/shared'
 
@@ -64,6 +65,10 @@ export default function PatientProfile() {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [notFound, setNotFound] = useState(false)
+  const [showReferralModal, setShowReferralModal] = useState(false)
+  const [referralSpecialty, setReferralSpecialty] = useState('Cardiology')
+  const [referralPriority, setReferralPriority] = useState<'Routine' | 'Urgent' | 'Emergency'>('Routine')
+  const [referralReason, setReferralReason] = useState('')
 
   useEffect(() => {
     if (!studentId) { setNotFound(true); return }
@@ -162,6 +167,51 @@ export default function PatientProfile() {
       else next.add(id)
       return next
     })
+  }
+
+  function submitReferral() {
+    if (!currentUser || !student || !referralReason.trim()) {
+      toast('Referral reason is required', 'error')
+      return
+    }
+    const specialists = getAll<SystemUser>(StorageKey.USERS).filter((u) => u.role === 'specialist' && u.isActive)
+    if (specialists.length === 0) {
+      toast('No active specialist is available for assignment', 'error')
+      return
+    }
+    const matchedSpecialist = specialists.find((u) =>
+      (u.department ?? '').toLowerCase().includes(referralSpecialty.toLowerCase()),
+    ) ?? specialists[0]
+
+    const referral = create<Referral>(StorageKey.REFERRALS, {
+      studentId: student.id,
+      studentName: student.name,
+      requestingStaffId: currentUser.id,
+      requestingStaffName: currentUser.name,
+      specialistId: matchedSpecialist?.id,
+      specialistName: matchedSpecialist?.name,
+      specialty: referralSpecialty,
+      reason: referralReason.trim(),
+      priority: referralPriority,
+      status: 'Requested',
+      requestedAt: new Date().toISOString(),
+    }, { autoAudit: false })
+
+    createAuditEntry({
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userRole: currentUser.role,
+      action: 'CREATE_REFERRAL',
+      resourceType: 'Referral',
+      resourceId: referral.id,
+      resourceDescription: `Created ${referralSpecialty} referral for ${student.name}`,
+      status: 'Success',
+    })
+    setShowReferralModal(false)
+    setReferralReason('')
+    setReferralPriority('Routine')
+    setReferralSpecialty('Cardiology')
+    toast('Referral created', 'success')
   }
 
   return (
@@ -351,6 +401,13 @@ export default function PatientProfile() {
           >
             <PlusCircle className="w-4 h-4" />
             Add New Encounter
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowReferralModal(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-colors"
+          >
+            Create Referral
           </button>
         </div>
 
@@ -741,6 +798,67 @@ export default function PatientProfile() {
           </Tabs.Root>
         </div>
       </div>
+
+      {showReferralModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowReferralModal(false)} />
+          <div className="relative bg-white rounded-xl border border-gray-200 shadow-xl w-full max-w-lg p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Create Specialist Referral</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Specialty</label>
+                <select
+                  value={referralSpecialty}
+                  onChange={(e) => setReferralSpecialty(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  {['Cardiology', 'Dermatology', 'Neurology', 'ENT', 'Orthopedics', 'Radiology', 'Pathology'].map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                <select
+                  value={referralPriority}
+                  onChange={(e) => setReferralPriority(e.target.value as 'Routine' | 'Urgent' | 'Emergency')}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  {['Routine', 'Urgent', 'Emergency'].map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+                <textarea
+                  rows={4}
+                  value={referralReason}
+                  onChange={(e) => setReferralReason(e.target.value)}
+                  placeholder="Provide concise clinical reason for referral..."
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowReferralModal(false)}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitReferral}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm"
+              >
+                Create Referral
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

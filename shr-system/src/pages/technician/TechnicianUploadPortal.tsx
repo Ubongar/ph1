@@ -97,7 +97,7 @@ export default function TechnicianUploadPortal() {
       criticalFlag,
       criticalFlagReason: criticalFlag ? criticalReason : undefined,
     };
-    create(StorageKey.RESULTS, result);
+    create(StorageKey.RESULTS, result, { autoAudit: false });
     createAuditEntry({
       userId: currentUser.id, userName: currentUser.name, userRole: currentUser.role,
       action: 'UPLOAD_RESULT', resourceType: 'DiagnosticResult', resourceId: result.id,

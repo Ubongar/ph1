@@ -14,6 +14,7 @@ import type {
   AuditLog,
   Encounter,
   DiagnosticResult,
+  Referral,
 } from '../../types/types'
 import { SeverityBadge } from '../../components/shared'
 
@@ -49,6 +50,9 @@ export default function StaffDashboard() {
   const criticalAlerts = allResults.filter((r) => r.criticalFlag)
   const pendingResults = allResults.filter(
     (r) => r.status === 'Pending' || r.status === 'Processing',
+  )
+  const myReferralFeedback = getAll<Referral>(StorageKey.REFERRALS).filter(
+    (r) => r.requestingStaffId === currentUser?.id && r.status === 'Completed',
   )
 
   const topRequisitions = [...pendingRequisitions]
@@ -182,6 +186,21 @@ export default function StaffDashboard() {
             <div>
               <div className="text-3xl font-bold text-gray-900">{pendingResults.length}</div>
               <div className="text-sm text-gray-500">Pending Lab Results</div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl border border-indigo-200 p-5 flex items-center gap-4">
+            <div className="p-3 bg-indigo-100 rounded-lg">
+              <ClipboardList className="w-6 h-6 text-indigo-600" />
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-gray-900">{myReferralFeedback.length}</div>
+              <button
+                type="button"
+                onClick={() => navigate('/staff/referral-feedback')}
+                className="text-sm text-indigo-600 hover:underline"
+              >
+                Referral Feedback
+              </button>
             </div>
           </div>
         </div>

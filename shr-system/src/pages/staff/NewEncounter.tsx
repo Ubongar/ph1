@@ -325,7 +325,7 @@ export default function NewEncounter() {
       status: form.status,
     }
 
-    create<Encounter>(StorageKey.ENCOUNTERS, encounter)
+    create<Encounter>(StorageKey.ENCOUNTERS, encounter, { autoAudit: false })
 
     createAuditEntry({
       userId: currentUser.id,
