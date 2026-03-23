@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Search, ClipboardList,
@@ -50,7 +50,17 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
 
 export function Sidebar() {
   const { currentUser } = useAuth();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('shr_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('shr_sidebar_collapsed', String(collapsed));
+  }, [collapsed]);
 
   if (!currentUser) return null;
 

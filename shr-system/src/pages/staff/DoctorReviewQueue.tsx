@@ -141,6 +141,14 @@ export default function DoctorReviewQueue() {
     openMedModal()
   }
 
+  function closeAllergyModal() {
+    setShowAllergyModal(false)
+  }
+
+  function closeMedicationModal() {
+    setShowMedModal(false)
+  }
+
   async function confirmApproval() {
     if (!selectedReq || !currentUser) return
     setShowMedModal(false)
@@ -611,7 +619,13 @@ export default function DoctorReviewQueue() {
                 ⚠️ Allergy Conflict Detected
               </Dialog.Title>
               <Dialog.Close asChild>
-                <button type="button" className="ml-auto p-1 text-gray-400 hover:text-gray-600">
+                <button
+                  type="button"
+                  onClick={closeAllergyModal}
+                  aria-label="Close allergy conflict dialog"
+                  title="Close"
+                  className="ml-auto p-1 text-gray-400 hover:text-gray-600"
+                >
                   <X className="w-4 h-4" />
                 </button>
               </Dialog.Close>
@@ -630,6 +644,7 @@ export default function DoctorReviewQueue() {
               <Dialog.Close asChild>
                 <button
                   type="button"
+                  onClick={closeAllergyModal}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
                 >
                   Cancel
@@ -657,7 +672,13 @@ export default function DoctorReviewQueue() {
                 Configure Approved Medications
               </Dialog.Title>
               <Dialog.Close asChild>
-                <button type="button" className="p-1 text-gray-400 hover:text-gray-600">
+                <button
+                  type="button"
+                  onClick={closeMedicationModal}
+                  aria-label="Close medication configuration dialog"
+                  title="Close"
+                  className="p-1 text-gray-400 hover:text-gray-600"
+                >
                   <X className="w-4 h-4" />
                 </button>
               </Dialog.Close>
@@ -693,6 +714,7 @@ export default function DoctorReviewQueue() {
                         type="number"
                         min={1}
                         value={med.quantity}
+                        aria-label={`Quantity for ${med.name}`}
                         onChange={(e) => {
                           const updated = [...medConfigs]
                           updated[idx] = { ...updated[idx], quantity: parseInt(e.target.value) || 1 }
@@ -742,6 +764,7 @@ export default function DoctorReviewQueue() {
               <Dialog.Close asChild>
                 <button
                   type="button"
+                  onClick={closeMedicationModal}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
                 >
                   Cancel

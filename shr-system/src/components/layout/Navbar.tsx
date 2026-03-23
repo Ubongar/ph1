@@ -1,10 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, ChevronDown, LogOut, UserCircle } from 'lucide-react';
+import {
+  Bell,
+  ChevronDown,
+  Clock3,
+  Command,
+  LogOut,
+  Search,
+  UserCircle,
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { getAll } from '../../services/storage';
-import { StorageKey } from '../../services/storage';
-import type { SystemAlert, SystemUser } from '../../types/types';
+import { getAll, StorageKey, update } from '../../services/storage';
+import type { MedicationRequisition, Referral, SystemAlert, SystemUser } from '../../types/types';
+import { useToast } from '../../hooks';
+import { useSimulatedPolling } from '../../hooks/useSimulatedPolling';
+import { CommandPalette, type CommandItem } from './CommandPalette';
 
 const ROLE_LABELS: Record<string, string> = {
   student: 'Student',
@@ -19,13 +29,162 @@ export function Navbar() {
   const { currentUser, logout, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
   const [switchUserOpen, setSwitchUserOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [switchingUserId, setSwitchingUserId] = useState<string | null>(null);
+  const [alerts, setAlerts] = useState<SystemAlert[]>(() =>
+    getAll<SystemAlert>(StorageKey.ALERTS).sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    ),
+  );
+  const [now, setNow] = useState(() => new Date());
+  const [readAlertIds, setReadAlertIds] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem('shr_alert_read_ids');
+      if (!raw) return [];
+      const parsed = JSON.parse(raw) as string[];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
 
-  const alerts = getAll<SystemAlert>(StorageKey.ALERTS).filter((a) => !a.isResolved);
   const demoUsers = getAll<SystemUser>(StorageKey.USERS).filter((u) => u.isActive);
-  const alertCount = alerts.length;
+
+  const unresolvedAlerts = alerts.filter((a) => !a.isResolved);
+  const unreadAlerts = unresolvedAlerts.filter((a) => !readAlertIds.includes(a.id));
+  const alertCount = unreadAlerts.length;
+
+  const requisitions = getAll<MedicationRequisition>(StorageKey.REQUISITIONS);
+  const referrals = getAll<Referral>(StorageKey.REFERRALS);
+
+  const quickWorkloadLabel = useMemo(() => {
+    if (!currentUser) return '';
+    if (currentUser.role === 'medical_staff') {
+      const pending = requisitions.filter((r) => r.status === 'Pending Review').length;
+      return `${pending} pending reviews`;
+    }
+    if (currentUser.role === 'specialist') {
+      const pending = referrals.filter((r) => r.status === 'Requested' || r.status === 'Under Review').length;
+      return `${pending} referrals waiting`;
+    }
+    if (currentUser.role === 'pharmacy') {
+      const ready = requisitions.filter((r) => r.status === 'Approved' || r.status === 'Ready for Pickup').length;
+      return `${ready} ready to dispense`;
+    }
+    if (currentUser.role === 'technician') {
+      const pendingResults = getAll<{ status: string }>(StorageKey.RESULTS)
+        .filter((r) => r.status === 'Pending' || r.status === 'Processing').length;
+      return `${pendingResults} results pending`;
+    }
+    if (currentUser.role === 'student') {
+      const myRequests = requisitions.filter((r) => r.studentId === currentUser.id || r.studentName === currentUser.name).length;
+      return `${myRequests} total requests`;
+    }
+    const critical = unresolvedAlerts.filter((alert) => alert.type === 'Critical').length;
+    return `${critical} critical alerts`;
+  }, [currentUser, requisitions, referrals, unresolvedAlerts]);
+
+  const commandItems: CommandItem[] = useMemo(() => {
+    if (!currentUser) return [];
+
+    const byRole: Record<SystemUser['role'], CommandItem[]> = {
+      student: [
+        { id: 'st-1', label: 'Go to Student Dashboard', hint: '/student/dashboard', keywords: ['home'], onSelect: () => navigate('/student/dashboard') },
+        { id: 'st-2', label: 'Open My Profile', hint: '/student/profile', keywords: ['profile'], onSelect: () => navigate('/student/profile') },
+        { id: 'st-3', label: 'Submit New Symptom Report', hint: '/student/submit-symptom', keywords: ['new request'], onSelect: () => navigate('/student/submit-symptom') },
+        { id: 'st-4', label: 'Track My Requests', hint: '/student/my-requisitions', keywords: ['status'], onSelect: () => navigate('/student/my-requisitions') },
+      ],
+      medical_staff: [
+        { id: 'ms-1', label: 'Go to Staff Dashboard', hint: '/staff/dashboard', keywords: ['home'], onSelect: () => navigate('/staff/dashboard') },
+        { id: 'ms-2', label: 'Search Patients', hint: '/staff/search', keywords: ['student search'], onSelect: () => navigate('/staff/search') },
+        { id: 'ms-3', label: 'Open Review Queue', hint: '/staff/review-queue', keywords: ['pending requisitions'], onSelect: () => navigate('/staff/review-queue') },
+        { id: 'ms-4', label: 'Open Referral Feedback', hint: '/staff/referral-feedback', keywords: ['referral'], onSelect: () => navigate('/staff/referral-feedback') },
+      ],
+      technician: [
+        { id: 'te-1', label: 'Open Upload Portal', hint: '/technician/upload', keywords: ['lab upload'], onSelect: () => navigate('/technician/upload') },
+      ],
+      pharmacy: [
+        { id: 'ph-1', label: 'Open Dispensing Queue', hint: '/pharmacy/queue', keywords: ['queue'], onSelect: () => navigate('/pharmacy/queue') },
+      ],
+      specialist: [
+        { id: 'sp-1', label: 'Go to Specialist Dashboard', hint: '/specialist/dashboard', keywords: ['home'], onSelect: () => navigate('/specialist/dashboard') },
+        { id: 'sp-2', label: 'View Referrals', hint: '/specialist/referrals', keywords: ['cases'], onSelect: () => navigate('/specialist/referrals') },
+        { id: 'sp-3', label: 'Open Consultation Analytics', hint: '/specialist/analytics', keywords: ['metrics', 'chart'], onSelect: () => navigate('/specialist/analytics') },
+      ],
+      admin: [
+        { id: 'ad-1', label: 'Go to Admin Dashboard', hint: '/admin/dashboard', keywords: ['home'], onSelect: () => navigate('/admin/dashboard') },
+        { id: 'ad-2', label: 'Open User Management', hint: '/admin/users', keywords: ['users'], onSelect: () => navigate('/admin/users') },
+        { id: 'ad-3', label: 'Open Audit Logs', hint: '/admin/audit-logs', keywords: ['audit'], onSelect: () => navigate('/admin/audit-logs') },
+        { id: 'ad-4', label: 'Open Reports', hint: '/admin/reports', keywords: ['reports'], onSelect: () => navigate('/admin/reports') },
+      ],
+    };
+
+    return byRole[currentUser.role] ?? [];
+  }, [currentUser, navigate]);
+
+  function refreshAlerts() {
+    const latestAlerts = getAll<SystemAlert>(StorageKey.ALERTS)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    setAlerts(latestAlerts);
+  }
+
+  useSimulatedPolling(15000, refreshAlerts);
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('shr_alert_read_ids', JSON.stringify(readAlertIds));
+  }, [readAlertIds]);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setCommandPaletteOpen((v) => !v);
+      }
+
+      if (event.key === 'Escape') {
+        setNotificationOpen(false);
+        setDropdownOpen(false);
+        setCommandPaletteOpen(false);
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  function markAlertAsRead(alertId: string) {
+    setReadAlertIds((prev) => (prev.includes(alertId) ? prev : [...prev, alertId]));
+  }
+
+  function markAllNotificationsAsRead() {
+    const unresolvedIds = unresolvedAlerts.map((alert) => alert.id);
+    setReadAlertIds((prev) => Array.from(new Set([...prev, ...unresolvedIds])));
+  }
+
+  function resolveAlert(alertId: string) {
+    const updated = update<SystemAlert>(StorageKey.ALERTS, alertId, {
+      isResolved: true,
+      resolvedBy: currentUser?.name ?? 'Unknown User',
+    });
+
+    if (!updated) {
+      toast('Unable to resolve alert.', 'error');
+      return;
+    }
+
+    setReadAlertIds((prev) => Array.from(new Set([...prev, alertId])));
+    refreshAlerts();
+    toast('Alert resolved successfully.', 'success');
+  }
 
   function handleLogout() {
     logout();
@@ -73,6 +232,28 @@ export function Navbar() {
     return 'SHR System';
   }
 
+  function getQuickActionForRole() {
+    if (!currentUser) return null;
+    if (currentUser.role === 'student') {
+      return { label: 'New Request', path: '/student/submit-symptom' };
+    }
+    if (currentUser.role === 'medical_staff') {
+      return { label: 'Review Queue', path: '/staff/review-queue' };
+    }
+    if (currentUser.role === 'technician') {
+      return { label: 'Upload Result', path: '/technician/upload' };
+    }
+    if (currentUser.role === 'pharmacy') {
+      return { label: 'Dispense Queue', path: '/pharmacy/queue' };
+    }
+    if (currentUser.role === 'specialist') {
+      return { label: 'Referrals', path: '/specialist/referrals' };
+    }
+    return { label: 'Audit Logs', path: '/admin/audit-logs' };
+  }
+
+  const quickAction = getQuickActionForRole();
+
   return (
     <header className="border-t-[3px] border-t-blue-600 bg-white shadow-sm z-30 relative">
       <div className="flex items-center justify-between h-14 px-4 md:px-6">
@@ -87,17 +268,57 @@ export function Navbar() {
         </div>
 
         {/* Page title */}
-        <div className="hidden md:block">
+        <div className="hidden md:flex md:items-center md:gap-3">
           <h1 className="text-sm font-semibold text-gray-700">{getPageTitle(location.pathname)}</h1>
+          <div className="hidden lg:flex items-center gap-2 text-xs text-gray-500 border border-gray-200 rounded-md px-2 py-1">
+            <Clock3 className="w-3.5 h-3.5" />
+            <span>{now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
+          {quickWorkloadLabel && (
+            <span className="hidden xl:inline-flex rounded-full bg-blue-50 text-blue-700 text-xs font-medium px-2.5 py-1">
+              {quickWorkloadLabel}
+            </span>
+          )}
         </div>
 
         {/* Right actions */}
         <div className="flex items-center gap-3">
-          {/* Notification bell */}
+          <button
+            type="button"
+            onClick={() => setCommandPaletteOpen(true)}
+            className="hidden md:flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
+            aria-label="Open command palette"
+          >
+            <Search className="h-3.5 w-3.5" />
+            <span>Quick Search</span>
+            <span className="flex items-center gap-0.5 text-[10px] text-gray-400">
+              <Command className="h-3 w-3" />K
+            </span>
+          </button>
+
+          {quickAction && (
             <button
               type="button"
+              onClick={() => navigate(quickAction.path)}
+              className="hidden lg:inline-flex rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+            >
+              {quickAction.label}
+            </button>
+          )}
+
+          {/* Notification bell */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setNotificationOpen((prev) => !prev);
+                if (!notificationOpen) {
+                  setDropdownOpen(false);
+                  markAllNotificationsAsRead();
+                }
+              }}
               className="relative p-2 rounded-full hover:bg-gray-100 transition-colors"
-              aria-label={`${alertCount} unresolved alerts`}
+              aria-label={`${alertCount} unread alerts`}
             >
             <Bell className="w-5 h-5 text-gray-600" />
             {alertCount > 0 && (
@@ -105,13 +326,96 @@ export function Navbar() {
                 {alertCount}
               </span>
             )}
-          </button>
+            </button>
+
+            {notificationOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setNotificationOpen(false)} />
+                <div className="absolute right-0 mt-2 w-[360px] max-w-[90vw] rounded-xl bg-white shadow-lg border border-gray-200 py-2 z-20">
+                  <div className="flex items-center justify-between px-3 pb-2 border-b border-gray-100">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Notifications</p>
+                      <p className="text-xs text-gray-500">{unresolvedAlerts.length} unresolved alerts</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={markAllNotificationsAsRead}
+                      className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      Mark all read
+                    </button>
+                  </div>
+                  <div className="max-h-80 overflow-y-auto px-2 pt-2">
+                    {unresolvedAlerts.length === 0 ? (
+                      <p className="py-8 text-center text-sm text-gray-500">No unresolved alerts.</p>
+                    ) : (
+                      unresolvedAlerts.slice(0, 8).map((alert) => {
+                        const isUnread = !readAlertIds.includes(alert.id);
+                        return (
+                          <div
+                            key={alert.id}
+                            className={`mb-2 rounded-lg border px-3 py-2 ${
+                              isUnread ? 'border-blue-200 bg-blue-50/40' : 'border-gray-200 bg-white'
+                            }`}
+                            onMouseEnter={() => markAlertAsRead(alert.id)}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <p className="text-sm font-medium text-gray-900 leading-snug">{alert.title}</p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {new Date(alert.timestamp).toLocaleString([], {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </p>
+                              </div>
+                              <span
+                                className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                  alert.type === 'Critical'
+                                    ? 'bg-red-100 text-red-700'
+                                    : alert.type === 'Warning'
+                                      ? 'bg-yellow-100 text-yellow-700'
+                                      : 'bg-blue-100 text-blue-700'
+                                }`}
+                              >
+                                {alert.type}
+                              </span>
+                            </div>
+                            <p className="mt-1.5 text-xs text-gray-600">{alert.message}</p>
+                            <div className="mt-2 flex items-center justify-between">
+                              {isUnread ? (
+                                <span className="text-[11px] text-blue-600 font-medium">New</span>
+                              ) : (
+                                <span className="text-[11px] text-gray-400">Seen</span>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => resolveAlert(alert.id)}
+                                className="text-[11px] font-medium text-green-700 hover:text-green-800"
+                              >
+                                Mark resolved
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
 
           {/* Avatar dropdown */}
           <div className="relative">
             <button
               type="button"
-              onClick={() => setDropdownOpen((v) => !v)}
+              onClick={() => {
+                setDropdownOpen((v) => !v);
+                setNotificationOpen(false);
+              }}
               className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
             >
               <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
@@ -147,11 +451,25 @@ export function Navbar() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => { setDropdownOpen(false); setSwitchUserOpen(true); }}
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      setSwitchUserOpen(true);
+                    }}
                     className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     <UserCircle className="w-4 h-4" />
                     Switch User
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      setCommandPaletteOpen(true);
+                    }}
+                    className="w-full flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <span>Quick Search</span>
+                    <span className="text-xs text-gray-400">Ctrl/Cmd + K</span>
                   </button>
                   <button
                     type="button"
@@ -189,6 +507,17 @@ export function Navbar() {
           </div>
         </div>
       )}
+      <CommandPalette
+        open={commandPaletteOpen}
+        commands={commandItems.map((item) => ({
+          ...item,
+          onSelect: () => {
+            setCommandPaletteOpen(false);
+            item.onSelect();
+          },
+        }))}
+        onClose={() => setCommandPaletteOpen(false)}
+      />
     </header>
   );
 }
