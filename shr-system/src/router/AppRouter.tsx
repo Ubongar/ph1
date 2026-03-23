@@ -14,6 +14,7 @@ import StudentSearch from '../pages/staff/StudentSearch';
 import PatientProfile from '../pages/staff/PatientProfile';
 import NewEncounter from '../pages/staff/NewEncounter';
 import DoctorReviewQueue from '../pages/staff/DoctorReviewQueue';
+import ReferralFeedback from '../pages/staff/ReferralFeedback';
 import TechnicianUploadPortal from '../pages/technician/TechnicianUploadPortal';
 import PharmacyQueue from '../pages/pharmacy/PharmacyQueue';
 import AdminDashboard from '../pages/admin/AdminDashboard';
@@ -22,6 +23,8 @@ import AuditLogs from '../pages/admin/AuditLogs';
 import SystemReports from '../pages/admin/SystemReports';
 import SpecialistDashboard from '../pages/specialist/SpecialistDashboard';
 import ReferralDetail from '../pages/specialist/ReferralDetail';
+import ConsultationAnalytics from '../pages/specialist/ConsultationAnalytics';
+import ReferralCompliance from '../pages/admin/ReferralCompliance';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -130,6 +133,14 @@ export function AppRouter() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/staff/referral-feedback"
+        element={
+          <ProtectedRoute roles={['medical_staff']}>
+            <AppShell><ReferralFeedback /></AppShell>
+          </ProtectedRoute>
+        }
+      />
 
       {/* Technician routes */}
       <Route
@@ -165,6 +176,14 @@ export function AppRouter() {
         element={
           <ProtectedRoute roles={['specialist']}>
             <AppShell><SpecialistDashboard /></AppShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/specialist/analytics"
+        element={
+          <ProtectedRoute roles={['specialist']}>
+            <AppShell><ConsultationAnalytics /></AppShell>
           </ProtectedRoute>
         }
       />
@@ -207,6 +226,14 @@ export function AppRouter() {
         element={
           <ProtectedRoute roles={['admin']}>
             <AppShell><SystemReports /></AppShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/referral-compliance"
+        element={
+          <ProtectedRoute roles={['admin']}>
+            <AppShell><ReferralCompliance /></AppShell>
           </ProtectedRoute>
         }
       />

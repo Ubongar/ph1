@@ -68,6 +68,7 @@ export interface Referral {
   requestingStaffName: string;
   specialistId?: string;
   specialistName?: string;
+  parentReferralId?: string;
   specialty: string;
   reason: string;
   priority: ReferralPriority;
@@ -75,6 +76,9 @@ export interface Referral {
   requestedAt: string;
   reviewedAt?: string;
   consultationDate?: string;
+  consultationDurationMinutes?: number;
+  consultationOutcome?: 'Resolved' | 'Improved' | 'No Change' | 'Escalated' | 'Follow-up Required';
+  complianceStatus?: 'Compliant' | 'Delayed' | 'Overdue';
   consultationNotes?: string;
 }
 export type ResultType = 'Blood Test' | 'Urinalysis' | 'Imaging' | 'Microbiology' | 'Histology' | 'ECG' | 'Other';
@@ -92,7 +96,8 @@ export type AuditAction =
   | 'APPROVE_REQUISITION' | 'REJECT_REQUISITION' | 'UPLOAD_RESULT'
   | 'DISPENSE_MEDICATION' | 'CREATE_USER' | 'DEACTIVATE_USER'
   | 'RESET_PASSWORD' | 'EXPORT_REPORT' | 'VIEW_AUDIT_LOG'
-  | 'CREATE_REFERRAL' | 'ACCEPT_REFERRAL' | 'COMPLETE_REFERRAL' | 'DECLINE_REFERRAL';
+  | 'CREATE_REFERRAL' | 'ACCEPT_REFERRAL' | 'COMPLETE_REFERRAL' | 'DECLINE_REFERRAL'
+  | 'SUBMIT_CONSULTATION_NOTES' | 'REFER_TO_SPECIALIST' | 'CLOSE_REFERRAL' | 'GENERATE_QA_REPORT';
 export interface AuditLog {
   id: string; timestamp: string; userId: string; userName: string;
   userRole: UserRole; action: AuditAction;

@@ -20,6 +20,7 @@ export default function SpecialistDashboard() {
   const pendingCount = myReferrals.filter((r) => r.status === 'Requested' || r.status === 'Under Review').length;
   const acceptedCount = myReferrals.filter((r) => r.status === 'Accepted' || r.status === 'In Consultation').length;
   const completedCount = myReferrals.filter((r) => r.status === 'Completed').length;
+  const followUpRequiredCount = myReferrals.filter((r) => r.consultationOutcome === 'Follow-up Required').length;
   const statusClass: Record<Referral['status'], string> = {
     Requested: 'bg-yellow-100 text-yellow-700',
     'Under Review': 'bg-blue-100 text-blue-700',
@@ -46,6 +47,10 @@ export default function SpecialistDashboard() {
         <div className="bg-white border border-gray-200 rounded-xl p-4">
           <p className="text-xs text-gray-500 uppercase">Completed</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">{completedCount}</p>
+        </div>
+        <div className="bg-white border border-gray-200 rounded-xl p-4">
+          <p className="text-xs text-gray-500 uppercase">Follow-up Needed</p>
+          <p className="text-2xl font-bold text-gray-900 mt-1">{followUpRequiredCount}</p>
         </div>
       </div>
 

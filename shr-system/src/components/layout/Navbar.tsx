@@ -57,16 +57,19 @@ export function Navbar() {
     if (pathname.startsWith('/staff/dashboard')) return 'Medical Staff Dashboard';
     if (pathname.startsWith('/staff/search')) return 'Student Search';
     if (pathname.startsWith('/staff/review-queue')) return 'Doctor Review Queue';
+    if (pathname.startsWith('/staff/referral-feedback')) return 'Referral Feedback';
     if (pathname.startsWith('/staff/patient/')) return 'Patient Profile';
     if (pathname.startsWith('/technician/upload')) return 'Technician Upload Portal';
     if (pathname.startsWith('/pharmacy/queue')) return 'Pharmacy Queue';
     if (pathname.startsWith('/specialist/dashboard')) return 'Specialist Dashboard';
     if (pathname.startsWith('/specialist/referrals')) return 'Referrals';
+    if (pathname.startsWith('/specialist/analytics')) return 'Consultation Analytics';
     if (pathname.startsWith('/specialist/referral/')) return 'Referral Detail';
     if (pathname.startsWith('/admin/dashboard')) return 'Admin Dashboard';
     if (pathname.startsWith('/admin/users')) return 'User Management';
     if (pathname.startsWith('/admin/audit-logs')) return 'Audit Logs';
     if (pathname.startsWith('/admin/reports')) return 'System Reports';
+    if (pathname.startsWith('/admin/referral-compliance')) return 'Referral Compliance';
     return 'SHR System';
   }
 

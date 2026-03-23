@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Search, ClipboardList,
-  ShoppingBag, Users, FileText, BarChart3, Upload, Stethoscope,
+  ShoppingBag, Users, FileText, BarChart3, Upload, Stethoscope, ShieldCheck,
   ChevronLeft, ChevronRight, UserCircle, PlusCircle,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -25,6 +25,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Dashboard', to: '/staff/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
     { label: 'Search Patients', to: '/staff/search', icon: <Search className="w-5 h-5" /> },
     { label: 'Review Queue', to: '/staff/review-queue', icon: <ClipboardList className="w-5 h-5" /> },
+    { label: 'Referral Feedback', to: '/staff/referral-feedback', icon: <Stethoscope className="w-5 h-5" /> },
   ],
   technician: [
     { label: 'Upload Results', to: '/technician/upload', icon: <Upload className="w-5 h-5" /> },
@@ -35,12 +36,14 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   specialist: [
     { label: 'Dashboard', to: '/specialist/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
     { label: 'Referrals', to: '/specialist/referrals', icon: <Stethoscope className="w-5 h-5" /> },
+    { label: 'Analytics', to: '/specialist/analytics', icon: <BarChart3 className="w-5 h-5" /> },
   ],
   admin: [
     { label: 'Dashboard', to: '/admin/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
     { label: 'Users', to: '/admin/users', icon: <Users className="w-5 h-5" /> },
     { label: 'Audit Logs', to: '/admin/audit-logs', icon: <FileText className="w-5 h-5" /> },
     { label: 'Reports', to: '/admin/reports', icon: <BarChart3 className="w-5 h-5" /> },
+    { label: 'Referral Compliance', to: '/admin/referral-compliance', icon: <ShieldCheck className="w-5 h-5" /> },
   ],
 };
 
