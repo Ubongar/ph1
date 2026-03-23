@@ -106,6 +106,16 @@ Detailed route and workflow mapping is documented in `structure/workflow.md`.
 - Start here: `README.md`
 - How to operate and test role flows: `GUIDE.md`
 - Deep architecture and internals: `structure/workflow.md`
+- License terms: `license.md`
+
+## License
+
+This project is proprietary software and is not open source.
+
+- All rights are reserved by the copyright owner.
+- No use, copying, modification, redistribution, or derivative works are permitted
+	without prior written authorization.
+- See `license.md` for full legal terms.
 
 ## Resetting Mock Data
 

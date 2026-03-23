@@ -184,3 +184,12 @@ npm run lint
 
 - Project setup and high-level overview: `README.md`
 - Deep internal architecture and workflow design: `structure/workflow.md`
+
+## 9) License Notice
+
+This software is proprietary and not open source.
+
+- All rights are reserved by the owner.
+- You may not use, copy, modify, distribute, or create derivative works without
+	prior written authorization.
+- See `license.md` for complete legal terms.
