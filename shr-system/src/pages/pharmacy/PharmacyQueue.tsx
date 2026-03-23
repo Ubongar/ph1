@@ -45,7 +45,12 @@ export default function PharmacyQueue() {
   const dispensedToday = requisitions.filter(r => r.status === 'Dispensed' && r.dispensedAt && new Date(r.dispensedAt).getTime() >= oneDayAgo);
 
   const markReady = (req: MedicationRequisition) => {
-    update<MedicationRequisition>(StorageKey.REQUISITIONS, req.id, { status: 'Ready for Pickup' });
+    update<MedicationRequisition>(
+      StorageKey.REQUISITIONS,
+      req.id,
+      { status: 'Ready for Pickup' },
+      { autoAudit: false },
+    );
     createAuditEntry({ userId: currentUser!.id, userName: currentUser!.name, userRole: currentUser!.role,
       action: 'DISPENSE_MEDICATION', resourceType: 'Requisition', resourceId: req.id,
       resourceDescription: `Marked ready for pickup: ${getStudentName(req.studentId, students)}`,
@@ -56,7 +61,12 @@ export default function PharmacyQueue() {
 
   const confirmDispense = () => {
     if (!dispenseTarget || !currentUser) return;
-    update<MedicationRequisition>(StorageKey.REQUISITIONS, dispenseTarget.id, { status: 'Dispensed', dispensedAt: new Date().toISOString() });
+    update<MedicationRequisition>(
+      StorageKey.REQUISITIONS,
+      dispenseTarget.id,
+      { status: 'Dispensed', dispensedAt: new Date().toISOString() },
+      { autoAudit: false },
+    );
     createAuditEntry({ userId: currentUser.id, userName: currentUser.name, userRole: currentUser.role,
       action: 'DISPENSE_MEDICATION', resourceType: 'Requisition', resourceId: dispenseTarget.id,
       resourceDescription: `Dispensed to: ${getStudentName(dispenseTarget.studentId, students)}`,

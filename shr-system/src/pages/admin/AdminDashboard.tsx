@@ -47,7 +47,12 @@ export default function AdminDashboard() {
 
   const resolveAlert = (alert: SystemAlert) => {
     if (!currentUser) return;
-    update<SystemAlert>(StorageKey.ALERTS, alert.id, { isResolved: true, resolvedBy: currentUser.name });
+    update<SystemAlert>(
+      StorageKey.ALERTS,
+      alert.id,
+      { isResolved: true, resolvedBy: currentUser.name },
+      { autoAudit: false },
+    );
     createAuditEntry({ userId: currentUser.id, userName: currentUser.name, userRole: currentUser.role,
       action: 'EDIT_RECORD', resourceType: 'System', resourceId: alert.id,
       resourceDescription: `Resolved alert: ${alert.title}`, status: 'Success' });

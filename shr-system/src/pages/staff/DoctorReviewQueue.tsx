@@ -162,7 +162,7 @@ export default function DoctorReviewQueue() {
       reviewedAt: new Date().toISOString(),
       doctorNotes: doctorNote,
       approvedMedications,
-    })
+    }, { autoAudit: false })
 
     createAuditEntry({
       userId: currentUser.id,
@@ -196,7 +196,7 @@ export default function DoctorReviewQueue() {
       reviewedByStaffName: currentUser.name,
       reviewedAt: new Date().toISOString(),
       doctorNotes: doctorNote,
-    })
+    }, { autoAudit: false })
 
     createAuditEntry({
       userId: currentUser.id,
@@ -227,7 +227,7 @@ export default function DoctorReviewQueue() {
       reviewedByStaffName: currentUser.name,
       reviewedAt: new Date().toISOString(),
       doctorNotes: note,
-    })
+    }, { autoAudit: false })
 
     createAuditEntry({
       userId: currentUser.id,

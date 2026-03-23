@@ -36,6 +36,34 @@ export default function ReferralDetail() {
   }
   const activeReferral = referral;
 
+  if (!currentUser) {
+    return (
+      <div className="p-6">
+        <button type="button" onClick={() => navigate('/login')} className="text-sm text-blue-600 hover:underline">
+          Back
+        </button>
+        <div className="mt-4 bg-white border border-red-200 rounded-xl p-6 text-sm text-red-700">
+          You must be signed in to manage referrals.
+        </div>
+      </div>
+    );
+  }
+
+  const canManageReferral = !activeReferral.specialistId || activeReferral.specialistId === currentUser.id;
+
+  if (!canManageReferral) {
+    return (
+      <div className="p-6">
+        <button type="button" onClick={() => navigate('/specialist/dashboard')} className="text-sm text-blue-600 hover:underline">
+          Back
+        </button>
+        <div className="mt-4 bg-white border border-red-200 rounded-xl p-6 text-sm text-red-700">
+          You are not authorized to manage this referral.
+        </div>
+      </div>
+    );
+  }
+
   function logAction(
     action:
       | 'ACCEPT_REFERRAL'
@@ -67,7 +95,7 @@ export default function ReferralDetail() {
       specialistId: currentUser.id,
       specialistName: currentUser.name,
       reviewedAt: new Date().toISOString(),
-    });
+    }, { autoAudit: false });
     logAction('ACCEPT_REFERRAL', `Accepted referral for ${activeReferral.studentName}`);
     toast('Referral accepted', 'success');
     setBusy(false);
@@ -79,7 +107,7 @@ export default function ReferralDetail() {
     update<Referral>(StorageKey.REFERRALS, activeReferral.id, {
       status: 'Declined',
       reviewedAt: new Date().toISOString(),
-    });
+    }, { autoAudit: false });
     logAction('DECLINE_REFERRAL', `Declined referral for ${activeReferral.studentName}`);
     toast('Referral declined', 'warning');
     setBusy(false);
@@ -105,7 +133,7 @@ export default function ReferralDetail() {
         : undefined,
       consultationOutcome: outcome,
       complianceStatus,
-    });
+    }, { autoAudit: false });
     logAction('SUBMIT_CONSULTATION_NOTES', `Submitted consultation notes for ${activeReferral.studentName}`);
     logAction('COMPLETE_REFERRAL', `Completed referral consultation for ${activeReferral.studentName}`);
     logAction('CLOSE_REFERRAL', `Closed referral for ${activeReferral.studentName}`);
@@ -157,14 +185,14 @@ export default function ReferralDetail() {
       consultationNotes: notes.trim() || undefined,
       complianceStatus: 'Compliant',
     };
-    create<Referral>(StorageKey.REFERRALS, escalatedReferral);
+    create<Referral>(StorageKey.REFERRALS, escalatedReferral, { autoAudit: false });
     update<Referral>(StorageKey.REFERRALS, activeReferral.id, {
       consultationOutcome: 'Escalated',
       status: 'Completed',
       reviewedAt: now,
       consultationNotes: notes.trim() || activeReferral.consultationNotes,
       complianceStatus: 'Compliant',
-    });
+    }, { autoAudit: false });
     logAction('REFER_TO_SPECIALIST', `Escalated referral for ${activeReferral.studentName} to ${matching.name}`);
     logAction('COMPLETE_REFERRAL', `Completed original referral after escalation for ${activeReferral.studentName}`);
     toast('Referral escalated to another specialist', 'success');

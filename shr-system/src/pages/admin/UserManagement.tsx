@@ -70,7 +70,12 @@ export default function UserManagement() {
   const saveUser = () => {
     if (!currentUser) return;
     if (editTarget) {
-      update<SystemUser>(StorageKey.USERS, editTarget.id, { name: form.name, email: form.email, department: form.department, staffId: form.staffId, matricNumber: form.matricNumber });
+      update<SystemUser>(
+        StorageKey.USERS,
+        editTarget.id,
+        { name: form.name, email: form.email, department: form.department, staffId: form.staffId, matricNumber: form.matricNumber },
+        { autoAudit: false },
+      );
       createAuditEntry({ userId: currentUser.id, userName: currentUser.name, userRole: currentUser.role, action: 'EDIT_RECORD', resourceType: 'User', resourceId: editTarget.id, resourceDescription: `Edited user: ${form.name}`, status: 'Success' });
       toast('User updated', 'success');
     } else {
@@ -84,7 +89,7 @@ export default function UserManagement() {
         isActive: true,
         createdAt: new Date().toISOString(),
         createdBy: currentUser.id,
-      });
+      }, { autoAudit: false });
       createAuditEntry({ userId: currentUser.id, userName: currentUser.name, userRole: currentUser.role, action: 'CREATE_USER', resourceType: 'User', resourceId: createdUser.id, resourceDescription: `Created user: ${form.name}`, status: 'Success' });
       toast('User created', 'success');
     }
@@ -94,7 +99,7 @@ export default function UserManagement() {
 
   const deactivate = () => {
     if (!deactivateTarget || !currentUser) return;
-    update<SystemUser>(StorageKey.USERS, deactivateTarget.id, { isActive: false });
+    update<SystemUser>(StorageKey.USERS, deactivateTarget.id, { isActive: false }, { autoAudit: false });
     createAuditEntry({ userId: currentUser.id, userName: currentUser.name, userRole: currentUser.role, action: 'DEACTIVATE_USER', resourceType: 'User', resourceId: deactivateTarget.id, resourceDescription: `Deactivated: ${deactivateTarget.name}`, status: 'Success' });
     toast('User deactivated', 'success');
     setDeactivateTarget(null);
@@ -103,7 +108,7 @@ export default function UserManagement() {
 
   const reactivate = (u: SystemUser) => {
     if (!currentUser) return;
-    update<SystemUser>(StorageKey.USERS, u.id, { isActive: true });
+    update<SystemUser>(StorageKey.USERS, u.id, { isActive: true }, { autoAudit: false });
     createAuditEntry({ userId: currentUser.id, userName: currentUser.name, userRole: currentUser.role, action: 'EDIT_RECORD', resourceType: 'User', resourceId: u.id, resourceDescription: `Reactivated: ${u.name}`, status: 'Success' });
     toast('User reactivated', 'success');
     reload();

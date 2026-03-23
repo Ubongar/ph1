@@ -195,7 +195,7 @@ export default function PatientProfile() {
       priority: referralPriority,
       status: 'Requested',
       requestedAt: new Date().toISOString(),
-    })
+    }, { autoAudit: false })
 
     createAuditEntry({
       userId: currentUser.id,

@@ -13,6 +13,8 @@ export enum StorageKey {
 }
 
 type AuditResourceType = AuditLog['resourceType'];
+const MAX_AUDIT_CHANGE_DETAILS_LENGTH = 500;
+const AUDIT_CHANGE_DETAILS_ELLIPSIS = '...';
 
 const KEY_TO_RESOURCE_TYPE: Partial<Record<StorageKey, AuditResourceType>> = {
   [StorageKey.STUDENTS]: 'Student',
@@ -72,6 +74,24 @@ function createAutoAuditEntry(
   });
 }
 
+interface StorageMutationOptions {
+  autoAudit?: boolean;
+  auditChangeDetails?: string;
+}
+
+function toAuditChangeDetails(value: unknown): string | undefined {
+  try {
+    const raw = JSON.stringify(value);
+    if (!raw) return undefined;
+    const maxContentLength = MAX_AUDIT_CHANGE_DETAILS_LENGTH - AUDIT_CHANGE_DETAILS_ELLIPSIS.length;
+    return raw.length > MAX_AUDIT_CHANGE_DETAILS_LENGTH
+      ? `${raw.slice(0, maxContentLength)}${AUDIT_CHANGE_DETAILS_ELLIPSIS}`
+      : raw;
+  } catch {
+    return undefined;
+  }
+}
+
 export function isLocalStorageAvailable(): boolean {
   try {
     const testKey = '__shr_test__';
@@ -101,12 +121,15 @@ export function getById<T extends { id: string }>(key: StorageKey, id: string): 
 export function create<T extends { id: string }>(
   key: StorageKey,
   item: Omit<T, 'id'> & Partial<Pick<T, 'id'>>,
+  options: StorageMutationOptions = {},
 ): T {
   const items = getAll<T>(key);
   const newItem = { ...item, id: item.id ?? crypto.randomUUID() } as T;
   items.push(newItem);
   localStorage.setItem(key, JSON.stringify(items));
-  createAutoAuditEntry(key, 'CREATE_RECORD', newItem.id);
+  if (options.autoAudit !== false) {
+    createAutoAuditEntry(key, 'CREATE_RECORD', newItem.id, options.auditChangeDetails);
+  }
   return newItem;
 }
 
@@ -114,6 +137,7 @@ export function update<T extends { id: string }>(
   key: StorageKey,
   id: string,
   updates: Partial<T>,
+  options: StorageMutationOptions = {},
 ): T | null {
   const items = getAll<T>(key);
   const index = items.findIndex((item) => item.id === id);
@@ -121,7 +145,10 @@ export function update<T extends { id: string }>(
   const updated = { ...items[index], ...updates } as T;
   items[index] = updated;
   localStorage.setItem(key, JSON.stringify(items));
-  createAutoAuditEntry(key, 'EDIT_RECORD', updated.id, JSON.stringify(updates));
+  if (options.autoAudit !== false) {
+    const changeDetails = options.auditChangeDetails ?? toAuditChangeDetails(updates);
+    createAutoAuditEntry(key, 'EDIT_RECORD', updated.id, changeDetails);
+  }
   return updated;
 }
 
