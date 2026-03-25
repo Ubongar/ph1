@@ -7,6 +7,11 @@ import { StorageKey, getAll, getRequisitionsByStudentId, createAuditEntry } from
 import type { Encounter, DiagnosticResult, MedicationRequisition } from '../../types/types';
 import { getHospitalNumber } from '../../utils/studentIdentifiers';
 
+const AMBULANCE_CONTACTS = [
+  { label: 'Campus Ambulance', phone: '+2348000000011' },
+  { label: 'BUTH Emergency Line', phone: '+2348000000012' },
+];
+
 export default function StudentProfile() {
   const { currentUser, currentStudent } = useAuth();
   const { toast } = useToast();
@@ -163,6 +168,28 @@ export default function StudentProfile() {
         </button>
       </div>
 
+      <div className="rounded-xl border border-red-200 bg-gradient-to-r from-red-50 to-rose-50 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold text-red-700 uppercase tracking-wide">Emergency Ambulance</p>
+            <p className="text-sm text-red-800 mt-1">Immediate transport support for urgent medical situations.</p>
+          </div>
+          <span className="text-[11px] px-2 py-1 rounded-full bg-red-100 text-red-700 font-semibold">24/7</span>
+        </div>
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {AMBULANCE_CONTACTS.map((contact) => (
+            <a
+              key={contact.phone}
+              href={`tel:${contact.phone}`}
+              className="flex items-center justify-between rounded-lg border border-red-100 bg-white px-3 py-2 hover:bg-red-100 transition-colors"
+            >
+              <span className="text-xs text-gray-600">{contact.label}</span>
+              <span className="text-sm font-semibold text-red-700">{contact.phone}</span>
+            </a>
+          ))}
+        </div>
+      </div>
+
       <Tabs.Root defaultValue="personal">
         <Tabs.List className="flex bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <Tabs.Trigger
@@ -251,6 +278,22 @@ export default function StudentProfile() {
               ))}
             </div>
           )}
+
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 space-y-3">
+            <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              Ambulance Details
+            </h2>
+            {AMBULANCE_CONTACTS.map((contact) => (
+              <a
+                key={contact.phone}
+                href={`tel:${contact.phone}`}
+                className="flex justify-between items-center pb-2 border-b border-gray-50 hover:bg-red-50 rounded px-1"
+              >
+                <span className="text-xs text-gray-500">{contact.label}</span>
+                <span className="text-sm font-semibold text-red-700">{contact.phone}</span>
+              </a>
+            ))}
+          </div>
         </Tabs.Content>
 
         {/* ── Tab 2: Allergies & Conditions ── */}

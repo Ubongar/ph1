@@ -15,6 +15,11 @@ const HEALTH_TIPS = [
   'Eat balanced meals with fruits and vegetables every day.',
 ];
 
+const AMBULANCE_CONTACTS = [
+  { label: 'Campus Ambulance', phone: '+2348000000011' },
+  { label: 'BUTH Emergency Line', phone: '+2348000000012' },
+];
+
 const REQUISITION_STEPS: string[] = [
   'Submitted',
   'Under Review',
@@ -242,6 +247,25 @@ export default function StudentDashboard() {
             </p>
             <p className="text-sm text-teal-800">{tip}</p>
           </div>
+        </div>
+      </div>
+
+      {/* Emergency Ambulance Contacts */}
+      <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+        <p className="text-xs font-semibold text-red-700 uppercase tracking-wide mb-2">
+          Emergency Ambulance
+        </p>
+        <div className="space-y-2">
+          {AMBULANCE_CONTACTS.map((contact) => (
+            <a
+              key={contact.phone}
+              href={`tel:${contact.phone}`}
+              className="flex items-center justify-between px-3 py-2 rounded-lg bg-white border border-red-100 text-sm hover:bg-red-100 transition-colors"
+            >
+              <span className="text-gray-700">{contact.label}</span>
+              <span className="font-semibold text-red-700">{contact.phone}</span>
+            </a>
+          ))}
         </div>
       </div>
     </div>
