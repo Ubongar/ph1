@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { create, getAll, getById, getRequisitionsByStudentId, StorageKey, createAuditEntry } from '../../services/storage'
 import { useAuth } from '../../context/AuthContext'
+import { getHospitalNumber } from '../../utils/studentIdentifiers'
 import type {
   Student,
   SystemUser,
@@ -137,6 +138,8 @@ export default function PatientProfile() {
 
   if (!student) return null
 
+  const hospitalNumber = getHospitalNumber(systemUser?.matricNumber, student.id)
+
   const latestEncounter = encounters[0]
   const criticalAllergies = student.allergies.filter((a) => a.severity === 'Life-threatening')
 
@@ -243,6 +246,10 @@ export default function PatientProfile() {
               )}
             </div>
             <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="col-span-2">
+                <span className="text-xs text-gray-500">Hospital Number</span>
+                <p className="font-medium text-gray-900">{hospitalNumber}</p>
+              </div>
               <div>
                 <span className="text-xs text-gray-500">Age</span>
                 <p className="font-medium text-gray-900">{calcAge(student.dateOfBirth)} yrs</p>

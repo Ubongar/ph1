@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Search, Upload, X, FileText, Image, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { getAll, create, createAuditEntry, StorageKey } from '../../services/storage';
-import type { Student, DiagnosticResult, ResultType } from '../../types/types';
+import { getAll, create, update, createAuditEntry, StorageKey } from '../../services/storage';
+import type { Student, DiagnosticResult, ResultType, Referral } from '../../types/types';
 import { useToast } from '../../components/shared/Toast';
 import { PageHeader } from '../../components/shared/PageHeader';
 
@@ -32,6 +32,10 @@ export default function TechnicianUploadPortal() {
   const [criticalFlag, setCriticalFlag] = useState(false);
   const [criticalReason, setCriticalReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [editingReferralId, setEditingReferralId] = useState<string | null>(null);
+  const [reviewStatus, setReviewStatus] = useState<Extract<Referral['status'], 'Under Review' | 'In Consultation' | 'Completed'>>('Under Review');
+  const [reviewNotes, setReviewNotes] = useState('');
+  const [updatingReferral, setUpdatingReferral] = useState(false);
 
   const search = useCallback((q: string) => {
     const students = getAll<Student>(StorageKey.STUDENTS);
@@ -51,6 +55,9 @@ export default function TechnicianUploadPortal() {
     setSelectedPatient(s);
     setQuery('');
     setShowDropdown(false);
+    setEditingReferralId(null);
+    setReviewNotes('');
+    setReviewStatus('Under Review');
   };
 
   const handleFile = (file: File) => {
@@ -64,6 +71,72 @@ export default function TechnicianUploadPortal() {
   };
 
   const disabled = !selectedPatient;
+
+  const patientReferrals = selectedPatient
+    ? getAll<Referral>(StorageKey.REFERRALS)
+        .filter((referral) => referral.studentId === selectedPatient.id)
+        .sort((a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime())
+    : [];
+
+  const startEditingReferral = (referral: Referral) => {
+    setEditingReferralId(referral.id);
+    if (
+      referral.status === 'Under Review'
+      || referral.status === 'In Consultation'
+      || referral.status === 'Completed'
+    ) {
+      setReviewStatus(referral.status);
+    } else {
+      setReviewStatus('Under Review');
+    }
+    setReviewNotes(referral.technicianReviewNotes ?? '');
+  };
+
+  const saveReferralReview = async () => {
+    if (!editingReferralId || !selectedPatient || !currentUser) return;
+    if (!reviewNotes.trim()) {
+      toast('Please add your review notes before saving', 'error');
+      return;
+    }
+
+    setUpdatingReferral(true);
+
+    const updated = update<Referral>(
+      StorageKey.REFERRALS,
+      editingReferralId,
+      {
+        status: reviewStatus,
+        technicianReviewedById: currentUser.id,
+        technicianReviewedByName: currentUser.name,
+        technicianReviewedAt: new Date().toISOString(),
+        technicianReviewNotes: reviewNotes.trim(),
+      },
+      { autoAudit: false },
+    );
+
+    if (!updated) {
+      toast('Unable to update referral. Please try again.', 'error');
+      setUpdatingReferral(false);
+      return;
+    }
+
+    createAuditEntry({
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userRole: currentUser.role,
+      action: 'EDIT_RECORD',
+      resourceType: 'Referral',
+      resourceId: updated.id,
+      resourceDescription: `Technician reviewed referral for ${selectedPatient.name}`,
+      status: 'Success',
+      changeDetails: JSON.stringify({ status: reviewStatus }),
+    });
+
+    toast('Referral review saved', 'success');
+    setUpdatingReferral(false);
+    setEditingReferralId(null);
+    setReviewNotes('');
+  };
 
   const resetForm = () => {
     setTestType('Blood Test'); setTestName(''); setDoctorName(currentUser?.name ?? '');
@@ -140,21 +213,103 @@ export default function TechnicianUploadPortal() {
             )}
           </div>
           {selectedPatient ? (
-            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="font-semibold text-gray-900">{selectedPatient.name}</div>
-                  <div className="text-sm text-gray-600 mt-1">ID: {selectedPatient.id}</div>
-                  <div className="text-sm text-gray-600">Blood Group: <span className="font-medium text-red-600">{selectedPatient.bloodGroup}</span></div>
-                  {selectedPatient.allergies.length > 0 && (
-                    <div className="mt-2">
-                      <span className="text-xs font-medium text-orange-700">Allergies: </span>
-                      <span className="text-xs text-orange-600">{selectedPatient.allergies.map(a => a.allergen).join(', ')}</span>
-                    </div>
-                  )}
+            <div className="mt-4 space-y-4">
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="font-semibold text-gray-900">{selectedPatient.name}</div>
+                    <div className="text-sm text-gray-600 mt-1">ID: {selectedPatient.id}</div>
+                    <div className="text-sm text-gray-600">Blood Group: <span className="font-medium text-red-600">{selectedPatient.bloodGroup}</span></div>
+                    {selectedPatient.allergies.length > 0 && (
+                      <div className="mt-2">
+                        <span className="text-xs font-medium text-orange-700">Allergies: </span>
+                        <span className="text-xs text-orange-600">{selectedPatient.allergies.map(a => a.allergen).join(', ')}</span>
+                      </div>
+                    )}
+                  </div>
+                  <button type="button" onClick={() => setSelectedPatient(null)}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-medium">Clear</button>
                 </div>
-                <button type="button" onClick={() => setSelectedPatient(null)}
-                  className="text-xs text-blue-600 hover:text-blue-800 font-medium">Clear</button>
+              </div>
+
+              <div className="p-4 bg-white border border-gray-200 rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-gray-800">Referral Review</h3>
+                  <span className="text-xs text-gray-500">{patientReferrals.length} referral(s)</span>
+                </div>
+
+                {patientReferrals.length === 0 ? (
+                  <p className="text-xs text-gray-500">No referral found for this student.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {patientReferrals.map((referral) => {
+                      const isEditing = editingReferralId === referral.id;
+                      return (
+                        <div key={referral.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{referral.specialty}</p>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                Requested {new Date(referral.requestedAt).toLocaleDateString('en-GB')} by {referral.requestingStaffName}
+                              </p>
+                              <p className="text-xs text-gray-600 mt-1">Status: {referral.status}</p>
+                              {referral.technicianReviewNotes && (
+                                <p className="text-xs text-gray-600 mt-1">
+                                  Last tech note: {referral.technicianReviewNotes}
+                                </p>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => startEditingReferral(referral)}
+                              className="text-xs px-2.5 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                            >
+                              Edit Review
+                            </button>
+                          </div>
+
+                          {isEditing && (
+                            <div className="mt-3 space-y-2">
+                              <select
+                                value={reviewStatus}
+                                onChange={(e) => setReviewStatus(e.target.value as Extract<Referral['status'], 'Under Review' | 'In Consultation' | 'Completed'>)}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="Under Review">Under Review</option>
+                                <option value="In Consultation">In Consultation</option>
+                                <option value="Completed">Completed</option>
+                              </select>
+                              <textarea
+                                value={reviewNotes}
+                                onChange={(e) => setReviewNotes(e.target.value)}
+                                rows={3}
+                                placeholder="Add technician review for this referral..."
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                              <div className="flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => void saveReferralReview()}
+                                  disabled={updatingReferral}
+                                  className="px-3 py-2 rounded-lg bg-green-600 text-white text-xs font-medium hover:bg-green-700 disabled:opacity-50"
+                                >
+                                  {updatingReferral ? 'Saving...' : 'Save Review'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { setEditingReferralId(null); setReviewNotes(''); }}
+                                  className="px-3 py-2 rounded-lg border border-gray-300 text-xs font-medium text-gray-700 hover:bg-gray-100"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           ) : (
@@ -165,7 +320,7 @@ export default function TechnicianUploadPortal() {
         </div>
 
         {/* Right: Upload Form */}
-        <div className={`bg-white rounded-xl border rounded-xl p-6 relative ${disabled ? 'opacity-60' : ''}`}>
+        <div className={`bg-white rounded-xl border p-6 relative ${disabled ? 'opacity-60' : ''}`}>
           {disabled && (
             <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center rounded-xl">
               <div className="bg-gray-800 text-white text-sm px-4 py-2 rounded-lg">Select a patient first to enable upload</div>

@@ -52,7 +52,9 @@ export default function ReferralFeedback() {
                     <span className="text-xs text-gray-400">Pending</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-gray-600 text-xs">{r.consultationNotes ?? '—'}</td>
+                <td className="px-4 py-3 text-gray-600 text-xs">
+                  {r.consultationNotes ?? r.technicianReviewNotes ?? '—'}
+                </td>
               </tr>
             ))}
             {myReferrals.length === 0 && (

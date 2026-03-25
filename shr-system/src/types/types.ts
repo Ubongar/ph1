@@ -80,6 +80,10 @@ export interface Referral {
   consultationOutcome?: 'Resolved' | 'Improved' | 'No Change' | 'Escalated' | 'Follow-up Required';
   complianceStatus?: 'Compliant' | 'Delayed' | 'Overdue';
   consultationNotes?: string;
+  technicianReviewedById?: string;
+  technicianReviewedByName?: string;
+  technicianReviewedAt?: string;
+  technicianReviewNotes?: string;
 }
 export type ResultType = 'Blood Test' | 'Urinalysis' | 'Imaging' | 'Microbiology' | 'Histology' | 'ECG' | 'Other';
 export type ResultStatus = 'Pending' | 'Processing' | 'Completed' | 'Flagged' | 'Requires Review';

@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/shared';
 import { StorageKey, getAll, getRequisitionsByStudentId } from '../../services/storage';
 import type { Encounter, MedicationRequisition } from '../../types/types';
+import { getHospitalNumber } from '../../utils/studentIdentifiers';
 
 const HEALTH_TIPS = [
   'Drink 8 glasses of water daily to stay hydrated.',
@@ -62,6 +63,10 @@ export default function StudentDashboard() {
     (a) => a.severity === 'Life-threatening',
   );
 
+  const hospitalNumber = currentStudent
+    ? getHospitalNumber(currentUser?.matricNumber, currentStudent.id)
+    : '—';
+
   const tip = HEALTH_TIPS[new Date().getDay() % HEALTH_TIPS.length];
   const initials = currentUser
     ? currentUser.name
@@ -90,9 +95,12 @@ export default function StudentDashboard() {
           <p className="text-sm text-blue-100">{getGreeting()},</p>
           <h1 className="text-lg font-bold">{currentUser?.name ?? 'Student'}</h1>
           {currentStudent && (
-            <p className="text-xs text-blue-200 mt-0.5">
-              {currentStudent.department} · Level {currentStudent.level}
-            </p>
+            <>
+              <p className="text-xs text-blue-200 mt-0.5">
+                {currentStudent.department} · Level {currentStudent.level}
+              </p>
+              <p className="text-xs text-blue-100 mt-0.5">Hospital No: {hospitalNumber}</p>
+            </>
           )}
         </div>
       </div>

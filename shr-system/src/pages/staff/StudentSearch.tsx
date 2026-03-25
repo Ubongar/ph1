@@ -4,6 +4,7 @@ import { Search, Eye, AlertTriangle } from 'lucide-react'
 import { getAll, StorageKey } from '../../services/storage'
 import type { Student, SystemUser, MedicationRequisition, Encounter } from '../../types/types'
 import { SkeletonRow, EmptyState } from '../../components/shared'
+import { getHospitalNumber } from '../../utils/studentIdentifiers'
 
 const ITEMS_PER_PAGE = 10
 const DEPARTMENTS = [
@@ -30,6 +31,7 @@ const BLOOD_GROUPS: Student['bloodGroup'][] = [
 interface StudentRow {
   student: Student
   matricNumber: string
+  hospitalNumber: string
   lastVisit: string
   hasActiveReq: boolean
 }
@@ -84,6 +86,7 @@ export default function StudentSearch() {
         return {
           student,
           matricNumber: user?.matricNumber ?? '—',
+          hospitalNumber: getHospitalNumber(user?.matricNumber, student.id),
           lastVisit: studentEncounters[0]?.date?.split('T')[0] ?? '—',
           hasActiveReq: activeReq,
         }
@@ -180,6 +183,9 @@ export default function StudentSearch() {
                   Matric #
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Hospital #
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Department
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -201,10 +207,10 @@ export default function StudentSearch() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
-                Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={8} />)
+                Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={9} />)
               ) : pageRows.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-4">
+                  <td colSpan={9} className="py-4">
                     <EmptyState
                       icon={<Search className="w-8 h-8" />}
                       title="No students found"
@@ -213,7 +219,7 @@ export default function StudentSearch() {
                   </td>
                 </tr>
               ) : (
-                pageRows.map(({ student, matricNumber, lastVisit }) => (
+                pageRows.map(({ student, matricNumber, hospitalNumber, lastVisit }) => (
                   <tr key={student.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
@@ -229,6 +235,7 @@ export default function StudentSearch() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-gray-600">{matricNumber}</td>
+                    <td className="px-4 py-3 text-gray-600 font-medium">{hospitalNumber}</td>
                     <td className="px-4 py-3 text-gray-600">{student.department}</td>
                     <td className="px-4 py-3 text-gray-600">{student.level}</td>
                     <td className="px-4 py-3">

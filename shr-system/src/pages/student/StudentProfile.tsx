@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
-import { ChevronDown, ChevronUp, User, Phone, Mail, Calendar, Droplets } from 'lucide-react';
+import { ChevronDown, ChevronUp, User, Phone, Mail, Calendar, Droplets, Download } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { SeverityBadge } from '../../components/shared';
-import { StorageKey, getAll } from '../../services/storage';
-import type { Encounter } from '../../types/types';
+import { SeverityBadge, useToast } from '../../components/shared';
+import { StorageKey, getAll, getRequisitionsByStudentId, createAuditEntry } from '../../services/storage';
+import type { Encounter, DiagnosticResult, MedicationRequisition } from '../../types/types';
+import { getHospitalNumber } from '../../utils/studentIdentifiers';
 
 export default function StudentProfile() {
   const { currentUser, currentStudent } = useAuth();
+  const { toast } = useToast();
   const [openEncounterId, setOpenEncounterId] = useState<string | null>(null);
 
   const encounters = currentStudent
@@ -15,6 +17,115 @@ export default function StudentProfile() {
         .filter((e) => e.studentId === currentStudent.id)
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     : [];
+
+  const results = currentStudent
+    ? getAll<DiagnosticResult>(StorageKey.RESULTS)
+        .filter((result) => result.studentId === currentStudent.id)
+        .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+    : [];
+
+  const requisitions = currentStudent
+    ? getRequisitionsByStudentId(currentStudent.id)
+        .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
+    : [];
+
+  const hospitalNumber = currentStudent
+    ? getHospitalNumber(currentUser?.matricNumber, currentStudent.id)
+    : '—';
+
+  const downloadMedicalRecords = () => {
+    if (!currentStudent || !currentUser) {
+      toast('Unable to export records right now', 'error');
+      return;
+    }
+
+    const lines: string[] = [
+      'STUDENT HEALTH RECORD EXPORT',
+      `Generated: ${new Date().toLocaleString('en-GB')}`,
+      '',
+      'Student Details',
+      `Name: ${currentStudent.name}`,
+      `Matric Number: ${currentUser.matricNumber ?? '—'}`,
+      `Hospital Number: ${hospitalNumber}`,
+      `Department: ${currentStudent.department}`,
+      `Level: ${currentStudent.level}`,
+      `Blood Group: ${currentStudent.bloodGroup}`,
+      `Genotype: ${currentStudent.genotype}`,
+      '',
+      `Encounters (${encounters.length})`,
+    ];
+
+    encounters.forEach((enc, index) => {
+      lines.push(
+        `${index + 1}. ${new Date(enc.date).toLocaleDateString('en-GB')} - ${enc.facility}`,
+        `   Complaint: ${enc.chiefComplaint}`,
+        `   Status: ${enc.status}`,
+        `   Attending Staff: ${enc.attendingStaffName}`,
+      );
+      if (enc.diagnoses.length > 0) {
+        lines.push(`   Diagnoses: ${enc.diagnoses.map((d) => d.description).join(', ')}`);
+      }
+      if (enc.prescriptions.length > 0) {
+        lines.push(
+          `   Prescriptions: ${enc.prescriptions
+            .map((rx) => `${rx.medicationName} ${rx.dosage}`)
+            .join(', ')}`,
+        );
+      }
+    });
+
+    lines.push('', `Diagnostic Results (${results.length})`);
+    results.forEach((result, index) => {
+      lines.push(
+        `${index + 1}. ${result.testName} (${result.type})`,
+        `   Uploaded: ${new Date(result.uploadedAt).toLocaleDateString('en-GB')}`,
+        `   Facility: ${result.facility}`,
+        `   Status: ${result.status}`,
+        `   Findings: ${result.findings}`,
+        `   File: ${result.fileSimulatedUrl}`,
+      );
+    });
+
+    lines.push('', `Medication Requisitions (${requisitions.length})`);
+    requisitions.forEach((req: MedicationRequisition, index) => {
+      lines.push(
+        `${index + 1}. Submitted: ${new Date(req.submittedAt).toLocaleDateString('en-GB')}`,
+        `   Status: ${req.status}`,
+        `   Symptoms: ${req.symptoms.join(', ') || '—'}`,
+      );
+      if (req.approvedMedications?.length) {
+        lines.push(
+          `   Approved Medications: ${req.approvedMedications
+            .map((med) => `${med.name} ${med.dosage}`)
+            .join(', ')}`,
+        );
+      }
+    });
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const safeName = currentStudent.name.toLowerCase().replace(/\s+/g, '-');
+    link.href = url;
+    link.download = `${safeName}-medical-records.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+
+    createAuditEntry({
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userRole: currentUser.role,
+      action: 'EXPORT_REPORT',
+      resourceType: 'Report',
+      resourceId: currentStudent.id,
+      resourceDescription: `Exported medical records for ${currentStudent.name}`,
+      status: 'Success',
+    });
+
+    toast('Medical records downloaded', 'success');
+  };
 
   const encounterStatusColor: Record<Encounter['status'], string> = {
     Active: 'bg-blue-100 text-blue-800',
@@ -42,6 +153,14 @@ export default function StudentProfile() {
             <p className="text-sm text-gray-500">Matric: {currentUser.matricNumber}</p>
           )}
         </div>
+        <button
+          type="button"
+          onClick={downloadMedicalRecords}
+          className="ml-auto inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 text-xs font-semibold hover:bg-blue-100 transition-colors"
+        >
+          <Download className="w-4 h-4" />
+          Download Records
+        </button>
       </div>
 
       <Tabs.Root defaultValue="personal">
@@ -76,6 +195,7 @@ export default function StudentProfile() {
               [
                 { label: 'Full Name', value: currentStudent?.name ?? currentUser?.name, Icon: User },
                 { label: 'Matric Number', value: currentUser?.matricNumber ?? '—', Icon: User },
+                { label: 'Hospital Number', value: hospitalNumber, Icon: User },
                 { label: 'Department', value: currentStudent?.department, Icon: User },
                 { label: 'Level', value: currentStudent?.level, Icon: User },
                 { label: 'Blood Group', value: currentStudent?.bloodGroup, Icon: Droplets },
