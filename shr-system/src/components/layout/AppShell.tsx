@@ -22,10 +22,12 @@ export function AppShell({ children }: AppShellProps) {
     if (!element) return;
 
     function onScroll() {
-      const totalScrollable = element.scrollHeight - element.clientHeight;
-      const ratio = totalScrollable <= 0 ? 0 : element.scrollTop / totalScrollable;
+      const node = mainRef.current;
+      if (!node) return;
+      const totalScrollable = node.scrollHeight - node.clientHeight;
+      const ratio = totalScrollable <= 0 ? 0 : node.scrollTop / totalScrollable;
       setScrollProgress(Math.max(0, Math.min(100, ratio * 100)));
-      setShowScrollTop(element.scrollTop > 320);
+      setShowScrollTop(node.scrollTop > 320);
     }
 
     onScroll();
