@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Search, ClipboardList,
   ShoppingBag, Users, FileText, BarChart3, Upload, Stethoscope, ShieldCheck,
@@ -91,6 +91,24 @@ export function Sidebar() {
           </NavLink>
         ))}
       </nav>
+
+      <div className="mx-2 mb-2 rounded-lg border border-gray-200 bg-gray-50 p-2">
+        {!collapsed && <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500">Legal</p>}
+        <div className="space-y-1">
+          <Link
+            to="/legal"
+            className="block rounded-md px-2 py-1.5 text-xs font-medium text-gray-600 hover:bg-white hover:text-gray-900"
+          >
+            {collapsed ? 'LC' : 'Legal Center'}
+          </Link>
+          <Link
+            to="/legal/privacy"
+            className="block rounded-md px-2 py-1.5 text-xs font-medium text-gray-600 hover:bg-white hover:text-gray-900"
+          >
+            {collapsed ? 'PP' : 'Privacy Policy'}
+          </Link>
+        </div>
+      </div>
 
       {/* Collapse toggle */}
       <div className="border-t border-gray-200 p-2">

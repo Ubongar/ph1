@@ -25,6 +25,15 @@ import SpecialistDashboard from '../pages/specialist/SpecialistDashboard';
 import ReferralDetail from '../pages/specialist/ReferralDetail';
 import ConsultationAnalytics from '../pages/specialist/ConsultationAnalytics';
 import ReferralCompliance from '../pages/admin/ReferralCompliance';
+import LegalCenter from '../pages/legal/LegalCenter';
+import PrivacyPolicyPage from '../pages/legal/PrivacyPolicyPage';
+import TermsAndConditionsPage from '../pages/legal/TermsAndConditionsPage';
+import DataRightsPage from '../pages/legal/DataRightsPage';
+import ConsentPage from '../pages/legal/ConsentPage';
+import CookiesPage from '../pages/legal/CookiesPage';
+import SecurityRetentionPage from '../pages/legal/SecurityRetentionPage';
+import MedicalDisclaimerPage from '../pages/legal/MedicalDisclaimerPage';
+import RolePrivacyMatrixPage from '../pages/legal/RolePrivacyMatrixPage';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -57,6 +66,15 @@ export function AppRouter() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
+      <Route path="/legal" element={<LegalCenter />} />
+      <Route path="/legal/privacy" element={<PrivacyPolicyPage />} />
+      <Route path="/legal/terms" element={<TermsAndConditionsPage />} />
+      <Route path="/legal/data-rights" element={<DataRightsPage />} />
+      <Route path="/legal/consent" element={<ConsentPage />} />
+      <Route path="/legal/cookies" element={<CookiesPage />} />
+      <Route path="/legal/security" element={<SecurityRetentionPage />} />
+      <Route path="/legal/role-matrix" element={<RolePrivacyMatrixPage />} />
+      <Route path="/legal/medical-disclaimer" element={<MedicalDisclaimerPage />} />
 
       {/* Student routes */}
       <Route

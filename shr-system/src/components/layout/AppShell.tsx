@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowUp } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
@@ -54,6 +55,17 @@ export function AppShell({ children }: AppShellProps) {
           <div className={`${isStudent ? 'pb-20 md:pb-6' : 'pb-6'} p-4 md:p-6`}>
             {children}
           </div>
+          <footer className="border-t border-gray-200 bg-white px-4 py-4 md:px-6">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-500">
+              <span className="font-medium text-gray-600">Policies</span>
+              <Link to="/legal" className="hover:text-blue-700">Legal Center</Link>
+              <Link to="/legal/privacy" className="hover:text-blue-700">Privacy</Link>
+              <Link to="/legal/terms" className="hover:text-blue-700">Terms</Link>
+              <Link to="/legal/data-rights" className="hover:text-blue-700">Data Rights</Link>
+              <Link to="/legal/role-matrix" className="hover:text-blue-700">Role Matrix</Link>
+              <Link to="/legal/security" className="hover:text-blue-700">Security</Link>
+            </div>
+          </footer>
           {showScrollTop && (
             <button
               type="button"

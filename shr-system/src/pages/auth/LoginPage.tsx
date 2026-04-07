@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -200,6 +201,12 @@ export default function LoginPage() {
               Demo system — all passwords are{' '}
               <code className="bg-gray-100 px-1 py-0.5 rounded font-mono">password</code>
             </p>
+            <div className="mt-4 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-gray-500">
+              <Link to="/legal" className="hover:text-blue-700">Legal Center</Link>
+              <Link to="/legal/privacy" className="hover:text-blue-700">Privacy</Link>
+              <Link to="/legal/terms" className="hover:text-blue-700">Terms</Link>
+              <Link to="/legal/data-rights" className="hover:text-blue-700">Data Rights</Link>
+            </div>
           </div>
         </div>
       </div>
