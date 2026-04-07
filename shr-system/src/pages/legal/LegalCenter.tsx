@@ -80,7 +80,7 @@ export default function LegalCenter() {
             Legal and Patient Data Pages
           </h1>
           <p className="mt-3 text-sm text-slate-600 sm:text-base">
-            For a health-related system, these pages should exist before production rollout. They are written in a production-style format so you can carry them forward when this mock system becomes a real service.
+            This legal center provides the complete policy experience for the Student Health Records platform, including rights management, policy versioning, and acceptance tracking.
           </p>
 
           <div className="mt-6 grid gap-3">
@@ -106,7 +106,7 @@ export default function LegalCenter() {
           </section>
 
           <p className="mt-6 text-xs text-slate-500">
-            Important: This content is a strong baseline template and should be reviewed by legal/compliance experts before production use.
+            Policy lifecycle is active: users can submit data requests, admins can process tickets, and acceptance history is tracked per account.
           </p>
         </div>
       </main>

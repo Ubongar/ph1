@@ -31,7 +31,7 @@ export default function PrivacyPolicyPage() {
 
         <div>
           <h2 className="text-lg font-semibold text-slate-900">5. International and Regulatory Context</h2>
-          <p>This template aligns with healthcare privacy principles and should be adapted to applicable local frameworks such as NDPA, GDPR, HIPAA-related organizational controls, and institutional policy.</p>
+          <p>This policy aligns with healthcare privacy principles and is structured to support NDPA, GDPR, HIPAA-aligned organizational controls, and institutional governance requirements.</p>
         </div>
       </section>
     </LegalPageFrame>
