@@ -1,9 +1,10 @@
 import { useMemo, useRef } from 'react';
 import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Download, FileClock, Printer } from 'lucide-react';
 import { getLatestPolicyVersion } from '../../services/compliance';
 import type { PolicyType } from '../../types/types';
+import { useAuth } from '../../context/AuthContext';
 
 interface LegalPageFrameProps {
   title: string;
@@ -29,7 +30,20 @@ const LEGAL_LINKS = [
 ] as const;
 
 export default function LegalPageFrame({ title, subtitle, lastUpdated, policyType, children }: LegalPageFrameProps) {
+  const { currentUser, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const articleRef = useRef<HTMLElement | null>(null);
+
+  const roleHome: Record<string, string> = {
+    student: '/student/dashboard',
+    medical_staff: '/staff/dashboard',
+    technician: '/technician/upload',
+    pharmacy: '/pharmacy/queue',
+    specialist: '/specialist/dashboard',
+    admin: '/admin/dashboard',
+  };
+
+  const fallbackPath = currentUser ? (roleHome[currentUser.role] ?? '/') : '/';
 
   const currentVersion = useMemo(
     () => (policyType ? getLatestPolicyVersion(policyType) : null),
@@ -38,6 +52,18 @@ export default function LegalPageFrame({ title, subtitle, lastUpdated, policyTyp
 
   function handlePrint() {
     window.print();
+  }
+
+  function handleShrClick() {
+    navigate(fallbackPath);
+  }
+
+  function handleReturnClick() {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate(fallbackPath);
   }
 
   function handleDownload() {
@@ -66,8 +92,28 @@ export default function LegalPageFrame({ title, subtitle, lastUpdated, policyTyp
     <div className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+          <div className="mb-3 flex items-center justify-between gap-2 print:hidden">
+            <button
+              type="button"
+              onClick={handleShrClick}
+              className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-bold tracking-wider text-white hover:bg-blue-700"
+            >
+              SHR
+            </button>
+            {isAuthenticated && (
+              <button
+                type="button"
+                onClick={handleReturnClick}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Return to Previous Page
+              </button>
+            )}
+          </div>
           <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-            <Link to="/login" className="font-medium text-blue-700 hover:text-blue-800">Login</Link>
+            <Link to={isAuthenticated ? fallbackPath : '/login'} className="font-medium text-blue-700 hover:text-blue-800">
+              {isAuthenticated ? 'Dashboard' : 'Login'}
+            </Link>
             <span>/</span>
             <Link to="/legal" className="font-medium text-blue-700 hover:text-blue-800">Legal Center</Link>
           </div>

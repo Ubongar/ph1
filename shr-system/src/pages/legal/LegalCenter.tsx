@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const REQUIRED_PAGES = [
   {
@@ -69,10 +70,54 @@ const LIVE_FEATURES = [
 ] as const;
 
 export default function LegalCenter() {
+  const { currentUser, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  const roleHome: Record<string, string> = {
+    student: '/student/dashboard',
+    medical_staff: '/staff/dashboard',
+    technician: '/technician/upload',
+    pharmacy: '/pharmacy/queue',
+    specialist: '/specialist/dashboard',
+    admin: '/admin/dashboard',
+  };
+
+  const fallbackPath = currentUser ? (roleHome[currentUser.role] ?? '/') : '/';
+
+  function handleShrClick() {
+    navigate(fallbackPath);
+  }
+
+  function handleReturnClick() {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate(fallbackPath);
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={handleShrClick}
+              className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-bold tracking-wider text-white hover:bg-blue-700"
+            >
+              SHR
+            </button>
+            {isAuthenticated && (
+              <button
+                type="button"
+                onClick={handleReturnClick}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Return to Previous Page
+              </button>
+            )}
+          </div>
           <p className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-700">
             Compliance Foundation
           </p>
