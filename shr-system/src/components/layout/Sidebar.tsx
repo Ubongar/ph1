@@ -46,6 +46,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Referral Compliance', to: '/admin/referral-compliance', icon: <ShieldCheck className="w-5 h-5" /> },
     { label: 'Data Requests', to: '/admin/data-requests', icon: <ClipboardList className="w-5 h-5" /> },
     { label: 'Policy Versions', to: '/admin/policy-versions', icon: <FileText className="w-5 h-5" /> },
+    { label: 'Reconciliation', to: '/admin/reconciliation', icon: <ShieldCheck className="w-5 h-5" /> },
   ],
 };
 

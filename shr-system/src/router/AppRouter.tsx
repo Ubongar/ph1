@@ -40,6 +40,7 @@ import PolicyAcceptancePage from '../pages/legal/PolicyAcceptancePage';
 import PolicyAcceptanceHistoryPage from '../pages/legal/PolicyAcceptanceHistoryPage';
 import AdminDataRequests from '../pages/admin/AdminDataRequests';
 import PolicyVersioning from '../pages/admin/PolicyVersioning';
+import ReconciliationCenter from '../pages/admin/ReconciliationCenter';
 
 const ALL_ROLES: UserRole[] = ['student', 'medical_staff', 'technician', 'pharmacy', 'specialist', 'admin'];
 
@@ -307,6 +308,14 @@ export function AppRouter() {
         element={
           <ProtectedRoute roles={['admin']}>
             <AppShell><PolicyVersioning /></AppShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/reconciliation"
+        element={
+          <ProtectedRoute roles={['admin']}>
+            <AppShell><ReconciliationCenter /></AppShell>
           </ProtectedRoute>
         }
       />

@@ -1,4 +1,5 @@
 import type { Student, MedicationRequisition, AuditLog, AuditAction } from '../types/types';
+import { enqueueOfflineMutation } from './offlineSync';
 
 export enum StorageKey {
   STUDENTS = 'shr_students',
@@ -133,6 +134,12 @@ export function create<T extends { id: string }>(
   const newItem = { ...item, id: item.id ?? crypto.randomUUID() } as T;
   items.push(newItem);
   localStorage.setItem(key, JSON.stringify(items));
+  enqueueOfflineMutation({
+    storageKey: key,
+    entityId: newItem.id,
+    action: 'create',
+    payload: newItem,
+  });
   if (options.autoAudit !== false) {
     createAutoAuditEntry(key, 'CREATE_RECORD', newItem.id, options.auditChangeDetails);
   }
@@ -148,9 +155,17 @@ export function update<T extends { id: string }>(
   const items = getAll<T>(key);
   const index = items.findIndex((item) => item.id === id);
   if (index === -1) return null;
+  const before = items[index];
   const updated = { ...items[index], ...updates } as T;
   items[index] = updated;
   localStorage.setItem(key, JSON.stringify(items));
+  enqueueOfflineMutation({
+    storageKey: key,
+    entityId: updated.id,
+    action: 'update',
+    payload: updates,
+    beforeSnapshot: before,
+  });
   if (options.autoAudit !== false) {
     const changeDetails = options.auditChangeDetails ?? toAuditChangeDetails(updates);
     createAutoAuditEntry(key, 'EDIT_RECORD', updated.id, changeDetails);
@@ -160,9 +175,17 @@ export function update<T extends { id: string }>(
 
 export function deleteById(key: StorageKey, id: string): boolean {
   const items = getAll<{ id: string }>(key);
+  const toDelete = items.find((item) => item.id === id);
   const filtered = items.filter((item) => item.id !== id);
   if (filtered.length === items.length) return false;
   localStorage.setItem(key, JSON.stringify(filtered));
+  enqueueOfflineMutation({
+    storageKey: key,
+    entityId: id,
+    action: 'delete',
+    payload: { deleted: true },
+    beforeSnapshot: toDelete,
+  });
   createAutoAuditEntry(key, 'EDIT_RECORD', id, JSON.stringify({ deleted: true }));
   return true;
 }

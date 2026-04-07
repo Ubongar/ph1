@@ -1,9 +1,18 @@
-import { useState, useMemo } from 'react';
-import { ChevronUp, ChevronDown, Eye, Download, AlertTriangle } from 'lucide-react';
+import { useState, useMemo, useRef, type ChangeEvent } from 'react';
+import { ChevronUp, ChevronDown, Eye, Download, AlertTriangle, RefreshCw, Upload, Wifi, WifiOff } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { getAll, StorageKey } from '../../services/storage';
 import type { AuditLog, UserRole, AuditAction } from '../../types/types';
 import { useToast } from '../../components/shared/Toast';
 import { PageHeader } from '../../components/shared/PageHeader';
+import { useOfflineSyncStatus } from '../../hooks';
+import {
+  downloadOfflineBundle,
+  importOfflineBundle,
+  resolveOfflineConflict,
+  retryFailedOfflineMutations,
+  runOfflineSync,
+} from '../../services/offlineSync';
 
 const ROLES: UserRole[] = ['student','medical_staff','technician','pharmacy','specialist','admin'];
 const ROLE_LABELS: Record<UserRole, string> = { student:'Student', medical_staff:'Medical Staff', technician:'Technician', pharmacy:'Pharmacy', specialist:'Specialist', admin:'Admin' };
@@ -22,6 +31,8 @@ function defaultStart() {
 
 export default function AuditLogs() {
   const { toast } = useToast();
+  const offline = useOfflineSyncStatus();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [logs] = useState(() => getAll<AuditLog>(StorageKey.AUDIT_LOGS));
   const [startDate, setStartDate] = useState(defaultStart());
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
@@ -33,6 +44,8 @@ export default function AuditLogs() {
   const [sortCol, setSortCol] = useState<SortCol>('timestamp');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [detailLog, setDetailLog] = useState<AuditLog | null>(null);
+  const [bundlePassphrase, setBundlePassphrase] = useState('');
+  const [syncBusy, setSyncBusy] = useState(false);
 
   const filtered = useMemo(() => {
     let result = logs.filter(l => {
@@ -85,19 +98,137 @@ export default function AuditLogs() {
     toast('CSV exported', 'success');
   };
 
+  const handleSyncNow = async () => {
+    setSyncBusy(true);
+    try {
+      const summary = await runOfflineSync();
+      toast(
+        `Sync complete: ${summary.synced} synced, ${summary.conflicts} conflicts, ${summary.failed} failed.`,
+        summary.failed > 0 || summary.conflicts > 0 ? 'warning' : 'success',
+      );
+    } finally {
+      setSyncBusy(false);
+    }
+  };
+
+  const handleExportBundle = async () => {
+    if (!bundlePassphrase.trim()) {
+      toast('Enter a passphrase before exporting an encrypted bundle.', 'warning');
+      return;
+    }
+    try {
+      const exportedAt = await downloadOfflineBundle(bundlePassphrase.trim());
+      toast(`Encrypted bundle exported at ${new Date(exportedAt).toLocaleString()}.`, 'success');
+    } catch {
+      toast('Failed to export encrypted bundle.', 'error');
+    }
+  };
+
+  const handleImportBundle = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!bundlePassphrase.trim()) {
+      toast('Enter the bundle passphrase before importing.', 'warning');
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      const result = await importOfflineBundle(text, bundlePassphrase.trim());
+      toast(
+        `Bundle imported: ${result.importedMutations} mutation(s), ${result.importedConflicts} conflict(s).`,
+        'success',
+      );
+    } catch {
+      toast('Bundle import failed. Verify passphrase and file integrity.', 'error');
+    } finally {
+      event.target.value = '';
+    }
+  };
+
   const SortIcon = ({ col }: { col: SortCol }) => sortCol === col
     ? (sortDir === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)
     : <span className="w-3 h-3 inline-block" />;
 
   return (
     <div className="p-6 space-y-4">
-      <PageHeader title="Audit Logs" actions={<button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm"><Download className="w-4 h-4" />Export CSV</button>} />
+      <PageHeader
+        title="Audit Logs"
+        actions={(
+          <>
+            <Link to="/admin/reconciliation" className="px-4 py-2 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 text-sm font-medium">Reconciliation</Link>
+            <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm"><Download className="w-4 h-4" />Export CSV</button>
+          </>
+        )}
+      />
       {hasSuspicious && (
         <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-300 rounded-xl text-red-700">
           <AlertTriangle className="w-5 h-5 shrink-0" />
           <span className="font-medium">Suspicious activity detected in current filtered results.</span>
         </div>
       )}
+
+      <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-gray-900">Offline Sync Center</h2>
+            <p className="text-xs text-gray-600 mt-1">Phase 1-4 controls: auto-sync, conflict review, and encrypted laptop bundle transfer.</p>
+          </div>
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${offline.isOnline ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-800'}`}>
+            {offline.isOnline ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
+            {offline.isOnline ? 'Online' : 'Offline'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+          <div className="rounded-lg border border-gray-200 p-3"><p className="text-gray-500">Pending Queue</p><p className="text-lg font-semibold text-gray-900">{offline.pendingCount}</p></div>
+          <div className="rounded-lg border border-gray-200 p-3"><p className="text-gray-500">Failed</p><p className="text-lg font-semibold text-red-700">{offline.failedCount}</p></div>
+          <div className="rounded-lg border border-gray-200 p-3"><p className="text-gray-500">Conflicts</p><p className="text-lg font-semibold text-amber-700">{offline.conflictCount}</p></div>
+          <div className="rounded-lg border border-gray-200 p-3"><p className="text-gray-500">Last Synced</p><p className="text-sm font-semibold text-gray-900">{offline.lastSyncedAt ? new Date(offline.lastSyncedAt).toLocaleString() : 'Never'}</p></div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={handleSyncNow} disabled={syncBusy || !offline.isOnline} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white text-xs disabled:opacity-50">
+            <RefreshCw className="w-3.5 h-3.5" />
+            {syncBusy ? 'Syncing...' : 'Sync Now'}
+          </button>
+          <button type="button" onClick={retryFailedOfflineMutations} className="px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs">Retry Failed</button>
+        </div>
+
+        <div className="grid md:grid-cols-[1fr_auto_auto] gap-2 items-center">
+          <input
+            aria-label="Bundle encryption passphrase"
+            type="password"
+            value={bundlePassphrase}
+            onChange={e => setBundlePassphrase(e.target.value)}
+            placeholder="Bundle passphrase"
+            className="border border-gray-300 rounded-lg px-3 py-2 text-xs"
+          />
+          <button type="button" onClick={handleExportBundle} className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs">Export Encrypted Bundle</button>
+          <button type="button" onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs"><Upload className="w-3.5 h-3.5" />Import Bundle</button>
+          <input ref={fileInputRef} type="file" accept="application/json" className="hidden" onChange={handleImportBundle} />
+        </div>
+
+        {offline.conflicts.filter(c => c.resolution === 'pending').length > 0 && (
+          <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 space-y-2">
+            <p className="text-xs font-semibold text-amber-900">Pending Conflict Review</p>
+            <div className="space-y-2">
+              {offline.conflicts.filter(c => c.resolution === 'pending').slice(0, 5).map(conflict => (
+                <div key={conflict.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-white border border-amber-200 px-3 py-2">
+                  <div className="text-xs text-gray-700">
+                    <span className="font-medium">{conflict.storageKey}</span> / {conflict.entityId} - {conflict.reason}
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => resolveOfflineConflict(conflict.id, 'keep_local')} className="px-2.5 py-1 rounded bg-blue-600 text-white text-xs">Keep Local</button>
+                    <button type="button" onClick={() => resolveOfflineConflict(conflict.id, 'keep_remote')} className="px-2.5 py-1 rounded bg-gray-200 text-gray-700 text-xs">Keep Remote</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <div><label className="block text-xs font-medium text-gray-600 mb-1">Start Date</label><input aria-label="Audit start date" type="date" value={startDate} onChange={e=>{setStartDate(e.target.value);setPage(1)}} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>

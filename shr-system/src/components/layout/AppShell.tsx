@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useOfflineSyncStatus } from '../../hooks';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 import { MobileBottomNav } from './MobileBottomNav';
@@ -13,6 +14,7 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   const { currentUser } = useAuth();
+  const offline = useOfflineSyncStatus();
   const isStudent = currentUser?.role === 'student';
   const mainRef = useRef<HTMLElement | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -49,6 +51,17 @@ export function AppShell({ children }: AppShellProps) {
         value={scrollProgress}
         aria-label="Page scroll progress"
       />
+      {!offline.isOnline && (
+        <div className="px-4 py-2 bg-amber-100 border-b border-amber-300 text-amber-900 text-xs font-medium">
+          Offline mode enabled. Changes are saved locally and will sync automatically when connectivity returns.
+          {offline.pendingCount > 0 && ` Pending sync items: ${offline.pendingCount}.`}
+        </div>
+      )}
+      {offline.isOnline && offline.pendingCount > 0 && (
+        <div className="px-4 py-2 bg-blue-50 border-b border-blue-200 text-blue-800 text-xs font-medium">
+          Back online. {offline.pendingCount} change(s) waiting to sync.
+        </div>
+      )}
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
         <main ref={mainRef} className="relative flex-1 overflow-y-auto">

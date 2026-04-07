@@ -168,3 +168,66 @@ export interface PolicyAcceptance {
   acceptedAt: string;
   method: 'in-app';
 }
+
+export type OfflineMutationAction = 'create' | 'update' | 'delete';
+export type OfflineMutationStatus = 'pending' | 'synced' | 'failed' | 'conflict' | 'discarded';
+
+export interface OfflineMutation {
+  id: string;
+  storageKey: string;
+  entityId: string;
+  action: OfflineMutationAction;
+  payload: unknown;
+  beforeSnapshot?: unknown;
+  queuedAt: string;
+  attempts: number;
+  status: OfflineMutationStatus;
+  queuedByUserId: string;
+  queuedByRole: UserRole;
+  deviceId: string;
+  lastError?: string;
+  syncedAt?: string;
+}
+
+export type OfflineConflictResolution = 'pending' | 'keep_local' | 'keep_remote';
+
+export interface OfflineConflict {
+  id: string;
+  mutationId: string;
+  storageKey: string;
+  entityId: string;
+  reason: string;
+  localValue: unknown;
+  remoteValue: unknown;
+  detectedAt: string;
+  resolution: OfflineConflictResolution;
+  resolvedAt?: string;
+}
+
+export interface OfflineSyncSnapshot {
+  isOnline: boolean;
+  pendingCount: number;
+  failedCount: number;
+  conflictCount: number;
+  lastSyncedAt: string | null;
+  outbox: OfflineMutation[];
+  conflicts: OfflineConflict[];
+}
+
+export interface OfflineSyncRunSummary {
+  processed: number;
+  synced: number;
+  conflicts: number;
+  failed: number;
+  skipped: number;
+  lastSyncedAt: string | null;
+}
+
+export interface OfflineSyncBundle {
+  bundleVersion: 1;
+  exportedAt: string;
+  deviceId: string;
+  saltB64: string;
+  ivB64: string;
+  encryptedPayloadB64: string;
+}
