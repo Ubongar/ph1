@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: shr-sync-api
+    runtime: node
+    rootDir: .
+    plan: free
+    buildCommand: npm install
+    startCommand: node backend/server.js
+    autoDeploy: true
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: SHR_SYNC_TOKEN_SECRET
+        sync: false
+      - key: SHR_SYNC_TOKEN_TTL_SECONDS
+        value: 3600
+      - key: PORT
+        value: 8787
