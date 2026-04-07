@@ -14,14 +14,14 @@ export function MobileBottomNav() {
   if (currentUser?.role !== 'student') return null;
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 md:hidden bg-white border-t border-gray-200 z-20">
+    <nav className="fixed bottom-0 inset-x-0 md:hidden bg-white/95 backdrop-blur border-t border-gray-200 z-20 pb-[max(0.35rem,env(safe-area-inset-bottom))]">
       <div className="flex">
         {TABS.map(({ label, to, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
             className={({ isActive }) =>
-              `flex-1 flex flex-col items-center justify-center py-2 text-xs font-medium transition-colors ${
+              `flex-1 flex flex-col items-center justify-center py-2 text-[11px] font-medium transition-colors ${
                 isActive ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
               }`
             }
@@ -29,7 +29,7 @@ export function MobileBottomNav() {
             {({ isActive }) => (
               <>
                 <Icon className={`w-5 h-5 mb-0.5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
-                <span className="leading-none">{label}</span>
+                <span className="leading-none truncate max-w-[84px]">{label}</span>
               </>
             )}
           </NavLink>

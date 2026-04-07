@@ -80,36 +80,44 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="bg-green-600 text-white rounded-xl p-4 flex flex-wrap items-center gap-6">
+    <div className="p-4 sm:p-6 space-y-5 sm:space-y-6">
+      <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-xl p-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-6">
         <span className="text-lg font-bold">🟢 OPERATIONAL</span>
-        <span className="text-sm">99.98% uptime</span>
-        <span className="text-sm">Last backup: {lastBackup}</span>
+        <span className="text-sm/5">99.98% uptime</span>
+        <span className="text-sm/5 break-words">Last backup: {lastBackup}</span>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-3 sm:gap-4">
         {kpis.map(({ label, value, color, icon: Icon }) => (
-          <div key={label} className={`rounded-xl border p-4 ${colorMap[color]}`}>
+          <div key={label} className={`rounded-xl border p-3 sm:p-4 ${colorMap[color]}`}>
             <div className="flex items-center gap-2 mb-2"><Icon className="w-5 h-5" /></div>
-            <div className="text-3xl font-bold">{value}</div>
-            <div className="text-sm mt-1">{label}</div>
+            <div className="text-2xl sm:text-3xl font-bold">{value}</div>
+            <div className="text-xs sm:text-sm mt-1 leading-snug">{label}</div>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
           <h3 className="font-semibold text-gray-800 mb-4">Requisitions by Status</h3>
-          <ResponsiveContainer width="100%" height={220}>
+          <ResponsiveContainer width="100%" height={240}>
             <PieChart>
-              <Pie data={reqPieData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} dataKey="value" label={({ name, value }) => `${name}: ${value}`} labelLine={false}>
+              <Pie data={reqPieData} cx="50%" cy="50%" innerRadius={52} outerRadius={80} dataKey="value" labelLine={false}>
                 {reqPieData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
               </Pie>
               <Tooltip />
             </PieChart>
           </ResponsiveContainer>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {reqPieData.map((slice, i) => (
+              <span key={slice.name} className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-[11px] text-gray-700">
+                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                {slice.name}: {slice.value}
+              </span>
+            ))}
+          </div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
           <h3 className="font-semibold text-gray-800 mb-4">Encounters by Facility (This Month)</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={facilityData}>
@@ -129,21 +137,21 @@ export default function AdminDashboard() {
         ) : (
           <div className="space-y-3">
             {activeAlerts.map(alert => (
-              <div key={alert.id} className="flex items-start gap-3 p-3 rounded-lg border border-gray-100">
+              <div key={alert.id} className="flex flex-col gap-3 p-3 rounded-lg border border-gray-100 sm:flex-row sm:items-start">
                 {alert.type === 'Critical' ? <AlertCircle className="w-5 h-5 text-red-500 shrink-0" /> : alert.type === 'Warning' ? <AlertTriangle className="w-5 h-5 text-yellow-500 shrink-0" /> : <Info className="w-5 h-5 text-blue-500 shrink-0" />}
                 <div className="flex-1">
                   <div className="font-medium text-sm">{alert.title}</div>
                   <div className="text-xs text-gray-500 mt-0.5">{alert.message}</div>
                   <div className="text-xs text-gray-400 mt-1">{new Date(alert.timestamp).toLocaleString()}</div>
                 </div>
-                <button onClick={() => resolveAlert(alert)} className="text-xs px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700">Resolve</button>
+                <button onClick={() => resolveAlert(alert)} className="text-xs px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 sm:self-start">Resolve</button>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
         {[
           { label: 'Manage Users', icon: Users, path: '/admin/users' },
           { label: 'View Audit Logs', icon: BookOpen, path: '/admin/audit-logs' },
@@ -153,9 +161,9 @@ export default function AdminDashboard() {
           { label: 'Policy Versions', icon: FileClock, path: '/admin/policy-versions' },
         ].map(({ label, icon: Icon, path }) => (
           <button key={label} onClick={() => navigate(path)}
-            className="flex flex-col items-center gap-2 p-6 bg-white border border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-200 transition-colors">
+            className="flex flex-col items-center gap-2 p-4 sm:p-6 bg-white border border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-200 transition-colors">
             <Icon className="w-6 h-6 text-blue-600" />
-            <span className="text-sm font-medium text-gray-700">{label}</span>
+            <span className="text-xs sm:text-sm font-medium text-gray-700 text-center leading-snug">{label}</span>
           </button>
         ))}
       </div>

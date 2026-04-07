@@ -52,20 +52,20 @@ export function AppShell({ children }: AppShellProps) {
         aria-label="Page scroll progress"
       />
       {!offline.isOnline && (
-        <div className="px-4 py-2 bg-amber-100 border-b border-amber-300 text-amber-900 text-xs font-medium">
+        <div className="px-4 py-2 bg-amber-100 border-b border-amber-300 text-amber-900 text-xs font-medium leading-relaxed">
           Offline mode enabled. Changes are saved locally and will sync automatically when connectivity returns.
           {offline.pendingCount > 0 && ` Pending sync items: ${offline.pendingCount}.`}
         </div>
       )}
       {offline.isOnline && offline.pendingCount > 0 && (
-        <div className="px-4 py-2 bg-blue-50 border-b border-blue-200 text-blue-800 text-xs font-medium">
+        <div className="px-4 py-2 bg-blue-50 border-b border-blue-200 text-blue-800 text-xs font-medium leading-relaxed">
           Back online. {offline.pendingCount} change(s) waiting to sync.
         </div>
       )}
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
         <main ref={mainRef} className="relative flex-1 overflow-y-auto">
-          <div className={`${isStudent ? 'pb-20 md:pb-6' : 'pb-6'} p-4 md:p-6`}>
+          <div className={`${isStudent ? 'pb-24 md:pb-6' : 'pb-6'} p-3 sm:p-4 md:p-6`}>
             {children}
           </div>
           <footer className="border-t border-gray-200 bg-white px-4 py-4 md:px-6">
