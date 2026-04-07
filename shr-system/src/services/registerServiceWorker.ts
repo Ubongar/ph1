@@ -13,6 +13,7 @@ export const PWA_EVENT_APP_INSTALLED = 'shr:pwa-app-installed';
 let started = false;
 let deferredInstallPrompt: BeforeInstallPromptEvent | null = null;
 let installAvailable = false;
+let activeRegistration: ServiceWorkerRegistration | null = null;
 
 function emitPwaEvent(name: string, detail?: unknown): void {
   window.dispatchEvent(new CustomEvent(name, { detail }));
@@ -35,6 +36,36 @@ export async function promptPwaInstall(): Promise<'accepted' | 'dismissed' | 'un
   deferredInstallPrompt = null;
   setInstallAvailable(false);
   return outcome;
+}
+
+export async function applyPwaUpdate(): Promise<boolean> {
+  if (!('serviceWorker' in navigator)) return false;
+
+  const registration = activeRegistration ?? await navigator.serviceWorker.getRegistration();
+  if (!registration?.waiting) return false;
+
+  await new Promise<void>((resolve) => {
+    let settled = false;
+    const onControllerChange = () => {
+      if (settled) return;
+      settled = true;
+      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+      resolve();
+    };
+
+    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+    registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
+
+    window.setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+      resolve();
+    }, 2500);
+  });
+
+  window.location.reload();
+  return true;
 }
 
 async function registerBackgroundSync(): Promise<void> {
@@ -70,6 +101,7 @@ export function registerServiceWorker(): void {
 
   window.addEventListener('load', () => {
     void navigator.serviceWorker.register('/sw.js').then((registration) => {
+      activeRegistration = registration;
       if (registration.waiting) {
         emitPwaEvent(PWA_EVENT_UPDATE_AVAILABLE);
       }

@@ -1,13 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { useToast } from '../../hooks';
 import {
+  applyPwaUpdate,
   PWA_EVENT_APP_INSTALLED,
   PWA_EVENT_OFFLINE_READY,
   PWA_EVENT_UPDATE_AVAILABLE,
 } from '../../services/registerServiceWorker';
 
 export function PwaNotifier() {
-  const { toast } = useToast();
+  const { toast, toastAction } = useToast();
   const hasShownOfflineReady = useRef(false);
 
   useEffect(() => {
@@ -18,7 +19,14 @@ export function PwaNotifier() {
     }
 
     function onUpdateAvailable() {
-      toast('A new app update is available. Refresh this page to get the latest version.', 'info');
+      toastAction(
+        'A new app update is available.',
+        'Refresh',
+        () => {
+          void applyPwaUpdate();
+        },
+        'info',
+      );
     }
 
     function onAppInstalled() {
@@ -34,7 +42,7 @@ export function PwaNotifier() {
       window.removeEventListener(PWA_EVENT_UPDATE_AVAILABLE, onUpdateAvailable);
       window.removeEventListener(PWA_EVENT_APP_INSTALLED, onAppInstalled);
     };
-  }, [toast]);
+  }, [toast, toastAction]);
 
   return null;
 }
