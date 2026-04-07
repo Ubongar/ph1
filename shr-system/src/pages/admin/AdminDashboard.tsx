@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, ClipboardList, FlaskConical, Bell, AlertCircle, AlertTriangle, Info, UserPlus, BookOpen, BarChart2 } from 'lucide-react';
+import { Users, ClipboardList, FlaskConical, Bell, AlertCircle, AlertTriangle, Info, UserPlus, BookOpen, BarChart2, FileCheck2, FileClock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getAll, update, createAuditEntry, StorageKey } from '../../services/storage';
 import type { Student, SystemUser, MedicationRequisition, DiagnosticResult, SystemAlert, Encounter, AuditLog } from '../../types/types';
@@ -143,12 +143,14 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         {[
           { label: 'Manage Users', icon: Users, path: '/admin/users' },
           { label: 'View Audit Logs', icon: BookOpen, path: '/admin/audit-logs' },
           { label: 'Reports', icon: BarChart2, path: '/admin/reports' },
           { label: 'Add User', icon: UserPlus, path: '/admin/users?create=1' },
+          { label: 'Data Requests', icon: FileCheck2, path: '/admin/data-requests' },
+          { label: 'Policy Versions', icon: FileClock, path: '/admin/policy-versions' },
         ].map(({ label, icon: Icon, path }) => (
           <button key={label} onClick={() => navigate(path)}
             className="flex flex-col items-center gap-2 p-6 bg-white border border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-200 transition-colors">

@@ -120,6 +120,8 @@ export function Navbar() {
         { id: 'ad-2', label: 'Open User Management', hint: '/admin/users', keywords: ['users'], onSelect: () => navigate('/admin/users') },
         { id: 'ad-3', label: 'Open Audit Logs', hint: '/admin/audit-logs', keywords: ['audit'], onSelect: () => navigate('/admin/audit-logs') },
         { id: 'ad-4', label: 'Open Reports', hint: '/admin/reports', keywords: ['reports'], onSelect: () => navigate('/admin/reports') },
+        { id: 'ad-5', label: 'Review Data Requests', hint: '/admin/data-requests', keywords: ['privacy requests'], onSelect: () => navigate('/admin/data-requests') },
+        { id: 'ad-6', label: 'Manage Policy Versions', hint: '/admin/policy-versions', keywords: ['policy'], onSelect: () => navigate('/admin/policy-versions') },
       ],
     };
 
@@ -229,6 +231,11 @@ export function Navbar() {
     if (pathname.startsWith('/admin/audit-logs')) return 'Audit Logs';
     if (pathname.startsWith('/admin/reports')) return 'System Reports';
     if (pathname.startsWith('/admin/referral-compliance')) return 'Referral Compliance';
+    if (pathname.startsWith('/admin/data-requests')) return 'Data Request Review';
+    if (pathname.startsWith('/admin/policy-versions')) return 'Policy Versioning';
+    if (pathname.startsWith('/legal/data-requests')) return 'Data Request Center';
+    if (pathname.startsWith('/legal/policy-updates')) return 'Policy Update Acceptance';
+    if (pathname.startsWith('/legal/acceptance-history')) return 'Acceptance History';
     return 'SHR System';
   }
 

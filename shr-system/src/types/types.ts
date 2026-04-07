@@ -101,11 +101,12 @@ export type AuditAction =
   | 'DISPENSE_MEDICATION' | 'CREATE_USER' | 'DEACTIVATE_USER'
   | 'RESET_PASSWORD' | 'EXPORT_REPORT' | 'VIEW_AUDIT_LOG'
   | 'CREATE_REFERRAL' | 'ACCEPT_REFERRAL' | 'COMPLETE_REFERRAL' | 'DECLINE_REFERRAL'
-  | 'SUBMIT_CONSULTATION_NOTES' | 'REFER_TO_SPECIALIST' | 'CLOSE_REFERRAL' | 'GENERATE_QA_REPORT';
+  | 'SUBMIT_CONSULTATION_NOTES' | 'REFER_TO_SPECIALIST' | 'CLOSE_REFERRAL' | 'GENERATE_QA_REPORT'
+  | 'SUBMIT_DATA_REQUEST' | 'REVIEW_DATA_REQUEST' | 'UPDATE_POLICY_VERSION' | 'ACCEPT_POLICY_UPDATE';
 export interface AuditLog {
   id: string; timestamp: string; userId: string; userName: string;
   userRole: UserRole; action: AuditAction;
-  resourceType: 'Student' | 'Requisition' | 'DiagnosticResult' | 'User' | 'System' | 'Report' | 'Referral';
+  resourceType: 'Student' | 'Requisition' | 'DiagnosticResult' | 'User' | 'System' | 'Report' | 'Referral' | 'DataRequest' | 'Policy';
   resourceId?: string; resourceDescription: string;
   ipAddress: string; sessionId: string; changeDetails?: string;
   status: 'Success' | 'Failed' | 'Suspicious';
@@ -124,4 +125,46 @@ export interface SystemMetrics {
   totalStudents: number; activeUsers: number; pendingRequisitions: number;
   pendingResults: number; systemUptime: number;
   lastBackup: string; totalEncountersThisMonth: number; criticalAlerts: number;
+}
+
+export type DataRequestType = 'Access' | 'Correction' | 'Deletion';
+export type DataRequestStatus = 'Submitted' | 'Under Review' | 'Approved' | 'Rejected' | 'Completed';
+
+export interface DataRequest {
+  id: string;
+  userId: string;
+  userName: string;
+  userRole: UserRole;
+  requestType: DataRequestType;
+  requestDetails: string;
+  auditTicketId: string;
+  status: DataRequestStatus;
+  createdAt: string;
+  updatedAt: string;
+  adminReviewerId?: string;
+  adminReviewerName?: string;
+  adminNotes?: string;
+}
+
+export type PolicyType = 'privacy' | 'terms';
+
+export interface PolicyVersion {
+  id: string;
+  policyType: PolicyType;
+  version: string;
+  title: string;
+  summary: string;
+  effectiveFrom: string;
+  publishedByUserId: string;
+  publishedByUserName: string;
+  createdAt: string;
+}
+
+export interface PolicyAcceptance {
+  id: string;
+  userId: string;
+  policyType: PolicyType;
+  acceptedVersion: string;
+  acceptedAt: string;
+  method: 'in-app';
 }

@@ -6,6 +6,7 @@ export default function TermsAndConditionsPage() {
       title="Terms and Conditions"
       subtitle="Rules governing access and responsible use of the Student Health Records platform."
       lastUpdated="April 7, 2026"
+      policyType="terms"
     >
       <section className="space-y-4 text-sm leading-6 text-slate-700">
         <div>

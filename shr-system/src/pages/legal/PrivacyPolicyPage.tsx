@@ -6,6 +6,7 @@ export default function PrivacyPolicyPage() {
       title="Privacy Policy"
       subtitle="How we collect, use, share, and protect patient and operational data in the Student Health Records platform."
       lastUpdated="April 7, 2026"
+      policyType="privacy"
     >
       <section className="space-y-4 text-sm leading-6 text-slate-700">
         <div>

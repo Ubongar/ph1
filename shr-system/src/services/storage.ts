@@ -9,6 +9,9 @@ export enum StorageKey {
   RESULTS = 'shr_diagnostic_results',
   AUDIT_LOGS = 'shr_audit_logs',
   ALERTS = 'shr_system_alerts',
+  DATA_REQUESTS = 'shr_data_requests',
+  POLICY_VERSIONS = 'shr_policy_versions',
+  POLICY_ACCEPTANCES = 'shr_policy_acceptances',
   AUTH_SESSION = 'shr_auth_session',
 }
 
@@ -24,6 +27,9 @@ const KEY_TO_RESOURCE_TYPE: Partial<Record<StorageKey, AuditResourceType>> = {
   [StorageKey.RESULTS]: 'DiagnosticResult',
   [StorageKey.ALERTS]: 'System',
   [StorageKey.ENCOUNTERS]: 'Student',
+  [StorageKey.DATA_REQUESTS]: 'DataRequest',
+  [StorageKey.POLICY_VERSIONS]: 'Policy',
+  [StorageKey.POLICY_ACCEPTANCES]: 'Policy',
 };
 
 function getCurrentAuditUser(): Pick<AuditLog, 'userId' | 'userName' | 'userRole'> {

@@ -41,15 +41,31 @@ const REQUIRED_PAGES = [
     to: '/legal/medical-disclaimer',
     reason: 'Clarifies that the platform does not replace emergency or direct clinical judgement.',
   },
+  {
+    title: 'Data Request Center',
+    to: '/legal/data-requests',
+    reason: 'Submit access, correction, and deletion requests with audit ticket IDs and status tracking.',
+  },
+  {
+    title: 'Policy Acceptance History',
+    to: '/legal/acceptance-history',
+    reason: 'Shows terms and privacy acceptance records tied to your user account.',
+  },
+  {
+    title: 'Policy Update Acceptance',
+    to: '/legal/policy-updates',
+    reason: 'Re-accept terms and privacy updates before continuing to role dashboards.',
+  },
 ] as const;
 
-const EXTRA_FEATURES = [
-  'Downloadable PDF exports of each legal policy',
-  'Consent history timeline in each patient profile',
+const LIVE_FEATURES = [
+  'Printable policy pages with browser Save as PDF support',
+  'Text export for each policy page snapshot',
   'Self-service request forms for access, correction, and deletion',
-  'Role-specific privacy highlights (Student, Staff, Specialist, Admin)',
-  'Audit receipt IDs for legal requests submitted in-app',
-  'Automated reminders for policy re-acceptance when terms change',
+  'Admin review workflow for legal data requests',
+  'Audit ticket IDs attached to every data-rights request',
+  'Policy version publishing and mandatory in-app re-acceptance',
+  'Per-user policy acceptance history timeline',
 ] as const;
 
 export default function LegalCenter() {
@@ -81,9 +97,9 @@ export default function LegalCenter() {
           </div>
 
           <section className="mt-7 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-            <h2 className="text-base font-semibold text-emerald-900">Recommended Next Features</h2>
+            <h2 className="text-base font-semibold text-emerald-900">Compliance Features Enabled</h2>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-emerald-800">
-              {EXTRA_FEATURES.map((feature) => (
+              {LIVE_FEATURES.map((feature) => (
                 <li key={feature}>{feature}</li>
               ))}
             </ul>

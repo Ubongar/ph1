@@ -1,8 +1,9 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import type { UserRole } from '../types/types';
 import { useAuth } from '../context/AuthContext';
 import { AppShell } from '../components/layout/AppShell';
+import { getPendingPolicyTypes } from '../services/compliance';
 import LoginPage from '../pages/auth/LoginPage';
 import UnauthorizedPage from '../pages/auth/UnauthorizedPage';
 import StudentDashboard from '../pages/student/StudentDashboard';
@@ -34,6 +35,13 @@ import CookiesPage from '../pages/legal/CookiesPage';
 import SecurityRetentionPage from '../pages/legal/SecurityRetentionPage';
 import MedicalDisclaimerPage from '../pages/legal/MedicalDisclaimerPage';
 import RolePrivacyMatrixPage from '../pages/legal/RolePrivacyMatrixPage';
+import DataRequestCenter from '../pages/legal/DataRequestCenter';
+import PolicyAcceptancePage from '../pages/legal/PolicyAcceptancePage';
+import PolicyAcceptanceHistoryPage from '../pages/legal/PolicyAcceptanceHistoryPage';
+import AdminDataRequests from '../pages/admin/AdminDataRequests';
+import PolicyVersioning from '../pages/admin/PolicyVersioning';
+
+const ALL_ROLES: UserRole[] = ['student', 'medical_staff', 'technician', 'pharmacy', 'specialist', 'admin'];
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -41,9 +49,16 @@ interface ProtectedRouteProps {
 }
 
 function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
-  const { isAuthenticated, hasRole } = useAuth();
+  const { isAuthenticated, hasRole, currentUser } = useAuth();
+  const location = useLocation();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (!hasRole(roles)) return <Navigate to="/unauthorized" replace />;
+  if (currentUser) {
+    const pending = getPendingPolicyTypes(currentUser.id);
+    if (pending.length > 0 && location.pathname !== '/legal/policy-updates') {
+      return <Navigate to="/legal/policy-updates" replace />;
+    }
+  }
   return <>{children}</>;
 }
 
@@ -75,6 +90,30 @@ export function AppRouter() {
       <Route path="/legal/security" element={<SecurityRetentionPage />} />
       <Route path="/legal/role-matrix" element={<RolePrivacyMatrixPage />} />
       <Route path="/legal/medical-disclaimer" element={<MedicalDisclaimerPage />} />
+      <Route
+        path="/legal/data-requests"
+        element={
+          <ProtectedRoute roles={ALL_ROLES}>
+            <DataRequestCenter />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/legal/acceptance-history"
+        element={
+          <ProtectedRoute roles={ALL_ROLES}>
+            <PolicyAcceptanceHistoryPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/legal/policy-updates"
+        element={
+          <ProtectedRoute roles={ALL_ROLES}>
+            <PolicyAcceptancePage />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Student routes */}
       <Route
@@ -252,6 +291,22 @@ export function AppRouter() {
         element={
           <ProtectedRoute roles={['admin']}>
             <AppShell><ReferralCompliance /></AppShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/data-requests"
+        element={
+          <ProtectedRoute roles={['admin']}>
+            <AppShell><AdminDataRequests /></AppShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/policy-versions"
+        element={
+          <ProtectedRoute roles={['admin']}>
+            <AppShell><PolicyVersioning /></AppShell>
           </ProtectedRoute>
         }
       />

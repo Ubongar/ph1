@@ -8,10 +8,10 @@ import { PageHeader } from '../../components/shared/PageHeader';
 const ROLES: UserRole[] = ['student','medical_staff','technician','pharmacy','specialist','admin'];
 const ROLE_LABELS: Record<UserRole, string> = { student:'Student', medical_staff:'Medical Staff', technician:'Technician', pharmacy:'Pharmacy', specialist:'Specialist', admin:'Admin' };
 const ROLE_COLORS: Record<UserRole, string> = { student:'bg-blue-100 text-blue-700', medical_staff:'bg-green-100 text-green-700', technician:'bg-purple-100 text-purple-700', pharmacy:'bg-orange-100 text-orange-700', specialist:'bg-indigo-100 text-indigo-700', admin:'bg-red-100 text-red-700' };
-const ALL_ACTIONS: AuditAction[] = ['LOGIN','LOGOUT','VIEW_RECORD','EDIT_RECORD','CREATE_RECORD','APPROVE_REQUISITION','REJECT_REQUISITION','UPLOAD_RESULT','DISPENSE_MEDICATION','CREATE_USER','DEACTIVATE_USER','RESET_PASSWORD','EXPORT_REPORT','VIEW_AUDIT_LOG','CREATE_REFERRAL','ACCEPT_REFERRAL','COMPLETE_REFERRAL','DECLINE_REFERRAL','SUBMIT_CONSULTATION_NOTES','REFER_TO_SPECIALIST','CLOSE_REFERRAL','GENERATE_QA_REPORT'];
-const ACTION_COLORS: Record<string, string> = { LOGIN:'bg-blue-100 text-blue-700', LOGOUT:'bg-gray-100 text-gray-600', VIEW_RECORD:'bg-cyan-100 text-cyan-700', EDIT_RECORD:'bg-yellow-100 text-yellow-700', CREATE_RECORD:'bg-green-100 text-green-700', APPROVE_REQUISITION:'bg-green-100 text-green-700', REJECT_REQUISITION:'bg-red-100 text-red-700', UPLOAD_RESULT:'bg-purple-100 text-purple-700', DISPENSE_MEDICATION:'bg-orange-100 text-orange-700', CREATE_USER:'bg-green-100 text-green-700', DEACTIVATE_USER:'bg-red-100 text-red-700', RESET_PASSWORD:'bg-yellow-100 text-yellow-700', EXPORT_REPORT:'bg-blue-100 text-blue-700', VIEW_AUDIT_LOG:'bg-gray-100 text-gray-600', CREATE_REFERRAL:'bg-indigo-100 text-indigo-700', ACCEPT_REFERRAL:'bg-blue-100 text-blue-700', COMPLETE_REFERRAL:'bg-green-100 text-green-700', DECLINE_REFERRAL:'bg-red-100 text-red-700', SUBMIT_CONSULTATION_NOTES:'bg-teal-100 text-teal-700', REFER_TO_SPECIALIST:'bg-indigo-100 text-indigo-700', CLOSE_REFERRAL:'bg-gray-100 text-gray-700', GENERATE_QA_REPORT:'bg-blue-100 text-blue-700' };
+const ALL_ACTIONS: AuditAction[] = ['LOGIN','LOGOUT','VIEW_RECORD','EDIT_RECORD','CREATE_RECORD','APPROVE_REQUISITION','REJECT_REQUISITION','UPLOAD_RESULT','DISPENSE_MEDICATION','CREATE_USER','DEACTIVATE_USER','RESET_PASSWORD','EXPORT_REPORT','VIEW_AUDIT_LOG','CREATE_REFERRAL','ACCEPT_REFERRAL','COMPLETE_REFERRAL','DECLINE_REFERRAL','SUBMIT_CONSULTATION_NOTES','REFER_TO_SPECIALIST','CLOSE_REFERRAL','GENERATE_QA_REPORT','SUBMIT_DATA_REQUEST','REVIEW_DATA_REQUEST','UPDATE_POLICY_VERSION','ACCEPT_POLICY_UPDATE'];
+const ACTION_COLORS: Record<string, string> = { LOGIN:'bg-blue-100 text-blue-700', LOGOUT:'bg-gray-100 text-gray-600', VIEW_RECORD:'bg-cyan-100 text-cyan-700', EDIT_RECORD:'bg-yellow-100 text-yellow-700', CREATE_RECORD:'bg-green-100 text-green-700', APPROVE_REQUISITION:'bg-green-100 text-green-700', REJECT_REQUISITION:'bg-red-100 text-red-700', UPLOAD_RESULT:'bg-purple-100 text-purple-700', DISPENSE_MEDICATION:'bg-orange-100 text-orange-700', CREATE_USER:'bg-green-100 text-green-700', DEACTIVATE_USER:'bg-red-100 text-red-700', RESET_PASSWORD:'bg-yellow-100 text-yellow-700', EXPORT_REPORT:'bg-blue-100 text-blue-700', VIEW_AUDIT_LOG:'bg-gray-100 text-gray-600', CREATE_REFERRAL:'bg-indigo-100 text-indigo-700', ACCEPT_REFERRAL:'bg-blue-100 text-blue-700', COMPLETE_REFERRAL:'bg-green-100 text-green-700', DECLINE_REFERRAL:'bg-red-100 text-red-700', SUBMIT_CONSULTATION_NOTES:'bg-teal-100 text-teal-700', REFER_TO_SPECIALIST:'bg-indigo-100 text-indigo-700', CLOSE_REFERRAL:'bg-gray-100 text-gray-700', GENERATE_QA_REPORT:'bg-blue-100 text-blue-700', SUBMIT_DATA_REQUEST:'bg-fuchsia-100 text-fuchsia-700', REVIEW_DATA_REQUEST:'bg-amber-100 text-amber-700', UPDATE_POLICY_VERSION:'bg-indigo-100 text-indigo-700', ACCEPT_POLICY_UPDATE:'bg-emerald-100 text-emerald-700' };
 const PAGE_SIZE = 20;
-const RESOURCE_TYPES = ['Student','Requisition','DiagnosticResult','User','System','Report','Referral'] as const;
+const RESOURCE_TYPES = ['Student','Requisition','DiagnosticResult','User','System','Report','Referral','DataRequest','Policy'] as const;
 
 type SortCol = 'timestamp' | 'userName' | 'action';
 type SortDir = 'asc' | 'desc';
@@ -100,20 +100,20 @@ export default function AuditLogs() {
       )}
       <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div><label className="block text-xs font-medium text-gray-600 mb-1">Start Date</label><input type="date" value={startDate} onChange={e=>{setStartDate(e.target.value);setPage(1)}} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
-          <div><label className="block text-xs font-medium text-gray-600 mb-1">End Date</label><input type="date" value={endDate} onChange={e=>{setEndDate(e.target.value);setPage(1)}} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
+          <div><label className="block text-xs font-medium text-gray-600 mb-1">Start Date</label><input aria-label="Audit start date" type="date" value={startDate} onChange={e=>{setStartDate(e.target.value);setPage(1)}} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
+          <div><label className="block text-xs font-medium text-gray-600 mb-1">End Date</label><input aria-label="Audit end date" type="date" value={endDate} onChange={e=>{setEndDate(e.target.value);setPage(1)}} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
           <div><label className="block text-xs font-medium text-gray-600 mb-1">User Role</label>
-            <select value={roleFilter} onChange={e=>{setRoleFilter(e.target.value);setPage(1)}} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select aria-label="Filter by user role" value={roleFilter} onChange={e=>{setRoleFilter(e.target.value);setPage(1)}} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option value="">All Roles</option>{ROLES.map(r=><option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
             </select>
           </div>
           <div><label className="block text-xs font-medium text-gray-600 mb-1">Resource Type</label>
-            <select value={resourceType} onChange={e=>{setResourceType(e.target.value);setPage(1)}} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select aria-label="Filter by resource type" value={resourceType} onChange={e=>{setResourceType(e.target.value);setPage(1)}} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option value="">All</option>{RESOURCE_TYPES.map(r=><option key={r} value={r}>{r}</option>)}
             </select>
           </div>
           <div><label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
-            <select value={statusFilter} onChange={e=>{setStatusFilter(e.target.value);setPage(1)}} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select aria-label="Filter by audit status" value={statusFilter} onChange={e=>{setStatusFilter(e.target.value);setPage(1)}} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option value="">All</option><option>Success</option><option>Failed</option><option>Suspicious</option>
             </select>
           </div>
@@ -154,7 +154,7 @@ export default function AuditLogs() {
                 <td className="px-3 py-2 text-gray-500 font-mono">{l.ipAddress}</td>
                 <td className="px-3 py-2 text-gray-400 font-mono">{l.sessionId.slice(0,12)}…</td>
                 <td className="px-3 py-2"><span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${l.status==='Success'?'bg-green-100 text-green-700':l.status==='Failed'?'bg-red-100 text-red-700':'bg-orange-100 text-orange-700'}`}>{l.status}</span></td>
-                <td className="px-3 py-2"><button onClick={()=>setDetailLog(l)}><Eye className="w-4 h-4 text-gray-400 hover:text-blue-600" /></button></td>
+                <td className="px-3 py-2"><button type="button" title="View log details" aria-label="View log details" onClick={()=>setDetailLog(l)}><Eye className="w-4 h-4 text-gray-400 hover:text-blue-600" /></button></td>
               </tr>
             ))}
           </tbody>

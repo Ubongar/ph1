@@ -1,6 +1,6 @@
 import type {
   Student, SystemUser, Encounter, MedicationRequisition,
-  DiagnosticResult, AuditLog, SystemAlert, Referral,
+  DiagnosticResult, AuditLog, SystemAlert, Referral, PolicyVersion, PolicyAcceptance, DataRequest,
 } from '../types/types';
 import { StorageKey } from '../services/storage';
 
@@ -43,6 +43,89 @@ export function initializeMockData(): void {
         },
       ];
       localStorage.setItem(StorageKey.REFERRALS, JSON.stringify(referrals));
+    }
+
+    if (!localStorage.getItem(StorageKey.POLICY_VERSIONS)) {
+      const policyVersions: PolicyVersion[] = [
+        {
+          id: 'policy-privacy-v1',
+          policyType: 'privacy',
+          version: '1.0',
+          title: 'Privacy Policy',
+          summary: 'Initial privacy framework for student health records handling.',
+          effectiveFrom: '2024-01-01T00:00:00Z',
+          publishedByUserId: 'admin-001',
+          publishedByUserName: 'Chidi Okwu',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+        {
+          id: 'policy-terms-v1',
+          policyType: 'terms',
+          version: '1.0',
+          title: 'Terms and Conditions',
+          summary: 'Initial terms governing acceptable use and responsibilities.',
+          effectiveFrom: '2024-01-01T00:00:00Z',
+          publishedByUserId: 'admin-001',
+          publishedByUserName: 'Chidi Okwu',
+          createdAt: '2024-01-01T00:00:00Z',
+        },
+      ];
+      localStorage.setItem(StorageKey.POLICY_VERSIONS, JSON.stringify(policyVersions));
+    }
+
+    if (!localStorage.getItem(StorageKey.POLICY_ACCEPTANCES)) {
+      const policyAcceptances: PolicyAcceptance[] = users.flatMap((user) => [
+        {
+          id: `${user.id}-privacy-v1`,
+          userId: user.id,
+          policyType: 'privacy',
+          acceptedVersion: '1.0',
+          acceptedAt: '2024-01-10T08:00:00Z',
+          method: 'in-app',
+        },
+        {
+          id: `${user.id}-terms-v1`,
+          userId: user.id,
+          policyType: 'terms',
+          acceptedVersion: '1.0',
+          acceptedAt: '2024-01-10T08:05:00Z',
+          method: 'in-app',
+        },
+      ]);
+      localStorage.setItem(StorageKey.POLICY_ACCEPTANCES, JSON.stringify(policyAcceptances));
+    }
+
+    if (!localStorage.getItem(StorageKey.DATA_REQUESTS)) {
+      const dataRequests: DataRequest[] = [
+        {
+          id: 'dr-001',
+          userId: 'student-001',
+          userName: 'Adaeze Okonkwo',
+          userRole: 'student',
+          requestType: 'Access',
+          requestDetails: 'Requesting complete copy of my encounter history for scholarship documentation.',
+          auditTicketId: 'DR-20260110-3021',
+          status: 'Completed',
+          createdAt: '2026-01-10T09:15:00Z',
+          updatedAt: '2026-01-14T13:40:00Z',
+          adminReviewerId: 'admin-001',
+          adminReviewerName: 'Chidi Okwu',
+          adminNotes: 'Identity verified and encrypted export delivered through secure channel.',
+        },
+        {
+          id: 'dr-002',
+          userId: 'student-001',
+          userName: 'Adaeze Okonkwo',
+          userRole: 'student',
+          requestType: 'Correction',
+          requestDetails: 'My emergency contact phone number should be updated to 08087654322.',
+          auditTicketId: 'DR-20260208-4493',
+          status: 'Under Review',
+          createdAt: '2026-02-08T10:05:00Z',
+          updatedAt: '2026-02-08T10:05:00Z',
+        },
+      ];
+      localStorage.setItem(StorageKey.DATA_REQUESTS, JSON.stringify(dataRequests));
     }
     return;
   }
@@ -736,6 +819,80 @@ export function initializeMockData(): void {
     },
   ];
 
+  const policyVersions: PolicyVersion[] = [
+    {
+      id: 'policy-privacy-v1',
+      policyType: 'privacy',
+      version: '1.0',
+      title: 'Privacy Policy',
+      summary: 'Initial privacy framework for student health records handling.',
+      effectiveFrom: '2024-01-01T00:00:00Z',
+      publishedByUserId: 'admin-001',
+      publishedByUserName: 'Chidi Okwu',
+      createdAt: '2024-01-01T00:00:00Z',
+    },
+    {
+      id: 'policy-terms-v1',
+      policyType: 'terms',
+      version: '1.0',
+      title: 'Terms and Conditions',
+      summary: 'Initial terms governing acceptable use and responsibilities.',
+      effectiveFrom: '2024-01-01T00:00:00Z',
+      publishedByUserId: 'admin-001',
+      publishedByUserName: 'Chidi Okwu',
+      createdAt: '2024-01-01T00:00:00Z',
+    },
+  ];
+
+  const policyAcceptances: PolicyAcceptance[] = systemUsers.flatMap((user) => [
+    {
+      id: `${user.id}-privacy-v1`,
+      userId: user.id,
+      policyType: 'privacy',
+      acceptedVersion: '1.0',
+      acceptedAt: '2024-01-10T08:00:00Z',
+      method: 'in-app',
+    },
+    {
+      id: `${user.id}-terms-v1`,
+      userId: user.id,
+      policyType: 'terms',
+      acceptedVersion: '1.0',
+      acceptedAt: '2024-01-10T08:05:00Z',
+      method: 'in-app',
+    },
+  ]);
+
+  const dataRequests: DataRequest[] = [
+    {
+      id: 'dr-001',
+      userId: 'student-001',
+      userName: 'Adaeze Okonkwo',
+      userRole: 'student',
+      requestType: 'Access',
+      requestDetails: 'Requesting complete copy of my encounter history for scholarship documentation.',
+      auditTicketId: 'DR-20260110-3021',
+      status: 'Completed',
+      createdAt: '2026-01-10T09:15:00Z',
+      updatedAt: '2026-01-14T13:40:00Z',
+      adminReviewerId: 'admin-001',
+      adminReviewerName: 'Chidi Okwu',
+      adminNotes: 'Identity verified and encrypted export delivered through secure channel.',
+    },
+    {
+      id: 'dr-002',
+      userId: 'student-001',
+      userName: 'Adaeze Okonkwo',
+      userRole: 'student',
+      requestType: 'Correction',
+      requestDetails: 'My emergency contact phone number should be updated to 08087654322.',
+      auditTicketId: 'DR-20260208-4493',
+      status: 'Under Review',
+      createdAt: '2026-02-08T10:05:00Z',
+      updatedAt: '2026-02-08T10:05:00Z',
+    },
+  ];
+
   localStorage.setItem(StorageKey.STUDENTS, JSON.stringify(students));
   localStorage.setItem(StorageKey.USERS, JSON.stringify(systemUsers));
   localStorage.setItem(StorageKey.ENCOUNTERS, JSON.stringify(encounters));
@@ -744,5 +901,8 @@ export function initializeMockData(): void {
   localStorage.setItem(StorageKey.REFERRALS, JSON.stringify(referrals));
   localStorage.setItem(StorageKey.AUDIT_LOGS, JSON.stringify(auditLogs));
   localStorage.setItem(StorageKey.ALERTS, JSON.stringify(systemAlerts));
+  localStorage.setItem(StorageKey.POLICY_VERSIONS, JSON.stringify(policyVersions));
+  localStorage.setItem(StorageKey.POLICY_ACCEPTANCES, JSON.stringify(policyAcceptances));
+  localStorage.setItem(StorageKey.DATA_REQUESTS, JSON.stringify(dataRequests));
   localStorage.setItem(INITIALIZED_KEY, 'true');
 }

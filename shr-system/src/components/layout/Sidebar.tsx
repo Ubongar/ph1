@@ -44,6 +44,8 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { label: 'Audit Logs', to: '/admin/audit-logs', icon: <FileText className="w-5 h-5" /> },
     { label: 'Reports', to: '/admin/reports', icon: <BarChart3 className="w-5 h-5" /> },
     { label: 'Referral Compliance', to: '/admin/referral-compliance', icon: <ShieldCheck className="w-5 h-5" /> },
+    { label: 'Data Requests', to: '/admin/data-requests', icon: <ClipboardList className="w-5 h-5" /> },
+    { label: 'Policy Versions', to: '/admin/policy-versions', icon: <FileText className="w-5 h-5" /> },
   ],
 };
 
@@ -106,6 +108,12 @@ export function Sidebar() {
             className="block rounded-md px-2 py-1.5 text-xs font-medium text-gray-600 hover:bg-white hover:text-gray-900"
           >
             {collapsed ? 'PP' : 'Privacy Policy'}
+          </Link>
+          <Link
+            to="/legal/data-requests"
+            className="block rounded-md px-2 py-1.5 text-xs font-medium text-gray-600 hover:bg-white hover:text-gray-900"
+          >
+            {collapsed ? 'DR' : 'Data Requests'}
           </Link>
         </div>
       </div>

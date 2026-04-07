@@ -62,6 +62,8 @@ export function AppShell({ children }: AppShellProps) {
               <Link to="/legal/privacy" className="hover:text-blue-700">Privacy</Link>
               <Link to="/legal/terms" className="hover:text-blue-700">Terms</Link>
               <Link to="/legal/data-rights" className="hover:text-blue-700">Data Rights</Link>
+              <Link to="/legal/data-requests" className="hover:text-blue-700">Data Requests</Link>
+              <Link to="/legal/acceptance-history" className="hover:text-blue-700">Acceptance History</Link>
               <Link to="/legal/role-matrix" className="hover:text-blue-700">Role Matrix</Link>
               <Link to="/legal/security" className="hover:text-blue-700">Security</Link>
             </div>

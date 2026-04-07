@@ -1,10 +1,15 @@
+import { useMemo, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { Download, FileClock, Printer } from 'lucide-react';
+import { getLatestPolicyVersion } from '../../services/compliance';
+import type { PolicyType } from '../../types/types';
 
 interface LegalPageFrameProps {
   title: string;
   subtitle: string;
   lastUpdated: string;
+  policyType?: PolicyType;
   children: ReactNode;
 }
 
@@ -18,9 +23,45 @@ const LEGAL_LINKS = [
   { label: 'Security & Retention', to: '/legal/security' },
   { label: 'Role Privacy Matrix', to: '/legal/role-matrix' },
   { label: 'Medical Disclaimer', to: '/legal/medical-disclaimer' },
+  { label: 'Data Request Center', to: '/legal/data-requests' },
+  { label: 'Acceptance History', to: '/legal/acceptance-history' },
+  { label: 'Policy Updates', to: '/legal/policy-updates' },
 ] as const;
 
-export default function LegalPageFrame({ title, subtitle, lastUpdated, children }: LegalPageFrameProps) {
+export default function LegalPageFrame({ title, subtitle, lastUpdated, policyType, children }: LegalPageFrameProps) {
+  const articleRef = useRef<HTMLElement | null>(null);
+
+  const currentVersion = useMemo(
+    () => (policyType ? getLatestPolicyVersion(policyType) : null),
+    [policyType],
+  );
+
+  function handlePrint() {
+    window.print();
+  }
+
+  function handleDownload() {
+    const articleText = articleRef.current?.innerText?.trim();
+    if (!articleText) return;
+
+    const headerLines = [
+      title,
+      `Last updated: ${lastUpdated}`,
+      currentVersion ? `Version: ${currentVersion.version}` : undefined,
+      '---',
+      articleText,
+    ].filter(Boolean);
+
+    const blob = new Blob([headerLines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    const safeName = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    anchor.href = url;
+    anchor.download = `${safeName}.txt`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200 bg-white">
@@ -32,15 +73,41 @@ export default function LegalPageFrame({ title, subtitle, lastUpdated, children 
           </div>
           <h1 className="mt-3 text-2xl font-bold text-slate-900 sm:text-3xl">{title}</h1>
           <p className="mt-2 max-w-3xl text-sm text-slate-600 sm:text-base">{subtitle}</p>
-          <p className="mt-2 text-xs font-medium text-slate-500">Last updated: {lastUpdated}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
+            <span>Last updated: {lastUpdated}</span>
+            {currentVersion && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-blue-700">
+                <FileClock className="h-3.5 w-3.5" />
+                Version {currentVersion.version}
+              </span>
+            )}
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2 print:hidden">
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              <Printer className="h-3.5 w-3.5" />
+              Print / Save PDF
+            </button>
+            <button
+              type="button"
+              onClick={handleDownload}
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Download Text Export
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="mx-auto grid max-w-5xl gap-6 px-4 py-6 sm:px-6 md:grid-cols-[1fr_220px]">
-        <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <article ref={articleRef} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           {children}
         </article>
-        <aside className="h-fit rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <aside className="h-fit rounded-xl border border-slate-200 bg-white p-4 shadow-sm print:hidden">
           <h2 className="mb-2 text-sm font-semibold text-slate-800">Policy Pages</h2>
           <nav className="space-y-1">
             {LEGAL_LINKS.map((link) => (
