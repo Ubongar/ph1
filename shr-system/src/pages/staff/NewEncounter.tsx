@@ -348,7 +348,7 @@ export default function NewEncounter() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <button
           type="button"
           onClick={() => navigate(-1)}
@@ -365,11 +365,11 @@ export default function NewEncounter() {
         )}
       </div>
 
-      <div className="max-w-screen-xl mx-auto p-6 flex gap-6">
+      <div className="max-w-screen-xl mx-auto p-4 sm:p-6 flex flex-col xl:flex-row gap-4 sm:gap-6">
         {/* Left sidebar (25%) */}
         {student && (
-          <div className="w-[25%] shrink-0">
-            <div className="bg-white rounded-xl border border-gray-200 p-5 sticky top-6">
+          <div className="w-full xl:w-[25%] shrink-0">
+            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 xl:sticky xl:top-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold">
                   {student.name
@@ -431,9 +431,9 @@ export default function NewEncounter() {
           <h1 className="text-xl font-bold text-gray-900">New Encounter</h1>
 
           {/* Section 1: Visit Info */}
-          <section className="bg-white rounded-xl border border-gray-200 p-5">
+          <section className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
             <h2 className="text-sm font-semibold text-gray-900 mb-4">Visit Information</h2>
-            <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-4">
               <div>
                 <label className="text-xs font-medium text-gray-600 mb-1 block">Facility</label>
                 <select
@@ -489,9 +489,9 @@ export default function NewEncounter() {
           </section>
 
           {/* Section 2: SOAP Notes */}
-          <section className="bg-white rounded-xl border border-gray-200 p-5">
+          <section className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
             <h2 className="text-sm font-semibold text-gray-900 mb-4">SOAP Notes</h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-medium text-gray-600 mb-1 block">
                   Subjective <span className="text-red-500">*</span>
@@ -528,11 +528,11 @@ export default function NewEncounter() {
           </section>
 
           {/* Section 3: Vitals */}
-          <section className="bg-white rounded-xl border border-gray-200 p-5">
+          <section className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
             <h2 className="text-sm font-semibold text-gray-900 mb-4">
               Vitals <span className="text-red-500">*</span>
             </h2>
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               {[
                 { label: 'BP Systolic (mmHg)', key: 'bpSystolic' as const },
                 { label: 'BP Diastolic (mmHg)', key: 'bpDiastolic' as const },
@@ -569,8 +569,8 @@ export default function NewEncounter() {
           </section>
 
           {/* Section 4: Diagnoses */}
-          <section className="bg-white rounded-xl border border-gray-200 p-5">
-            <div className="flex items-center justify-between mb-4">
+          <section className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
               <h2 className="text-sm font-semibold text-gray-900">
                 Diagnoses <span className="text-red-500">*</span>
               </h2>
@@ -587,12 +587,12 @@ export default function NewEncounter() {
             {errors.diagnoses && <p className="text-xs text-red-500 mb-2">{errors.diagnoses}</p>}
             <div className="space-y-3">
               {form.diagnoses.map((diag) => (
-                <div key={diag.uid} className="flex items-start gap-3">
+                <div key={diag.uid} className="grid grid-cols-1 md:grid-cols-[180px_1fr_140px_auto] gap-2 md:gap-3 items-start">
                   <select
                     value={diag.icd10Code}
                     disabled={submitting}
                     onChange={(e) => updateDiag(diag.uid, 'icd10Code', e.target.value)}
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 w-48 shrink-0"
+                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
                   >
                     <option value="">Select ICD-10</option>
                     {ICD10_CODES.map((c) => (
@@ -613,7 +613,7 @@ export default function NewEncounter() {
                     value={diag.type}
                     disabled={submitting}
                     onChange={(e) => updateDiag(diag.uid, 'type', e.target.value)}
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 w-36 shrink-0"
+                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
                   >
                     {(['Primary', 'Secondary', 'Differential'] as const).map((t) => (
                       <option key={t} value={t}>
@@ -626,7 +626,7 @@ export default function NewEncounter() {
                       type="button"
                       onClick={() => removeDiag(diag.uid)}
                       disabled={submitting}
-                      className="p-2 text-red-400 hover:text-red-600 disabled:opacity-60"
+                      className="p-2 text-red-400 hover:text-red-600 disabled:opacity-60 justify-self-start md:justify-self-auto"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -637,7 +637,7 @@ export default function NewEncounter() {
           </section>
 
           {/* Section 5: Treatment Plan */}
-          <section className="bg-white rounded-xl border border-gray-200 p-5">
+          <section className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
             <h2 className="text-sm font-semibold text-gray-900 mb-4">Treatment Plan</h2>
             <textarea
               rows={3}
@@ -670,7 +670,7 @@ export default function NewEncounter() {
                   value={form.followUpDate}
                   disabled={submitting}
                   onChange={(e) => setField('followUpDate', e.target.value)}
-                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
+                  className="w-full sm:w-auto border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
                 />
               </div>
             )}
@@ -682,7 +682,7 @@ export default function NewEncounter() {
                 value={form.status}
                 disabled={submitting}
                 onChange={(e) => setField('status', e.target.value as Encounter['status'])}
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
+                className="w-full sm:w-auto border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
               >
                 {(['Active', 'Resolved', 'Referred'] as const).map((s) => (
                   <option key={s} value={s}>
@@ -694,8 +694,8 @@ export default function NewEncounter() {
           </section>
 
           {/* Section 6: Prescriptions */}
-          <section className="bg-white rounded-xl border border-gray-200 p-5">
-            <div className="flex items-center justify-between mb-4">
+          <section className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
               <h2 className="text-sm font-semibold text-gray-900">Prescriptions (Optional)</h2>
               <button
                 type="button"
@@ -714,7 +714,7 @@ export default function NewEncounter() {
                 {form.prescriptions.map((p) => (
                   <div
                     key={p.uid}
-                    className="grid grid-cols-6 gap-2 items-start border border-gray-100 rounded-lg p-3 bg-gray-50"
+                    className="grid grid-cols-1 md:grid-cols-6 gap-2 items-start border border-gray-100 rounded-lg p-3 bg-gray-50"
                   >
                     <input
                       type="text"
@@ -722,7 +722,7 @@ export default function NewEncounter() {
                       disabled={submitting}
                       onChange={(e) => updatePresc(p.uid, 'medicationName', e.target.value)}
                       placeholder="Medication"
-                      className="col-span-2 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
+                      className="md:col-span-2 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
                     />
                     <input
                       type="text"
@@ -748,7 +748,7 @@ export default function NewEncounter() {
                       placeholder="Duration"
                       className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
                     />
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 md:col-span-1">
                       <select
                         value={p.route}
                         disabled={submitting}
@@ -787,12 +787,12 @@ export default function NewEncounter() {
           </section>
 
           {/* Submit */}
-          <div className="flex justify-end pb-8">
+          <div className="flex justify-stretch sm:justify-end pb-8">
             <button
               type="button"
               onClick={handleSubmit}
               disabled={submitting}
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {submitting ? (
                 <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
