@@ -65,7 +65,7 @@ export function AppShell({ children }: AppShellProps) {
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
         <main ref={mainRef} className="relative flex-1 overflow-y-auto">
-          <div className={`${isStudent ? 'pb-24 md:pb-6' : 'pb-6'} p-3 sm:p-4 md:p-6`}>
+          <div className={`${isStudent ? 'pb-28 md:pb-6' : 'pb-6'} p-3 sm:p-4 md:p-6`}>
             {children}
           </div>
           <footer className="border-t border-gray-200 bg-white px-4 py-4 md:px-6">
@@ -85,7 +85,7 @@ export function AppShell({ children }: AppShellProps) {
             <button
               type="button"
               onClick={scrollToTop}
-              className="fixed bottom-24 md:bottom-8 right-4 md:right-6 z-20 inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-md hover:bg-gray-50"
+              className="fixed bottom-24 md:bottom-8 right-4 md:right-6 z-20 inline-flex min-h-[42px] items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-md hover:bg-gray-50"
               aria-label="Scroll to top"
             >
               <ArrowUp className="h-3.5 w-3.5" />

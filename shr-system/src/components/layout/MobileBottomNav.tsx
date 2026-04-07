@@ -21,14 +21,14 @@ export function MobileBottomNav() {
             key={to}
             to={to}
             className={({ isActive }) =>
-              `flex-1 flex flex-col items-center justify-center py-2 text-[11px] font-medium transition-colors ${
+              `flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 text-[11px] font-medium transition-colors ${
                 isActive ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
               }`
             }
           >
             {({ isActive }) => (
               <>
-                <Icon className={`w-5 h-5 mb-0.5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
+                <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
                 <span className="leading-none truncate max-w-[84px]">{label}</span>
               </>
             )}
