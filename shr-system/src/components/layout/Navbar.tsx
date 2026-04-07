@@ -5,6 +5,7 @@ import {
   ChevronDown,
   Clock3,
   Command,
+  Download,
   LogOut,
   Search,
   UserCircle,
@@ -15,6 +16,11 @@ import type { MedicationRequisition, Referral, SystemAlert, SystemUser } from '.
 import { useToast } from '../../hooks';
 import { useSimulatedPolling } from '../../hooks/useSimulatedPolling';
 import { CommandPalette, type CommandItem } from './CommandPalette';
+import {
+  isPwaInstallAvailable,
+  promptPwaInstall,
+  PWA_EVENT_INSTALL_AVAILABILITY,
+} from '../../services/registerServiceWorker';
 
 const ROLE_LABELS: Record<string, string> = {
   student: 'Student',
@@ -35,6 +41,7 @@ export function Navbar() {
   const [switchUserOpen, setSwitchUserOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [switchingUserId, setSwitchingUserId] = useState<string | null>(null);
+  const [pwaInstallAvailable, setPwaInstallAvailable] = useState(() => isPwaInstallAvailable());
   const [alerts, setAlerts] = useState<SystemAlert[]>(() =>
     getAll<SystemAlert>(StorageKey.ALERTS).sort(
       (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
@@ -163,6 +170,16 @@ export function Navbar() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
+  useEffect(() => {
+    function onInstallAvailability(event: Event) {
+      const customEvent = event as CustomEvent<{ available?: boolean }>;
+      setPwaInstallAvailable(Boolean(customEvent.detail?.available));
+    }
+
+    window.addEventListener(PWA_EVENT_INSTALL_AVAILABILITY, onInstallAvailability);
+    return () => window.removeEventListener(PWA_EVENT_INSTALL_AVAILABILITY, onInstallAvailability);
+  }, []);
+
   function markAlertAsRead(alertId: string) {
     setReadAlertIds((prev) => (prev.includes(alertId) ? prev : [...prev, alertId]));
   }
@@ -208,6 +225,19 @@ export function Navbar() {
       admin: '/admin/dashboard',
     };
     navigate(rolePath[user.role] ?? '/');
+  }
+
+  async function handleInstallApp() {
+    const outcome = await promptPwaInstall();
+    if (outcome === 'accepted') {
+      toast('Installing app...', 'info');
+      return;
+    }
+    if (outcome === 'dismissed') {
+      toast('Install prompt dismissed.', 'warning');
+      return;
+    }
+    toast('Install is not available on this browser yet.', 'warning');
   }
 
   function getPageTitle(pathname: string): string {
@@ -310,6 +340,18 @@ export function Navbar() {
               className="hidden lg:inline-flex rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
             >
               {quickAction.label}
+            </button>
+          )}
+
+          {pwaInstallAvailable && (
+            <button
+              type="button"
+              onClick={() => void handleInstallApp()}
+              className="hidden md:inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+              aria-label="Install app"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Install App
             </button>
           )}
 
