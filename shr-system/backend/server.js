@@ -2,13 +2,15 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHmac, timingSafeEqual } from 'node:crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PORT = Number(process.env.PORT || 8787);
 const DB_PATH = path.join(__dirname, 'data', 'sync-db.json');
 const VALID_ROLES = new Set(['student', 'medical_staff', 'technician', 'pharmacy', 'specialist', 'admin']);
+const TOKEN_SECRET = process.env.SHR_SYNC_TOKEN_SECRET || 'shr-sync-dev-secret-change-me';
+const TOKEN_TTL_SECONDS = Number(process.env.SHR_SYNC_TOKEN_TTL_SECONDS || 3600);
 
 function readDb() {
   try {
@@ -18,8 +20,69 @@ function readDb() {
     return {
       entities: {},
       conflicts: [],
+      adminAuditLogs: [],
       updatedAt: new Date().toISOString(),
     };
+  }
+}
+
+function toBase64Url(value) {
+  const encoded = Buffer.isBuffer(value) ? value.toString('base64') : Buffer.from(value, 'utf8').toString('base64');
+  return encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function fromBase64Url(value) {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padLength = (4 - (normalized.length % 4)) % 4;
+  const padded = normalized + '='.repeat(padLength);
+  return Buffer.from(padded, 'base64');
+}
+
+function signTokenPayload(payload) {
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const encodedHeader = toBase64Url(JSON.stringify(header));
+  const encodedPayload = toBase64Url(JSON.stringify(payload));
+  const data = `${encodedHeader}.${encodedPayload}`;
+  const signature = createHmac('sha256', TOKEN_SECRET).update(data).digest();
+  return `${data}.${toBase64Url(signature)}`;
+}
+
+function verifyToken(token) {
+  try {
+    const [headerPart, payloadPart, signaturePart] = token.split('.');
+    if (!headerPart || !payloadPart || !signaturePart) return { ok: false, reason: 'Malformed token.' };
+
+    const data = `${headerPart}.${payloadPart}`;
+    const expectedSig = createHmac('sha256', TOKEN_SECRET).update(data).digest();
+    const providedSig = fromBase64Url(signaturePart);
+    if (providedSig.length !== expectedSig.length || !timingSafeEqual(providedSig, expectedSig)) {
+      return { ok: false, reason: 'Invalid token signature.' };
+    }
+
+    const payload = JSON.parse(fromBase64Url(payloadPart).toString('utf8'));
+    if (!payload?.sub || !payload?.role || !payload?.exp) {
+      return { ok: false, reason: 'Invalid token payload.' };
+    }
+
+    if (!VALID_ROLES.has(payload.role)) {
+      return { ok: false, reason: 'Invalid role claim.' };
+    }
+
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    if (nowSeconds >= payload.exp) {
+      return { ok: false, reason: 'Token expired.' };
+    }
+
+    return {
+      ok: true,
+      userId: payload.sub,
+      role: payload.role,
+      tokenId: payload.jti,
+      issuedAt: payload.iat,
+      expiresAt: payload.exp,
+    };
+  } catch {
+    return { ok: false, reason: 'Token parse failure.' };
   }
 }
 
@@ -33,7 +96,7 @@ function sendJson(res, statusCode, payload) {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, x-shr-user-id, x-shr-user-role',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-shr-user-id, x-shr-user-role',
   });
   res.end(JSON.stringify(payload));
 }
@@ -53,8 +116,22 @@ function getRequestIdentity(req) {
   return { ok: true, userId, role };
 }
 
+function getIdentityFromBearerToken(req) {
+  const authHeader = req.headers.authorization;
+  if (typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) {
+    return { ok: false, reason: 'Missing bearer token.' };
+  }
+
+  const token = authHeader.slice('Bearer '.length).trim();
+  if (!token) {
+    return { ok: false, reason: 'Missing bearer token.' };
+  }
+
+  return verifyToken(token);
+}
+
 function requireAuthenticated(req, res) {
-  const identity = getRequestIdentity(req);
+  const identity = getIdentityFromBearerToken(req);
   if (!identity.ok) {
     sendJson(res, 401, { error: identity.reason });
     return null;
@@ -125,6 +202,43 @@ function registerConflict(db, mutation, reason, remoteValue) {
 
   db.conflicts.push(created);
   return created;
+}
+
+function appendAdminAuditLog(db, entry) {
+  const list = Array.isArray(db.adminAuditLogs) ? db.adminAuditLogs : [];
+  list.push({
+    id: randomUUID(),
+    timestamp: new Date().toISOString(),
+    ...entry,
+  });
+  db.adminAuditLogs = list;
+}
+
+function handleIssueToken(req, res) {
+  const identity = getRequestIdentity(req);
+  if (!identity.ok) {
+    sendJson(res, 401, { error: identity.reason });
+    return;
+  }
+
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const payload = {
+    sub: identity.userId,
+    role: identity.role,
+    iat: nowSeconds,
+    exp: nowSeconds + TOKEN_TTL_SECONDS,
+    jti: randomUUID(),
+  };
+  const token = signTokenPayload(payload);
+
+  sendJson(res, 200, {
+    token,
+    tokenType: 'Bearer',
+    expiresInSeconds: TOKEN_TTL_SECONDS,
+    issuedAt: payload.iat,
+    expiresAt: payload.exp,
+    user: { id: identity.userId, role: identity.role },
+  });
 }
 
 function handleBatchSync(req, res) {
@@ -223,6 +337,19 @@ function handleListConflicts(req, res) {
   });
 }
 
+function handleAdminAuditLogs(req, res) {
+  const identity = requireAdmin(req, res);
+  if (!identity) return;
+
+  const db = readDb();
+  const logs = Array.isArray(db.adminAuditLogs) ? db.adminAuditLogs : [];
+  sendJson(res, 200, {
+    requestedBy: { userId: identity.userId, role: identity.role },
+    logs,
+    count: logs.length,
+  });
+}
+
 function handleResolveConflict(req, res) {
   const identity = requireAdmin(req, res);
   if (!identity) return;
@@ -273,6 +400,18 @@ function handleResolveConflict(req, res) {
       conflict.resolvedAt = new Date().toISOString();
       conflict.resolvedBy = identity.userId;
 
+      appendAdminAuditLog(db, {
+        adminUserId: identity.userId,
+        adminRole: identity.role,
+        action: 'RESOLVE_RECONCILIATION_CONFLICT',
+        conflictId: conflict.id,
+        mutationId: conflict.mutationId,
+        storageKey: conflict.storageKey,
+        entityId: conflict.entityId,
+        decision: resolution,
+        reason: conflict.reason,
+      });
+
       writeDb(db);
       sendJson(res, 200, {
         resolvedBy: { userId: identity.userId, role: identity.role },
@@ -298,6 +437,11 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (method === 'POST' && url === '/api/auth/token') {
+    handleIssueToken(req, res);
+    return;
+  }
+
   if (method === 'POST' && url === '/api/sync/batch') {
     handleBatchSync(req, res);
     return;
@@ -310,6 +454,11 @@ const server = http.createServer((req, res) => {
 
   if (method === 'POST' && url === '/api/admin/reconciliation/resolve') {
     handleResolveConflict(req, res);
+    return;
+  }
+
+  if (method === 'GET' && url === '/api/admin/audit-logs') {
+    handleAdminAuditLogs(req, res);
     return;
   }
 

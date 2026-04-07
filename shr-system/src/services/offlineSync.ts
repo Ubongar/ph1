@@ -23,6 +23,15 @@ interface SyncBatchResponse {
   results: SyncBatchResult[];
 }
 
+interface AuthTokenResponse {
+  token: string;
+  tokenType: 'Bearer';
+  expiresInSeconds: number;
+  issuedAt: number;
+  expiresAt: number;
+  user: { id: string; role: UserRole };
+}
+
 export interface ServerReconciliationConflict {
   id: string;
   mutationId: string;
@@ -37,13 +46,28 @@ export interface ServerReconciliationConflict {
   resolvedAt?: string;
 }
 
+export interface ServerAdminAuditLog {
+  id: string;
+  timestamp: string;
+  adminUserId: string;
+  adminRole: UserRole;
+  action: string;
+  conflictId: string;
+  mutationId: string;
+  storageKey: string;
+  entityId: string;
+  decision: 'keep_local' | 'keep_remote';
+  reason: string;
+}
+
 const OUTBOX_KEY = 'shr_offline_outbox';
 const CONFLICTS_KEY = 'shr_offline_conflicts';
 const LAST_SYNC_AT_KEY = 'shr_offline_last_synced_at';
 const DEVICE_ID_KEY = 'shr_offline_device_id';
+const AUTH_TOKEN_KEY = 'shr_api_auth_token';
 const USERS_KEY = 'shr_system_users';
 const AUTH_SESSION_KEY = 'shr_auth_session';
-const API_BASE = '/api';
+const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '') || '/api';
 
 type SyncListener = (snapshot: OfflineSyncSnapshot) => void;
 
@@ -156,14 +180,89 @@ function upsertLocalConflict(mutation: OfflineMutation, reason: string, remoteVa
   return created;
 }
 
-async function postJson<T>(path: string, payload: unknown): Promise<T> {
+function parseJwtExpiry(token: string): number | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payloadRaw = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padding = '='.repeat((4 - (payloadRaw.length % 4)) % 4);
+    const decoded = atob(payloadRaw + padding);
+    const payload = JSON.parse(decoded) as { exp?: number };
+    return typeof payload.exp === 'number' ? payload.exp : null;
+  } catch {
+    return null;
+  }
+}
+
+function getCachedAuthToken(): string | null {
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
+  if (!token) return null;
+  const exp = parseJwtExpiry(token);
+  if (!exp) return null;
+  const now = Math.floor(Date.now() / 1000);
+  if (now >= exp - 30) {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    return null;
+  }
+  return token;
+}
+
+async function issueAuthToken(): Promise<string> {
   const identity = getCurrentAuditUser();
+  const response = await fetch(`${API_BASE}/auth/token`, {
+    method: 'POST',
+    headers: {
+      'x-shr-user-id': identity.userId,
+      'x-shr-user-role': identity.userRole,
+    },
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(details || `Auth token request failed with status ${response.status}`);
+  }
+
+  const payload = await response.json() as AuthTokenResponse;
+  localStorage.setItem(AUTH_TOKEN_KEY, payload.token);
+  return payload.token;
+}
+
+async function ensureAuthToken(forceRefresh = false): Promise<string> {
+  if (!forceRefresh) {
+    const cached = getCachedAuthToken();
+    if (cached) return cached;
+  }
+  return issueAuthToken();
+}
+
+async function fetchWithAuth(path: string, init: RequestInit, allowRetry = true): Promise<Response> {
+  const token = await ensureAuthToken(false);
+  const headers = new Headers(init.headers ?? {});
+  headers.set('Authorization', `Bearer ${token}`);
+
   const response = await fetch(`${API_BASE}${path}`, {
+    ...init,
+    headers,
+  });
+
+  if (response.status === 401 && allowRetry) {
+    const refreshedToken = await ensureAuthToken(true);
+    const retryHeaders = new Headers(init.headers ?? {});
+    retryHeaders.set('Authorization', `Bearer ${refreshedToken}`);
+    return fetch(`${API_BASE}${path}`, {
+      ...init,
+      headers: retryHeaders,
+    });
+  }
+
+  return response;
+}
+
+async function postJson<T>(path: string, payload: unknown): Promise<T> {
+  const response = await fetchWithAuth(path, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-shr-user-id': identity.userId,
-      'x-shr-user-role': identity.userRole,
     },
     body: JSON.stringify(payload),
   });
@@ -372,12 +471,8 @@ export function retryFailedOfflineMutations(): void {
 }
 
 export async function fetchServerReconciliationConflicts(): Promise<ServerReconciliationConflict[]> {
-  const identity = getCurrentAuditUser();
-  const authorizedResponse = await fetch(`${API_BASE}/admin/reconciliation/conflicts`, {
-    headers: {
-      'x-shr-user-id': identity.userId,
-      'x-shr-user-role': identity.userRole,
-    },
+  const authorizedResponse = await fetchWithAuth('/admin/reconciliation/conflicts', {
+    method: 'GET',
   });
   if (!authorizedResponse.ok) {
     throw new Error(`Failed to load server conflicts (${authorizedResponse.status})`);
@@ -388,6 +483,17 @@ export async function fetchServerReconciliationConflicts(): Promise<ServerReconc
 
 export async function resolveServerReconciliationConflict(conflictId: string, resolution: 'keep_local' | 'keep_remote'): Promise<void> {
   await postJson('/admin/reconciliation/resolve', { conflictId, resolution });
+}
+
+export async function fetchServerAdminAuditLogs(): Promise<ServerAdminAuditLog[]> {
+  const response = await fetchWithAuth('/admin/audit-logs', {
+    method: 'GET',
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to load server audit logs (${response.status})`);
+  }
+  const payload = await response.json() as { logs: ServerAdminAuditLog[] };
+  return payload.logs;
 }
 
 async function deriveAesKey(passphrase: string, salt: Uint8Array): Promise<CryptoKey> {

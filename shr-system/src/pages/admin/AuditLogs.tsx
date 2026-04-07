@@ -157,6 +157,7 @@ export default function AuditLogs() {
         actions={(
           <>
             <Link to="/admin/reconciliation" className="px-4 py-2 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 text-sm font-medium">Reconciliation</Link>
+            <Link to="/admin/server-audit-logs" className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-900 text-sm font-medium">Server Audit Trail</Link>
             <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm"><Download className="w-4 h-4" />Export CSV</button>
           </>
         )}
