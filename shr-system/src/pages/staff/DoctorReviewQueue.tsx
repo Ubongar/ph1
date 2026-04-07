@@ -266,14 +266,14 @@ export default function DoctorReviewQueue() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
         <h1 className="text-xl font-bold text-gray-900">Doctor Review Queue</h1>
         <p className="text-sm text-gray-500">Review and process student medication requests</p>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 flex-col xl:flex-row">
         {/* Left list (40%) */}
-        <div className="w-[40%] border-r border-gray-200 bg-white flex flex-col overflow-hidden">
+        <div className="w-full xl:w-[40%] border-b xl:border-b-0 xl:border-r border-gray-200 bg-white flex flex-col max-h-[42vh] xl:max-h-none overflow-hidden">
           {/* Status filter chips */}
           <div className="px-4 py-3 border-b border-gray-100 flex flex-wrap gap-2">
             {STATUS_FILTERS.map((f) => (
@@ -359,11 +359,11 @@ export default function DoctorReviewQueue() {
               </p>
             </div>
           ) : (
-            <div className="p-6 space-y-5">
+            <div className="p-4 sm:p-6 space-y-5">
               {/* Patient context banner */}
               <div className="bg-white rounded-xl border border-gray-200 p-5">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex items-center gap-3 sm:gap-4">
                     <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
                       {initials(selectedReq.studentName)}
                     </div>
@@ -373,7 +373,7 @@ export default function DoctorReviewQueue() {
                         <p className="text-xs text-gray-500">{selectedSystemUser.matricNumber}</p>
                       )}
                       {selectedStudent && (
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
                           <span className="text-xs text-gray-600">
                             Blood Group: {selectedStudent.bloodGroup}
                           </span>
@@ -394,7 +394,7 @@ export default function DoctorReviewQueue() {
                   </div>
                   <Link
                     to={`/staff/patient/${selectedReq.studentId}`}
-                    className="text-xs text-blue-600 hover:underline"
+                    className="text-xs text-blue-600 hover:underline sm:self-start"
                   >
                     View Full EHR →
                   </Link>
@@ -545,31 +545,33 @@ export default function DoctorReviewQueue() {
                       <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
                         Approved Medications
                       </p>
-                      <table className="w-full text-xs border border-gray-200 rounded-lg overflow-hidden">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            {['Medication', 'Dosage', 'Qty', 'Frequency', 'Duration'].map((h) => (
-                              <th
-                                key={h}
-                                className="px-3 py-2 text-left font-semibold text-gray-500"
-                              >
-                                {h}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                          {selectedReq.approvedMedications.map((m, i) => (
-                            <tr key={i}>
-                              <td className="px-3 py-2 font-medium text-gray-900">{m.name}</td>
-                              <td className="px-3 py-2 text-gray-700">{m.dosage}</td>
-                              <td className="px-3 py-2 text-gray-700">{m.quantity}</td>
-                              <td className="px-3 py-2 text-gray-700">{m.frequency}</td>
-                              <td className="px-3 py-2 text-gray-700">{m.duration}</td>
+                      <div className="overflow-x-auto">
+                        <table className="w-full min-w-[560px] text-xs border border-gray-200 rounded-lg overflow-hidden">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              {['Medication', 'Dosage', 'Qty', 'Frequency', 'Duration'].map((h) => (
+                                <th
+                                  key={h}
+                                  className="px-3 py-2 text-left font-semibold text-gray-500"
+                                >
+                                  {h}
+                                </th>
+                              ))}
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100">
+                            {selectedReq.approvedMedications.map((m, i) => (
+                              <tr key={i}>
+                                <td className="px-3 py-2 font-medium text-gray-900">{m.name}</td>
+                                <td className="px-3 py-2 text-gray-700">{m.dosage}</td>
+                                <td className="px-3 py-2 text-gray-700">{m.quantity}</td>
+                                <td className="px-3 py-2 text-gray-700">{m.frequency}</td>
+                                <td className="px-3 py-2 text-gray-700">{m.duration}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   )}
                   <p className="text-xs text-gray-400 mt-3">
@@ -610,7 +612,7 @@ export default function DoctorReviewQueue() {
       <Dialog.Root open={showAllergyModal} onOpenChange={setShowAllergyModal}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white p-6 shadow-xl focus:outline-none">
+          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white p-4 sm:p-6 shadow-xl focus:outline-none">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-red-100 rounded-lg">
                 <AlertTriangle className="w-5 h-5 text-red-600" />
@@ -666,7 +668,7 @@ export default function DoctorReviewQueue() {
       <Dialog.Root open={showMedModal} onOpenChange={setShowMedModal}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white p-6 shadow-xl focus:outline-none overflow-y-auto max-h-[90vh]">
+          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-1.5rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white p-4 sm:p-6 shadow-xl focus:outline-none overflow-y-auto max-h-[90vh]">
             <div className="flex items-center justify-between mb-4">
               <Dialog.Title className="text-lg font-semibold text-gray-900">
                 Configure Approved Medications
@@ -691,7 +693,7 @@ export default function DoctorReviewQueue() {
               {medConfigs.map((med, idx) => (
                 <div key={idx} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                   <p className="text-sm font-semibold text-gray-900 mb-3">{med.name}</p>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="text-xs font-medium text-gray-600 mb-1 block">Dosage</label>
                       <input

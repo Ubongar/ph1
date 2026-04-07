@@ -164,9 +164,10 @@ export default function SubmitSymptomReport() {
   }
 
   return (
-    <div className="max-w-lg mx-auto md:max-w-2xl space-y-4">
+    <div className="w-full max-w-lg mx-auto md:max-w-2xl space-y-4">
       {/* Step Indicators */}
-      <div className="flex items-center gap-0">
+      <div className="overflow-x-auto">
+        <div className="flex min-w-[360px] items-center gap-0">
         {STEPS.map((label, idx) => {
           const stepNum = idx + 1;
           const done = step > stepNum;
@@ -194,6 +195,7 @@ export default function SubmitSymptomReport() {
             </div>
           );
         })}
+        </div>
       </div>
 
       {/* ── Step 1: Symptoms ── */}
@@ -309,7 +311,7 @@ export default function SubmitSymptomReport() {
               );
             })}
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
               type="button"
               onClick={() => setStep(1)}

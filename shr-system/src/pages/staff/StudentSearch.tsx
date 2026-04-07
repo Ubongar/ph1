@@ -106,7 +106,7 @@ export default function StudentSearch() {
   const pageRows = rows.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
       <div className="max-w-screen-xl mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Student Search</h1>
@@ -114,9 +114,9 @@ export default function StudentSearch() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
-          <div className="flex flex-wrap gap-4 items-end">
-            <div className="relative flex-1 min-w-48">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4 items-end">
+            <div className="relative sm:col-span-2 xl:col-span-2">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
@@ -129,7 +129,7 @@ export default function StudentSearch() {
             <select
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All Departments</option>
               {DEPARTMENTS.map((d) => (
@@ -141,7 +141,7 @@ export default function StudentSearch() {
             <select
               value={bloodGroup}
               onChange={(e) => setBloodGroup(e.target.value as Student['bloodGroup'] | '')}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All Blood Groups</option>
               {BLOOD_GROUPS.map((bg) => (
@@ -173,7 +173,8 @@ export default function StudentSearch() {
 
         {/* Results Table */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[980px] text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -266,10 +267,11 @@ export default function StudentSearch() {
                 ))
               )}
             </tbody>
-          </table>
+            </table>
+          </div>
 
           {!loading && rows.length > 0 && (
-            <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
+            <div className="px-4 py-3 border-t border-gray-100 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <span className="text-sm text-gray-500">
                 Page {page} of {totalPages} ({rows.length} results)
               </span>

@@ -90,9 +90,9 @@ export default function StudentDashboard() {
   ];
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto md:max-w-2xl">
+    <div className="w-full space-y-4 max-w-lg mx-auto md:max-w-2xl">
       {/* Greeting Card */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-500 rounded-2xl p-5 text-white flex items-center gap-4 shadow-md">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-500 rounded-2xl p-4 sm:p-5 text-white flex items-center gap-3 sm:gap-4 shadow-md">
         <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-xl font-bold shrink-0">
           {initials}
         </div>
@@ -148,7 +148,7 @@ export default function StudentDashboard() {
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${color}`}>
                 <Icon className="w-5 h-5" />
               </div>
-              <span className="text-xs font-medium text-gray-700">{label}</span>
+              <span className="text-xs font-medium text-gray-700 text-center leading-snug">{label}</span>
             </button>
           ))}
         </div>
@@ -167,36 +167,38 @@ export default function StudentDashboard() {
             </span>
           </div>
           {/* 5-step progress stepper */}
-          <div className="flex items-start">
-            {REQUISITION_STEPS.map((step, idx) => {
-              const activeIdx = getStepIndex(activeRequisition.status);
-              const done = idx < activeIdx;
-              const current = idx === activeIdx;
-              const isLast = idx === REQUISITION_STEPS.length - 1;
-              return (
-                <Fragment key={step}>
-                  <div className="flex flex-col items-center gap-1">
-                    <div
-                      className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0
-                        ${done ? 'bg-blue-500 text-white' : current ? 'bg-blue-600 text-white ring-2 ring-blue-200' : 'bg-gray-100 text-gray-400'}`}
-                    >
-                      {done ? '✓' : idx + 1}
+          <div className="overflow-x-auto">
+            <div className="flex min-w-[420px] items-start">
+              {REQUISITION_STEPS.map((step, idx) => {
+                const activeIdx = getStepIndex(activeRequisition.status);
+                const done = idx < activeIdx;
+                const current = idx === activeIdx;
+                const isLast = idx === REQUISITION_STEPS.length - 1;
+                return (
+                  <Fragment key={step}>
+                    <div className="flex flex-col items-center gap-1">
+                      <div
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0
+                          ${done ? 'bg-blue-500 text-white' : current ? 'bg-blue-600 text-white ring-2 ring-blue-200' : 'bg-gray-100 text-gray-400'}`}
+                      >
+                        {done ? '✓' : idx + 1}
+                      </div>
+                      <span
+                        className={`text-center leading-tight text-[9px] max-w-[52px]
+                          ${current ? 'text-blue-600 font-semibold' : 'text-gray-400'}`}
+                      >
+                        {step}
+                      </span>
                     </div>
-                    <span
-                      className={`text-center leading-tight text-[9px] max-w-[42px]
-                        ${current ? 'text-blue-600 font-semibold' : 'text-gray-400'}`}
-                    >
-                      {step}
-                    </span>
-                  </div>
-                  {!isLast && (
-                    <div
-                      className={`flex-1 h-0.5 mt-3 mx-0.5 ${done ? 'bg-blue-500' : 'bg-gray-200'}`}
-                    />
-                  )}
-                </Fragment>
-              );
-            })}
+                    {!isLast && (
+                      <div
+                        className={`flex-1 h-0.5 mt-3 mx-1 ${done ? 'bg-blue-500' : 'bg-gray-200'}`}
+                      />
+                    )}
+                  </Fragment>
+                );
+              })}
+            </div>
           </div>
           {activeRequisition.symptoms.length > 0 && (
             <p className="text-xs text-gray-500 mt-3">
@@ -260,10 +262,10 @@ export default function StudentDashboard() {
             <a
               key={contact.phone}
               href={`tel:${contact.phone}`}
-              className="flex items-center justify-between px-3 py-2 rounded-lg bg-white border border-red-100 text-sm hover:bg-red-100 transition-colors"
+              className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-white border border-red-100 text-sm hover:bg-red-100 transition-colors"
             >
-              <span className="text-gray-700">{contact.label}</span>
-              <span className="font-semibold text-red-700">{contact.phone}</span>
+                <span className="text-gray-700">{contact.label}</span>
+                <span className="font-semibold text-red-700 text-xs sm:text-sm">{contact.phone}</span>
             </a>
           ))}
         </div>

@@ -133,17 +133,17 @@ export default function RequisitionTracking() {
   }
 
   return (
-    <div className="max-w-lg mx-auto md:max-w-2xl space-y-4">
+    <div className="w-full max-w-lg mx-auto md:max-w-2xl space-y-4">
       <h1 className="text-lg font-bold text-gray-900">My Requisitions</h1>
 
       {requisitions.map((req) => (
         <div key={req.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 space-y-4">
           {/* Header row */}
-          <div className="flex items-start justify-between gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-xs text-gray-500">{formatDateTime(req.submittedAt)}</p>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
               {req.priority === 'Urgent' && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
                   Urgent
@@ -187,14 +187,14 @@ export default function RequisitionTracking() {
               </p>
               <div className="space-y-2">
                 {req.approvedMedications.map((med) => (
-                  <div key={med.name} className="flex items-start justify-between gap-2">
+                  <div key={med.name} className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
                     <div>
                       <p className="text-sm font-medium text-green-900">{med.name} {med.dosage}</p>
                       <p className="text-xs text-green-700">
                         {med.frequency} · {med.duration}
                       </p>
                     </div>
-                    <span className="text-xs text-green-600 shrink-0">Qty: {med.quantity}</span>
+                      <span className="text-xs text-green-600 sm:shrink-0">Qty: {med.quantity}</span>
                   </div>
                 ))}
               </div>
