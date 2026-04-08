@@ -74,18 +74,18 @@ export default function OnboardingPage() {
             </div>
 
             <div className="mt-8 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-emerald-300/30 bg-emerald-500/10 px-3 py-2">
-                <p className="text-lg font-bold text-emerald-200">6+</p>
-                <p className="text-xs text-emerald-100/90">Role-aware workflows</p>
-              </div>
-              <div className="rounded-xl border border-violet-300/30 bg-violet-500/10 px-3 py-2">
-                <p className="text-lg font-bold text-violet-200">PWA</p>
-                <p className="text-xs text-violet-100/90">Mobile install support</p>
-              </div>
-              <div className="rounded-xl border border-amber-300/30 bg-amber-500/10 px-3 py-2">
-                <p className="text-lg font-bold text-amber-200">24/7</p>
-                <p className="text-xs text-amber-100/90">Anytime record access</p>
-              </div>
+              <dl className="rounded-xl border border-emerald-300/30 bg-emerald-500/10 px-3 py-2">
+                <dt className="text-lg font-bold text-emerald-200">6+</dt>
+                <dd className="text-xs text-emerald-100/90">Role-aware workflows</dd>
+              </dl>
+              <dl className="rounded-xl border border-violet-300/30 bg-violet-500/10 px-3 py-2">
+                <dt className="text-lg font-bold text-violet-200">PWA</dt>
+                <dd className="text-xs text-violet-100/90">Mobile install support</dd>
+              </dl>
+              <dl className="rounded-xl border border-amber-300/30 bg-amber-500/10 px-3 py-2">
+                <dt className="text-lg font-bold text-amber-200">24/7</dt>
+                <dd className="text-xs text-amber-100/90">Anytime record access</dd>
+              </dl>
             </div>
           </section>
 
