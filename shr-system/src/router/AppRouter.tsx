@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import type { UserRole } from '../types/types';
@@ -93,9 +93,20 @@ function OnboardingRoute() {
   return <OnboardingPage />;
 }
 
+function ScrollToTopOnRouteChange() {
+  const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [location.pathname, location.search]);
+
+  return null;
+}
+
 export function AppRouter() {
   return (
     <Suspense fallback={<div className="p-6 text-sm text-gray-600">Loading page...</div>}>
+    <ScrollToTopOnRouteChange />
     <Routes>
       <Route path="/" element={<OnboardingRoute />} />
       <Route path="/onboarding" element={<OnboardingRoute />} />

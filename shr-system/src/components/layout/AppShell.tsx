@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowUp } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useOfflineSyncStatus } from '../../hooks';
 import { useToast } from '../../hooks/useToast';
@@ -49,6 +49,7 @@ const ROLE_THEME: Record<string, { label: string; badgeClass: string; stripClass
 
 export function AppShell({ children }: AppShellProps) {
   const { currentUser } = useAuth();
+  const location = useLocation();
   const { toast } = useToast();
   const offline = useOfflineSyncStatus();
   const isStudent = currentUser?.role === 'student';
@@ -75,6 +76,13 @@ export function AppShell({ children }: AppShellProps) {
     element.addEventListener('scroll', onScroll);
     return () => element.removeEventListener('scroll', onScroll);
   }, []);
+
+  useEffect(() => {
+    const node = mainRef.current;
+    if (!node) return;
+
+    node.scrollTo({ top: 0, behavior: 'auto' });
+  }, [location.pathname, location.search]);
 
   function scrollToTop() {
     mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
