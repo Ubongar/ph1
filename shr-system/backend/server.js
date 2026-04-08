@@ -21,6 +21,7 @@ function readDb() {
       entities: {},
       conflicts: [],
       adminAuditLogs: [],
+      clientErrors: [],
       updatedAt: new Date().toISOString(),
     };
   }
@@ -350,6 +351,35 @@ function handleAdminAuditLogs(req, res) {
   });
 }
 
+function handleClientErrorReport(req, res) {
+  parseJsonBody(req)
+    .then((body) => {
+      const db = readDb();
+      const reports = Array.isArray(db.clientErrors) ? db.clientErrors : [];
+
+      const report = {
+        id: typeof body.id === 'string' ? body.id : randomUUID(),
+        timestamp: typeof body.timestamp === 'string' ? body.timestamp : new Date().toISOString(),
+        source: typeof body.source === 'string' ? body.source : 'unknown',
+        message: typeof body.message === 'string' ? body.message : 'Unknown client error',
+        stack: typeof body.stack === 'string' ? body.stack : undefined,
+        url: typeof body.url === 'string' ? body.url : 'unknown',
+        userAgent: typeof body.userAgent === 'string' ? body.userAgent : 'unknown',
+        currentUserId: typeof body.currentUserId === 'string' ? body.currentUserId : null,
+        context: body.context && typeof body.context === 'object' ? body.context : undefined,
+      };
+
+      reports.push(report);
+      db.clientErrors = reports.slice(-100);
+      writeDb(db);
+
+      sendJson(res, 202, { ok: true, received: report.id });
+    })
+    .catch((err) => {
+      sendJson(res, 400, { error: err.message || 'Invalid request' });
+    });
+}
+
 function handleResolveConflict(req, res) {
   const identity = requireAdmin(req, res);
   if (!identity) return;
@@ -459,6 +489,11 @@ const server = http.createServer((req, res) => {
 
   if (method === 'GET' && url === '/api/admin/audit-logs') {
     handleAdminAuditLogs(req, res);
+    return;
+  }
+
+  if (method === 'POST' && url === '/api/client-errors') {
+    handleClientErrorReport(req, res);
     return;
   }
 

@@ -117,6 +117,12 @@ export function Sidebar() {
           >
             {collapsed ? 'DR' : 'Data Requests'}
           </Link>
+          <Link
+            to="/legal/pwa-diagnostics"
+            className="block rounded-md px-2 py-1.5 text-xs font-medium text-gray-600 hover:bg-white hover:text-gray-900"
+          >
+            {collapsed ? 'PD' : 'PWA Diagnostics'}
+          </Link>
         </div>
       </div>
 

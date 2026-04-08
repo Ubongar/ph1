@@ -57,6 +57,11 @@ const REQUIRED_PAGES = [
     to: '/legal/policy-updates',
     reason: 'Re-accept terms and privacy updates before continuing to role dashboards.',
   },
+  {
+    title: 'PWA Install Diagnostics',
+    to: '/legal/pwa-diagnostics',
+    reason: 'Checks install readiness on current device and explains why install prompt may be missing.',
+  },
 ] as const;
 
 const LIVE_FEATURES = [

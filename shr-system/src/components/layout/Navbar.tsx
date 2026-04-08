@@ -16,6 +16,7 @@ import type { MedicationRequisition, Referral, SystemAlert, SystemUser } from '.
 import { useToast } from '../../hooks';
 import { useSimulatedPolling } from '../../hooks/useSimulatedPolling';
 import { CommandPalette, type CommandItem } from './CommandPalette';
+import { IosInstallGuideModal } from '../shared/IosInstallGuideModal';
 import {
   isPwaInstallAvailable,
   promptPwaInstall,
@@ -60,6 +61,7 @@ export function Navbar() {
   const [switchUserOpen, setSwitchUserOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [switchingUserId, setSwitchingUserId] = useState<string | null>(null);
+  const [iosInstallGuideOpen, setIosInstallGuideOpen] = useState(false);
   const [pwaInstallAvailable, setPwaInstallAvailable] = useState(() => isPwaInstallAvailable());
   const [installCtaMode, setInstallCtaMode] = useState<InstallCtaMode>(() =>
     getInstallCtaMode(isPwaInstallAvailable()),
@@ -270,7 +272,7 @@ export function Navbar() {
 
   async function handleInstallApp() {
     if (installCtaMode === 'ios-manual') {
-      toast('On iPhone/iPad Safari: tap Share, then choose "Add to Home Screen".', 'info');
+      setIosInstallGuideOpen(true);
       return;
     }
 
@@ -317,6 +319,7 @@ export function Navbar() {
     if (pathname.startsWith('/legal/data-requests')) return 'Data Request Center';
     if (pathname.startsWith('/legal/policy-updates')) return 'Policy Update Acceptance';
     if (pathname.startsWith('/legal/acceptance-history')) return 'Acceptance History';
+    if (pathname.startsWith('/legal/pwa-diagnostics')) return 'PWA Diagnostics';
     return 'SHR System';
   }
 
@@ -633,6 +636,7 @@ export function Navbar() {
         }))}
         onClose={() => setCommandPaletteOpen(false)}
       />
+      <IosInstallGuideModal open={iosInstallGuideOpen} onClose={() => setIosInstallGuideOpen(false)} />
     </header>
   );
 }

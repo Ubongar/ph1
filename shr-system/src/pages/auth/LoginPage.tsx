@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getAll, StorageKey } from '../../services/storage';
 import type { SystemUser } from '../../types/types';
 import { useToast } from '../../hooks';
+import { IosInstallGuideModal } from '../../components/shared';
 import {
   isPwaInstallAvailable,
   PWA_EVENT_INSTALL_AVAILABILITY,
@@ -64,6 +65,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedDemo, setSelectedDemo] = useState('');
+  const [iosInstallGuideOpen, setIosInstallGuideOpen] = useState(false);
   const [installMode, setInstallMode] = useState<InstallCtaMode>(() => getInstallCtaMode(isPwaInstallAvailable()));
 
   useEffect(() => {
@@ -101,7 +103,7 @@ export default function LoginPage() {
 
   async function handleInstallApp() {
     if (installMode === 'ios-manual') {
-      toast('On iPhone/iPad Safari: tap Share, then choose "Add to Home Screen".', 'info');
+      setIosInstallGuideOpen(true);
       return;
     }
 
@@ -289,10 +291,12 @@ export default function LoginPage() {
               <Link to="/legal/privacy" className="hover:text-blue-700">Privacy</Link>
               <Link to="/legal/terms" className="hover:text-blue-700">Terms</Link>
               <Link to="/legal/data-rights" className="hover:text-blue-700">Data Rights</Link>
+              <Link to="/legal/pwa-diagnostics" className="hover:text-blue-700">PWA Diagnostics</Link>
             </div>
           </div>
         </div>
       </div>
+      <IosInstallGuideModal open={iosInstallGuideOpen} onClose={() => setIosInstallGuideOpen(false)} />
     </div>
   );
 }

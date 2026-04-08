@@ -4,18 +4,21 @@ import { AppRouter } from './router/AppRouter'
 import { AuthProvider } from './context/AuthContext'
 import { ToastProvider } from './components/shared/Toast'
 import { PwaNotifier } from './components/shared/PwaNotifier'
+import { AppErrorBoundary } from './components/shared/AppErrorBoundary'
 
 function App() {
   return (
-    <BrowserRouter>
-      <ToastProvider>
-        <AuthProvider>
-          <PwaNotifier />
-          <AppRouter />
-        </AuthProvider>
-      </ToastProvider>
-      <Analytics />
-    </BrowserRouter>
+    <AppErrorBoundary>
+      <BrowserRouter>
+        <ToastProvider>
+          <AuthProvider>
+            <PwaNotifier />
+            <AppRouter />
+          </AuthProvider>
+        </ToastProvider>
+        <Analytics />
+      </BrowserRouter>
+    </AppErrorBoundary>
   )
 }
 

@@ -271,6 +271,7 @@ export default function TechnicianUploadPortal() {
                           {isEditing && (
                             <div className="mt-3 space-y-2">
                               <select
+                                aria-label="Referral review status"
                                 value={reviewStatus}
                                 onChange={(e) => setReviewStatus(e.target.value as Extract<Referral['status'], 'Under Review' | 'In Consultation' | 'Completed'>)}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -330,7 +331,11 @@ export default function TechnicianUploadPortal() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Test Type</label>
-              <select value={testType} onChange={e => setTestType(e.target.value as ResultType)} disabled={disabled}
+              <select
+                aria-label="Test type"
+                value={testType}
+                onChange={e => setTestType(e.target.value as ResultType)}
+                disabled={disabled}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 {testTypes.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
@@ -343,12 +348,22 @@ export default function TechnicianUploadPortal() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Requesting Doctor</label>
-              <input value={doctorName} onChange={e => setDoctorName(e.target.value)} disabled={disabled}
+              <input
+                aria-label="Requesting doctor"
+                value={doctorName}
+                onChange={e => setDoctorName(e.target.value)}
+                placeholder="Enter requesting doctor"
+                disabled={disabled}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">File Attachment</label>
-              <input ref={fileInputRef} type="file" className="hidden"
+              <input
+                ref={fileInputRef}
+                type="file"
+                aria-label="Attach diagnostic file"
+                title="Attach diagnostic file"
+                className="hidden"
                 onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); }} />
               {fileInfo ? (
                 <div className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
@@ -357,7 +372,15 @@ export default function TechnicianUploadPortal() {
                     <div className="text-sm font-medium truncate">{fileInfo.name}</div>
                     <div className="text-xs text-gray-500">{formatBytes(fileInfo.size)}</div>
                   </div>
-                  <button type="button" onClick={() => setFileInfo(null)} className="text-gray-400 hover:text-red-500"><X className="w-4 h-4" /></button>
+                  <button
+                    type="button"
+                    title="Remove attached file"
+                    aria-label="Remove attached file"
+                    onClick={() => setFileInfo(null)}
+                    className="text-gray-400 hover:text-red-500"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
               ) : (
                 <div onDrop={onDrop} onDragOver={e => e.preventDefault()}
@@ -378,7 +401,12 @@ export default function TechnicianUploadPortal() {
             <div>
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium text-gray-700">Critical Flag</label>
-                <button type="button" onClick={() => setCriticalFlag(!criticalFlag)} disabled={disabled}
+                <button
+                  type="button"
+                  title="Toggle critical flag"
+                  aria-label="Toggle critical flag"
+                  onClick={() => setCriticalFlag(!criticalFlag)}
+                  disabled={disabled}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${criticalFlag ? 'bg-red-500 ring-2 ring-red-300' : 'bg-gray-300'}`}>
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${criticalFlag ? 'translate-x-6' : 'translate-x-1'}`} />
                 </button>

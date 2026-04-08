@@ -4,6 +4,7 @@ import { initializeMockData } from './data/mockData'
 import { initializeOfflineSync } from './services/offlineSync'
 import { registerServiceWorker } from './services/registerServiceWorker'
 import { StorageKey } from './services/storage'
+import { registerGlobalErrorHandlers } from './services/clientErrors'
 import './index.css'
 import App from './App'
 
@@ -31,6 +32,7 @@ function bootstrapMockDataSafely() {
 bootstrapMockDataSafely()
 initializeOfflineSync()
 registerServiceWorker()
+registerGlobalErrorHandlers()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

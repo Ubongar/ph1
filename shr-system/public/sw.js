@@ -1,8 +1,9 @@
-const APP_CACHE = 'shr-app-cache-v2';
-const RUNTIME_CACHE = 'shr-runtime-cache-v2';
+const APP_CACHE = 'shr-app-cache-v3';
+const RUNTIME_CACHE = 'shr-runtime-cache-v3';
 const APP_SHELL = [
   '/',
   '/index.html',
+  '/offline.html',
   '/manifest.webmanifest',
   '/favicon.svg',
   '/icons.svg',
@@ -44,8 +45,9 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(async () => {
-          const cached = await caches.match('/index.html');
-          return cached || Response.error();
+          const offlinePage = await caches.match('/offline.html');
+          const cachedShell = await caches.match('/index.html');
+          return offlinePage || cachedShell || Response.error();
         }),
     );
     return;
@@ -75,7 +77,7 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => {
           if (request.destination === 'document') {
-            return caches.match('/index.html');
+            return caches.match('/offline.html').then((offlinePage) => offlinePage || caches.match('/index.html'));
           }
           return Response.error();
         });
