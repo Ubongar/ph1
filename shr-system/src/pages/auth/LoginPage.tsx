@@ -199,8 +199,11 @@ export default function LoginPage() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-lg p-8">
-            <div className="mb-4 text-xs text-gray-500">
-              New here? <Link to="/onboarding" className="font-medium text-blue-700 hover:text-blue-800">View system onboarding</Link>
+            <div className="mb-5 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 px-3 py-2.5 text-xs text-slate-600">
+              <span className="font-medium">New here?</span>{' '}
+              <Link to="/" className="font-semibold text-blue-700 underline decoration-blue-300 underline-offset-2 hover:text-blue-800">
+                Open onboarding (or your dashboard if signed in)
+              </Link>
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-1">Sign in</h2>
             <p className="text-gray-500 text-sm mb-6">Access your health records portal</p>
