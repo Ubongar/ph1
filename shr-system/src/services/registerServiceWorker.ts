@@ -10,10 +10,34 @@ export const PWA_EVENT_OFFLINE_READY = 'shr:pwa-offline-ready';
 export const PWA_EVENT_UPDATE_AVAILABLE = 'shr:pwa-update-available';
 export const PWA_EVENT_APP_INSTALLED = 'shr:pwa-app-installed';
 
+const SHR_CACHE_PREFIXES = ['shr-app-cache-', 'shr-runtime-cache-'];
+
 let started = false;
 let deferredInstallPrompt: BeforeInstallPromptEvent | null = null;
 let installAvailable = false;
 let activeRegistration: ServiceWorkerRegistration | null = null;
+
+async function unregisterDevelopmentServiceWorkers(): Promise<void> {
+  try {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((registration) => registration.unregister()));
+  } catch {
+    // Best effort cleanup only.
+  }
+
+  if (!('caches' in window)) return;
+
+  try {
+    const cacheNames = await caches.keys();
+    await Promise.all(
+      cacheNames
+        .filter((cacheName) => SHR_CACHE_PREFIXES.some((prefix) => cacheName.startsWith(prefix)))
+        .map((cacheName) => caches.delete(cacheName)),
+    );
+  } catch {
+    // Cache cleanup is optional in dev.
+  }
+}
 
 function emitPwaEvent(name: string, detail?: unknown): void {
   window.dispatchEvent(new CustomEvent(name, { detail }));
@@ -87,6 +111,21 @@ export function registerServiceWorker(): void {
   if (started || typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
   started = true;
 
+  if (import.meta.env.DEV) {
+    deferredInstallPrompt = null;
+    activeRegistration = null;
+    setInstallAvailable(false);
+    void unregisterDevelopmentServiceWorkers();
+    return;
+  }
+
+  if (!window.isSecureContext) {
+    deferredInstallPrompt = null;
+    activeRegistration = null;
+    setInstallAvailable(false);
+    return;
+  }
+
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     deferredInstallPrompt = event as BeforeInstallPromptEvent;
@@ -107,7 +146,7 @@ export function registerServiceWorker(): void {
       }
 
       registration.addEventListener('updatefound', () => {
-        const installing = registration.installing;
+        const { installing } = registration;
         if (!installing) return;
 
         installing.addEventListener('statechange', () => {
@@ -119,6 +158,9 @@ export function registerServiceWorker(): void {
           emitPwaEvent(PWA_EVENT_OFFLINE_READY);
         });
       });
+    }).catch(() => {
+      activeRegistration = null;
+      setInstallAvailable(false);
     });
     void registerBackgroundSync();
   });

@@ -1,6 +1,15 @@
-const APP_CACHE = 'shr-app-cache-v1';
-const RUNTIME_CACHE = 'shr-runtime-cache-v1';
-const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/favicon.svg', '/icons.svg'];
+const APP_CACHE = 'shr-app-cache-v2';
+const RUNTIME_CACHE = 'shr-runtime-cache-v2';
+const APP_SHELL = [
+  '/',
+  '/index.html',
+  '/manifest.webmanifest',
+  '/favicon.svg',
+  '/icons.svg',
+  '/pwa-192.png',
+  '/pwa-512.png',
+  '/apple-touch-icon.png',
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -18,7 +27,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  const request = event.request;
+  const { request } = event;
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);

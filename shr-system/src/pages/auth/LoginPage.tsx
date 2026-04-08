@@ -1,10 +1,16 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Download } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getAll, StorageKey } from '../../services/storage';
 import type { SystemUser } from '../../types/types';
+import { useToast } from '../../hooks';
+import {
+  isPwaInstallAvailable,
+  PWA_EVENT_INSTALL_AVAILABILITY,
+  promptPwaInstall,
+} from '../../services/registerServiceWorker';
 
 interface DemoCredential {
   label: string;
@@ -30,14 +36,57 @@ const ROLE_REDIRECT: Record<string, string> = {
   admin: '/admin/dashboard',
 };
 
+type InstallCtaMode = 'none' | 'prompt' | 'ios-manual' | 'https-required';
+
+function getInstallCtaMode(installAvailable: boolean): InstallCtaMode {
+  if (typeof window === 'undefined') return installAvailable ? 'prompt' : 'none';
+
+  const nav = window.navigator as Navigator & { standalone?: boolean };
+  const userAgent = nav.userAgent.toLowerCase();
+  const isIOS = /iphone|ipad|ipod/.test(userAgent);
+  const isMobile = /android|iphone|ipad|ipod/.test(userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || nav.standalone === true;
+
+  if (isStandalone) return 'none';
+  if (installAvailable) return 'prompt';
+  if (isIOS) return 'ios-manual';
+  if (isMobile && !window.isSecureContext) return 'https-required';
+
+  return 'none';
+}
+
 export default function LoginPage() {
   const { login } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedDemo, setSelectedDemo] = useState('');
+  const [installMode, setInstallMode] = useState<InstallCtaMode>(() => getInstallCtaMode(isPwaInstallAvailable()));
+
+  useEffect(() => {
+    function refreshInstallMode() {
+      setInstallMode(getInstallCtaMode(isPwaInstallAvailable()));
+    }
+
+    function onInstallAvailability(event: Event) {
+      const customEvent = event as CustomEvent<{ available?: boolean }>;
+      setInstallMode(getInstallCtaMode(Boolean(customEvent.detail?.available)));
+    }
+
+    refreshInstallMode();
+    window.addEventListener('focus', refreshInstallMode);
+    window.addEventListener('appinstalled', refreshInstallMode);
+    window.addEventListener(PWA_EVENT_INSTALL_AVAILABILITY, onInstallAvailability);
+
+    return () => {
+      window.removeEventListener('focus', refreshInstallMode);
+      window.removeEventListener('appinstalled', refreshInstallMode);
+      window.removeEventListener(PWA_EVENT_INSTALL_AVAILABILITY, onInstallAvailability);
+    };
+  }, []);
 
   function handleDemoSelect(value: string) {
     setSelectedDemo(value);
@@ -48,6 +97,29 @@ export default function LoginPage() {
       setPassword(cred.password);
       setError('');
     }
+  }
+
+  async function handleInstallApp() {
+    if (installMode === 'ios-manual') {
+      toast('On iPhone/iPad Safari: tap Share, then choose "Add to Home Screen".', 'info');
+      return;
+    }
+
+    if (installMode === 'https-required') {
+      toast('Install on mobile requires HTTPS. Open the app with an https:// URL.', 'warning');
+      return;
+    }
+
+    const outcome = await promptPwaInstall();
+    if (outcome === 'accepted') {
+      toast('Installing app...', 'info');
+      return;
+    }
+    if (outcome === 'dismissed') {
+      toast('Install prompt dismissed.', 'warning');
+      return;
+    }
+    toast('Install is not available yet. Browse for a few seconds and try again.', 'warning');
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -195,6 +267,17 @@ export default function LoginPage() {
                   'Sign In'
                 )}
               </button>
+
+              {installMode !== 'none' && (
+                <button
+                  type="button"
+                  onClick={() => void handleInstallApp()}
+                  className="mt-3 w-full border border-blue-200 bg-blue-50 text-blue-700 font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 hover:bg-blue-100"
+                >
+                  <Download className="w-4 h-4" />
+                  {installMode === 'prompt' ? 'Install App' : installMode === 'ios-manual' ? 'Add to Home Screen' : 'Install Help'}
+                </button>
+              )}
             </form>
 
             <p className="text-center text-xs text-gray-400 mt-6">

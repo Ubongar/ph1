@@ -7,9 +7,20 @@ import { StorageKey } from '../services/storage';
 const INITIALIZED_KEY = 'shr_initialized';
 const SPECIALIST_USER_ID = 'specialist-001';
 
+function readStoredUsersSafely(): SystemUser[] {
+  try {
+    const raw = localStorage.getItem(StorageKey.USERS);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as SystemUser[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 export function initializeMockData(): void {
   if (localStorage.getItem(INITIALIZED_KEY)) {
-    const users = JSON.parse(localStorage.getItem(StorageKey.USERS) ?? '[]') as SystemUser[];
+    const users = readStoredUsersSafely();
     if (!users.some((u) => u.id === SPECIALIST_USER_ID)) {
       users.push({
         id: SPECIALIST_USER_ID,

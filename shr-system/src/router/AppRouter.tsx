@@ -23,6 +23,7 @@ import UserManagement from '../pages/admin/UserManagement';
 import AuditLogs from '../pages/admin/AuditLogs';
 import SystemReports from '../pages/admin/SystemReports';
 import SpecialistDashboard from '../pages/specialist/SpecialistDashboard';
+import SpecialistReferrals from '../pages/specialist/SpecialistReferrals';
 import ReferralDetail from '../pages/specialist/ReferralDetail';
 import ConsultationAnalytics from '../pages/specialist/ConsultationAnalytics';
 import ReferralCompliance from '../pages/admin/ReferralCompliance';
@@ -234,7 +235,7 @@ export function AppRouter() {
         path="/specialist/referrals"
         element={
           <ProtectedRoute roles={['specialist']}>
-            <AppShell><SpecialistDashboard /></AppShell>
+            <AppShell><SpecialistReferrals /></AppShell>
           </ProtectedRoute>
         }
       />

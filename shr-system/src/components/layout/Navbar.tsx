@@ -31,6 +31,25 @@ const ROLE_LABELS: Record<string, string> = {
   admin: 'Administrator',
 };
 
+type InstallCtaMode = 'none' | 'prompt' | 'ios-manual' | 'https-required';
+
+function getInstallCtaMode(installAvailable: boolean): InstallCtaMode {
+  if (typeof window === 'undefined') return installAvailable ? 'prompt' : 'none';
+
+  const nav = window.navigator as Navigator & { standalone?: boolean };
+  const userAgent = nav.userAgent.toLowerCase();
+  const isIOS = /iphone|ipad|ipod/.test(userAgent);
+  const isMobile = /android|iphone|ipad|ipod/.test(userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || nav.standalone === true;
+
+  if (isStandalone) return 'none';
+  if (installAvailable) return 'prompt';
+  if (isIOS) return 'ios-manual';
+  if (isMobile && !window.isSecureContext) return 'https-required';
+
+  return 'none';
+}
+
 export function Navbar() {
   const { currentUser, logout, login } = useAuth();
   const navigate = useNavigate();
@@ -42,6 +61,9 @@ export function Navbar() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [switchingUserId, setSwitchingUserId] = useState<string | null>(null);
   const [pwaInstallAvailable, setPwaInstallAvailable] = useState(() => isPwaInstallAvailable());
+  const [installCtaMode, setInstallCtaMode] = useState<InstallCtaMode>(() =>
+    getInstallCtaMode(isPwaInstallAvailable()),
+  );
   const [alerts, setAlerts] = useState<SystemAlert[]>(() =>
     getAll<SystemAlert>(StorageKey.ALERTS).sort(
       (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
@@ -180,6 +202,25 @@ export function Navbar() {
     return () => window.removeEventListener(PWA_EVENT_INSTALL_AVAILABILITY, onInstallAvailability);
   }, []);
 
+  useEffect(() => {
+    function refreshInstallMode() {
+      setInstallCtaMode(getInstallCtaMode(isPwaInstallAvailable()));
+    }
+
+    refreshInstallMode();
+    window.addEventListener('focus', refreshInstallMode);
+    window.addEventListener('appinstalled', refreshInstallMode);
+
+    return () => {
+      window.removeEventListener('focus', refreshInstallMode);
+      window.removeEventListener('appinstalled', refreshInstallMode);
+    };
+  }, []);
+
+  useEffect(() => {
+    setInstallCtaMode(getInstallCtaMode(pwaInstallAvailable));
+  }, [pwaInstallAvailable]);
+
   function markAlertAsRead(alertId: string) {
     setReadAlertIds((prev) => (prev.includes(alertId) ? prev : [...prev, alertId]));
   }
@@ -228,6 +269,16 @@ export function Navbar() {
   }
 
   async function handleInstallApp() {
+    if (installCtaMode === 'ios-manual') {
+      toast('On iPhone/iPad Safari: tap Share, then choose "Add to Home Screen".', 'info');
+      return;
+    }
+
+    if (installCtaMode === 'https-required') {
+      toast('Install on mobile requires HTTPS. Open the app with an https:// URL.', 'warning');
+      return;
+    }
+
     const outcome = await promptPwaInstall();
     if (outcome === 'accepted') {
       toast('Installing app...', 'info');
@@ -237,7 +288,7 @@ export function Navbar() {
       toast('Install prompt dismissed.', 'warning');
       return;
     }
-    toast('Install is not available on this browser yet.', 'warning');
+    toast('Install is not available yet. Browse for a few seconds and try again.', 'warning');
   }
 
   function getPageTitle(pathname: string): string {
@@ -343,15 +394,17 @@ export function Navbar() {
             </button>
           )}
 
-          {pwaInstallAvailable && (
+          {installCtaMode !== 'none' && (
             <button
               type="button"
               onClick={() => void handleInstallApp()}
-              className="hidden md:inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100"
               aria-label="Install app"
             >
               <Download className="h-3.5 w-3.5" />
-              Install App
+              <span className="hidden sm:inline">
+                {installCtaMode === 'prompt' ? 'Install App' : installCtaMode === 'ios-manual' ? 'Add to Home Screen' : 'Install Help'}
+              </span>
             </button>
           )}
 
@@ -520,6 +573,19 @@ export function Navbar() {
                     <span>Quick Search</span>
                     <span className="text-xs text-gray-400">Ctrl/Cmd + K</span>
                   </button>
+                  {installCtaMode !== 'none' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDropdownOpen(false);
+                        void handleInstallApp();
+                      }}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-blue-700 hover:bg-blue-50"
+                    >
+                      <Download className="w-4 h-4" />
+                      {installCtaMode === 'prompt' ? 'Install App' : installCtaMode === 'ios-manual' ? 'Add to Home Screen' : 'Install Help'}
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={handleLogout}
