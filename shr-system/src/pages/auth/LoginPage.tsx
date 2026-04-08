@@ -150,10 +150,7 @@ export default function LoginPage() {
     }
     const state = location.state as LoginRouteState | null;
     const from = state?.from;
-    const hasValidFromPath = Boolean(
-      from?.pathname && from.pathname !== '/login' && from.pathname !== '/onboarding',
-    );
-    if (hasValidFromPath) {
+    if (from?.pathname && from.pathname !== '/login' && from.pathname !== '/onboarding') {
       const to = `${from.pathname}${from.search ?? ''}${from.hash ?? ''}`;
       navigate(to, { replace: true });
       return;

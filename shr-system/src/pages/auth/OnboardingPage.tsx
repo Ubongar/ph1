@@ -1,5 +1,5 @@
 import { ArrowRight, CheckCircle2, ShieldCheck, Smartphone, Stethoscope } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const ROLE_GUIDE = [
   { role: 'Student', description: 'Submit symptoms, track requisitions, and access your profile safely.' },
@@ -9,6 +9,8 @@ const ROLE_GUIDE = [
 ];
 
 export default function OnboardingPage() {
+  const location = useLocation();
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-slate-950 text-white">
       <div className="pointer-events-none absolute -left-24 top-16 h-72 w-72 rounded-full bg-cyan-500/25 blur-3xl animate-pulse motion-reduce:animate-none" />
@@ -55,6 +57,7 @@ export default function OnboardingPage() {
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 to="/login"
+                state={location.state}
                 className="inline-flex items-center gap-2 rounded-xl bg-blue-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-400"
               >
                 Continue to Login <ArrowRight className="h-4 w-4" />
