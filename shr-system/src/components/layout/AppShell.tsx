@@ -195,7 +195,7 @@ export function AppShell({ children }: AppShellProps) {
           {showComplaintsQuickTab && (
             <Link
               to="/complaints"
-              className="fixed right-0 top-1/2 z-20 inline-flex -translate-y-1/2 items-center gap-1.5 rounded-l-full border border-r-0 border-blue-200 bg-blue-600 px-3 py-2 text-xs font-semibold text-white shadow-md hover:bg-blue-700"
+              className="fixed right-0 top-1/2 z-20 hidden -translate-y-1/2 items-center gap-1.5 rounded-l-full border border-r-0 border-blue-200 bg-blue-600 px-3 py-2 text-xs font-semibold text-white shadow-md hover:bg-blue-700 md:inline-flex"
               aria-label="Open complaints center"
             >
               <MessageSquare className="h-3.5 w-3.5" />

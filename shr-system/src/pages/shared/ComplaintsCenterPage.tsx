@@ -157,6 +157,12 @@ export default function ComplaintsCenterPage() {
   const isAdmin = currentUser?.role === 'admin';
 
   const readReceiptRef = useRef<Set<string>>(new Set());
+  const submitComplaintSectionRef = useRef<HTMLElement | null>(null);
+  const myComplaintsSectionRef = useRef<HTMLElement | null>(null);
+  const assignedComplaintsSectionRef = useRef<HTMLElement | null>(null);
+  const adminSlaSectionRef = useRef<HTMLElement | null>(null);
+  const adminQueueSectionRef = useRef<HTMLElement | null>(null);
+  const adminDetailSectionRef = useRef<HTMLElement | null>(null);
 
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -339,6 +345,16 @@ export default function ComplaintsCenterPage() {
     setCorrectiveAction(activeComplaint.correctiveAction ?? '');
     setPreventionAction(activeComplaint.preventionAction ?? '');
   }, [activeComplaint]);
+
+  useEffect(() => {
+    if (!isAdmin || !activeComplaintId) return;
+    if (globalThis.matchMedia === undefined) return;
+
+    const isMobileViewport = globalThis.matchMedia('(max-width: 1023px)').matches;
+    if (!isMobileViewport) return;
+
+    adminDetailSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [activeComplaintId, isAdmin]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -1248,8 +1264,12 @@ export default function ComplaintsCenterPage() {
     toast('Resolution rating submitted. Thank you.', 'success');
   }
 
+  function scrollToSection(section: HTMLElement | null): void {
+    section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   return (
-    <div className="space-y-5 p-6">
+    <div className="space-y-5 px-3 py-4 sm:p-6">
       <PageHeader
         title="Complaints Center"
         subtitle={
@@ -1258,6 +1278,61 @@ export default function ComplaintsCenterPage() {
             : 'Submit complaints, attach evidence, monitor read receipts, and track admin-led resolution progress.'
         }
       />
+
+      <div className="rounded-xl border border-gray-200 bg-white p-3 lg:hidden">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Quick Jump</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {isAdmin ? (
+            <>
+              <button
+                type="button"
+                onClick={() => scrollToSection(adminSlaSectionRef.current)}
+                className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700"
+              >
+                SLA & Ladder
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollToSection(adminQueueSectionRef.current)}
+                className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700"
+              >
+                Complaint Queue
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollToSection(adminDetailSectionRef.current)}
+                className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700"
+              >
+                Active Ticket
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => scrollToSection(submitComplaintSectionRef.current)}
+                className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700"
+              >
+                Submit Form
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollToSection(myComplaintsSectionRef.current)}
+                className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700"
+              >
+                My Tickets
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollToSection(assignedComplaintsSectionRef.current)}
+                className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700"
+              >
+                Assigned
+              </button>
+            </>
+          )}
+        </div>
+      </div>
 
       {!isAdmin && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
@@ -1271,7 +1346,7 @@ export default function ComplaintsCenterPage() {
       )}
 
       {!isAdmin && (
-        <section className="rounded-xl border border-gray-200 bg-white p-4">
+        <section ref={submitComplaintSectionRef} className="rounded-xl border border-gray-200 bg-white p-4">
           <h2 className="mb-3 text-base font-semibold text-gray-900">Submit New Complaint</h2>
           <form onSubmit={handleSubmitComplaint} className="grid gap-4 md:grid-cols-2">
             <div className="md:col-span-2">
@@ -1390,7 +1465,7 @@ export default function ComplaintsCenterPage() {
       )}
 
       {isAdmin && (
-        <section className="rounded-xl border border-slate-200 bg-white p-4">
+        <section ref={adminSlaSectionRef} className="rounded-xl border border-slate-200 bg-white p-4">
           <h2 className="text-base font-semibold text-gray-900">SLA Matrix And Escalation Ladder (Mock)</h2>
 
           <div className="mt-3 overflow-x-auto">
@@ -1479,7 +1554,7 @@ export default function ComplaintsCenterPage() {
 
       {isAdmin ? (
         <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
-          <section className="rounded-xl border border-gray-200 bg-white">
+          <section ref={adminQueueSectionRef} className="rounded-xl border border-gray-200 bg-white">
             <div className="flex flex-wrap items-center gap-3 border-b border-gray-100 p-4">
               <select
                 value={statusFilter}
@@ -1549,7 +1624,7 @@ export default function ComplaintsCenterPage() {
             </div>
           </section>
 
-          <section className="rounded-xl border border-gray-200 bg-white p-4">
+          <section ref={adminDetailSectionRef} className="rounded-xl border border-gray-200 bg-white p-4">
             {activeComplaint ? (
               <div className="space-y-4">
                 <div>
@@ -1622,7 +1697,7 @@ export default function ComplaintsCenterPage() {
                       {activeComplaint.evidenceItems.map((item) => (
                         <div key={item.id} className="rounded-md border border-gray-200 bg-gray-50 p-2 text-xs">
                           <p className="font-semibold text-gray-800">{item.label}</p>
-                          <a className="text-blue-700 underline" href={item.url} target="_blank" rel="noreferrer">{item.url}</a>
+                          <a className="break-all text-blue-700 underline" href={item.url} target="_blank" rel="noreferrer">{item.url}</a>
                           <p className="mt-1 text-gray-600">{item.note ?? 'No additional note provided.'}</p>
                           <p className="mt-1 text-gray-500">{item.uploadedByUserName} • {formatDateTime(item.uploadedAt)}</p>
                         </div>
@@ -1823,7 +1898,7 @@ export default function ComplaintsCenterPage() {
         </div>
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
-          <section className="rounded-xl border border-gray-200 bg-white p-4">
+          <section ref={myComplaintsSectionRef} className="rounded-xl border border-gray-200 bg-white p-4">
             <h2 className="text-base font-semibold text-gray-900">My Complaints</h2>
             <div className="mt-3 space-y-3">
               {visibleFiledByMe.length === 0 && (
@@ -1878,7 +1953,7 @@ export default function ComplaintsCenterPage() {
                           {complaint.evidenceItems.map((item) => (
                             <div key={item.id} className="rounded border border-gray-200 bg-white p-2">
                               <p className="font-semibold text-gray-800">{item.label}</p>
-                              <a className="text-blue-700 underline" href={item.url} target="_blank" rel="noreferrer">{item.url}</a>
+                              <a className="break-all text-blue-700 underline" href={item.url} target="_blank" rel="noreferrer">{item.url}</a>
                               <p className="mt-1 text-gray-600">{item.note ?? 'No additional note provided.'}</p>
                             </div>
                           ))}
@@ -1999,7 +2074,7 @@ export default function ComplaintsCenterPage() {
             </div>
           </section>
 
-          <section className="rounded-xl border border-gray-200 bg-white p-4">
+          <section ref={assignedComplaintsSectionRef} className="rounded-xl border border-gray-200 bg-white p-4">
             <h2 className="text-base font-semibold text-gray-900">Assigned To Me / My Department</h2>
             <div className="mt-3 space-y-3">
               {visibleAssignedToMe.length === 0 && (
