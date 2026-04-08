@@ -334,6 +334,7 @@ export function Navbar({ onToggleMobileSidebar }: NavbarProps) {
     if (pathname.startsWith('/specialist/referral/')) return 'Referral Detail';
     if (pathname.startsWith('/admin/dashboard')) return 'Admin Dashboard';
     if (pathname.startsWith('/workspace')) return 'Role Operations Workspace';
+    if (pathname.startsWith('/settings')) return 'Settings';
     if (pathname.startsWith('/admin/governance')) return 'Admin Governance Center';
     if (pathname.startsWith('/admin/users')) return 'User Management';
     if (pathname.startsWith('/admin/audit-logs')) return 'Audit Logs';

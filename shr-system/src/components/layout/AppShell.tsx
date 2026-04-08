@@ -132,16 +132,10 @@ export function AppShell({ children }: AppShellProps) {
       />
       {roleTheme && (
         <div className="border-b border-gray-200 bg-white px-4 py-2 text-xs">
-          <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-2">
+          <div className="mx-auto flex max-w-[1400px] items-center gap-2">
             <span className={`inline-flex items-center rounded-full border px-2.5 py-1 font-semibold ${roleTheme.badgeClass}`}>
               {roleTheme.label}
             </span>
-            <div className="flex items-center gap-2 text-gray-500">
-              <span>You can open install diagnostics from Legal Center.</span>
-              <Link to="/legal/pwa-diagnostics" className="font-medium text-blue-700 hover:text-blue-800">
-                Open Diagnostics
-              </Link>
-            </div>
           </div>
           <div className={`mt-2 h-0.5 w-full ${roleTheme.stripClass}`} />
         </div>
@@ -185,6 +179,7 @@ export function AppShell({ children }: AppShellProps) {
           <footer className="border-t border-gray-200 bg-white px-4 py-4 md:px-6">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-500">
               <span className="font-medium text-gray-600">Policies</span>
+              <Link to="/settings" className="hover:text-blue-700">Settings</Link>
               <Link to="/legal" className="hover:text-blue-700">Legal Center</Link>
               <Link to="/legal/privacy" className="hover:text-blue-700">Privacy</Link>
               <Link to="/legal/terms" className="hover:text-blue-700">Terms</Link>

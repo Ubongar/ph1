@@ -47,6 +47,7 @@ import AdminDataRequests from '../pages/admin/AdminDataRequests';
 import PolicyVersioning from '../pages/admin/PolicyVersioning';
 import ReconciliationCenter from '../pages/admin/ReconciliationCenter';
 import AdminResolutionAuditLogs from '../pages/admin/AdminResolutionAuditLogs';
+import SettingsPage from '../pages/shared/SettingsPage';
 
 const RoleWorkspacePage = lazy(() => import('../pages/shared/RoleWorkspacePage'));
 const AdminGovernanceCenter = lazy(() => import('../pages/admin/AdminGovernanceCenter'));
@@ -54,8 +55,8 @@ const AdminGovernanceCenter = lazy(() => import('../pages/admin/AdminGovernanceC
 const ALL_ROLES: UserRole[] = ['student', 'medical_staff', 'technician', 'pharmacy', 'specialist', 'admin'];
 
 interface ProtectedRouteProps {
-  children: ReactNode;
-  roles: UserRole[];
+  readonly children: ReactNode;
+  readonly roles: UserRole[];
 }
 
 function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
@@ -308,6 +309,14 @@ export function AppRouter() {
         element={
           <ProtectedRoute roles={ALL_ROLES}>
             <AppShell><RoleWorkspacePage /></AppShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute roles={ALL_ROLES}>
+            <AppShell><SettingsPage /></AppShell>
           </ProtectedRoute>
         }
       />
