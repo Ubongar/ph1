@@ -5,6 +5,7 @@ import type { UserRole } from '../types/types';
 import { useAuth } from '../context/AuthContext';
 import { AppShell } from '../components/layout/AppShell';
 import { getPendingPolicyTypes } from '../services/compliance';
+import OnboardingPage from '../pages/auth/OnboardingPage';
 import LoginPage from '../pages/auth/LoginPage';
 import UnauthorizedPage from '../pages/auth/UnauthorizedPage';
 import StudentDashboard from '../pages/student/StudentDashboard';
@@ -60,7 +61,7 @@ interface ProtectedRouteProps {
 function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
   const { isAuthenticated, hasRole, currentUser } = useAuth();
   const location = useLocation();
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAuthenticated) return <Navigate to="/onboarding" replace />;
   if (!hasRole(roles)) return <Navigate to="/unauthorized" replace />;
   if (currentUser) {
     const pending = getPendingPolicyTypes(currentUser.id);
@@ -73,7 +74,7 @@ function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
 
 function RoleRedirect() {
   const { currentUser, isAuthenticated } = useAuth();
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAuthenticated) return <Navigate to="/onboarding" replace />;
   switch (currentUser?.role) {
     case 'student': return <Navigate to="/student/dashboard" replace />;
     case 'medical_staff': return <Navigate to="/staff/dashboard" replace />;
@@ -85,10 +86,18 @@ function RoleRedirect() {
   }
 }
 
+function OnboardingRoute() {
+  const { isAuthenticated } = useAuth();
+  if (isAuthenticated) return <RoleRedirect />;
+  return <OnboardingPage />;
+}
+
 export function AppRouter() {
   return (
     <Suspense fallback={<div className="p-6 text-sm text-gray-600">Loading page...</div>}>
     <Routes>
+      <Route path="/" element={<OnboardingRoute />} />
+      <Route path="/onboarding" element={<OnboardingRoute />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
       <Route path="/legal" element={<LegalCenter />} />
@@ -355,7 +364,6 @@ export function AppRouter() {
         }
       />
 
-      <Route path="/" element={<RoleRedirect />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     </Suspense>

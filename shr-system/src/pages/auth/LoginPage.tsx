@@ -185,6 +185,9 @@ export default function LoginPage() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-lg p-8">
+            <div className="mb-4 text-xs text-gray-500">
+              New here? <Link to="/onboarding" className="font-medium text-blue-700 hover:text-blue-800">View system onboarding</Link>
+            </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-1">Sign in</h2>
             <p className="text-gray-500 text-sm mb-6">Access your health records portal</p>
 
