@@ -188,7 +188,7 @@ export default function LoginPage() {
             <div className="mb-5 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 px-3 py-2.5 text-xs text-slate-600">
               <span className="font-medium">New here?</span>{' '}
               <Link to="/" className="font-semibold text-blue-700 underline decoration-blue-300 underline-offset-2 hover:text-blue-800">
-                View the home onboarding dashboard
+                Explore the platform overview
               </Link>
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-1">Sign in</h2>
