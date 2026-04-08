@@ -27,6 +27,16 @@ function writeInbox(tasks: RoleInboxTask[]): void {
   localStorage.setItem(INBOX_KEY, JSON.stringify(tasks.slice(-1000)));
 }
 
+function getCurrentSessionIdentity(): { id: string; role: UserRole } | null {
+  const sessionUserId = localStorage.getItem(StorageKey.AUTH_SESSION);
+  if (!sessionUserId) return null;
+
+  const users = getAll<{ id: string; role: UserRole; isActive?: boolean }>(StorageKey.USERS);
+  const user = users.find((item) => item.id === sessionUserId && item.isActive !== false);
+  if (!user) return null;
+  return { id: user.id, role: user.role };
+}
+
 function computeSlaStatus(dueAt: string, role: UserRole): SlaStatus {
   const dueMs = new Date(dueAt).getTime();
   const now = Date.now();
@@ -48,6 +58,7 @@ export function seedRoleInboxIfNeeded(): void {
     {
       id: crypto.randomUUID(),
       role: 'medical_staff',
+      ownerUserId: 'staff-001',
       title: 'Review Urgent Requisition',
       description: 'Urgent symptom request requires triage and medication decision.',
       priority: 'urgent',
@@ -62,6 +73,7 @@ export function seedRoleInboxIfNeeded(): void {
     {
       id: crypto.randomUUID(),
       role: 'specialist',
+      ownerUserId: 'specialist-001',
       title: 'Accept or Decline Cardiology Referral',
       description: 'Referral pending specialist decision with urgency marker.',
       priority: 'high',
@@ -76,6 +88,7 @@ export function seedRoleInboxIfNeeded(): void {
     {
       id: crypto.randomUUID(),
       role: 'pharmacy',
+      ownerUserId: 'pharm-001',
       title: 'Dispense Approved Medication',
       description: 'Approved item ready for fulfillment with allergy check required.',
       priority: 'high',
@@ -90,6 +103,7 @@ export function seedRoleInboxIfNeeded(): void {
     {
       id: crypto.randomUUID(),
       role: 'technician',
+      ownerUserId: 'tech-001',
       title: 'Upload Flagged Diagnostic Result',
       description: 'Critical lab result pending upload and clinician notification.',
       priority: 'urgent',
@@ -104,6 +118,7 @@ export function seedRoleInboxIfNeeded(): void {
     {
       id: crypto.randomUUID(),
       role: 'admin',
+      ownerUserId: 'admin-001',
       title: 'Review Data Rights Ticket',
       description: 'A pending legal data request requires governance decision.',
       priority: 'normal',
@@ -118,6 +133,7 @@ export function seedRoleInboxIfNeeded(): void {
     {
       id: crypto.randomUUID(),
       role: 'student',
+      ownerUserId: 'student-001',
       title: 'Complete Follow-Up Appointment',
       description: 'Follow-up visit recommended after recent encounter.',
       priority: 'normal',
@@ -135,22 +151,46 @@ export function seedRoleInboxIfNeeded(): void {
 }
 
 export function getRoleInbox(role: UserRole): RoleInboxTask[] {
-  const list = readInbox()
-    .filter((item) => item.role === role)
-    .map((item) => ({
-      ...item,
-      slaStatus: computeSlaStatus(item.dueAt, item.role),
-    }))
-    .sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime());
+  const currentUser = getCurrentSessionIdentity();
+  const list = readInbox();
+  let changed = false;
 
-  writeInbox([...readInbox().filter((item) => item.role !== role), ...list]);
-  return list;
+  for (const item of list) {
+    if (item.role !== role) continue;
+
+    // Migrate legacy role-only tasks to current user ownership.
+    if (!item.ownerUserId && currentUser && currentUser.role === role) {
+      item.ownerUserId = currentUser.id;
+      changed = true;
+    }
+
+    const nextSla = computeSlaStatus(item.dueAt, item.role);
+    if (item.slaStatus !== nextSla) {
+      item.slaStatus = nextSla;
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    writeInbox(list);
+  }
+
+  return list
+    .filter((item) => item.role === role)
+    .filter((item) => {
+      if (!currentUser) return false;
+      if (currentUser.role !== role) return false;
+      return item.ownerUserId === currentUser.id;
+    })
+    .sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime());
 }
 
 export function updateInboxTaskStatus(taskId: string, status: RoleInboxTask['status']): RoleInboxTask | null {
+  const currentUser = getCurrentSessionIdentity();
   const list = readInbox();
   const task = list.find((item) => item.id === taskId);
   if (!task) return null;
+  if (currentUser && task.ownerUserId && task.ownerUserId !== currentUser.id) return null;
   task.status = status;
   task.slaStatus = computeSlaStatus(task.dueAt, task.role);
   writeInbox(list);
@@ -173,15 +213,19 @@ export function pushTask(task: Omit<RoleInboxTask, 'id' | 'createdAt' | 'slaStat
 export function deriveInboxFromData(): void {
   const requisitions = getAll<{ id: string; status: string; priority: 'Normal' | 'Urgent' }>(StorageKey.REQUISITIONS);
   const pendingUrgent = requisitions.filter((item) => item.status === 'Pending Review' && item.priority === 'Urgent');
+  const currentUser = getCurrentSessionIdentity();
 
-  if (pendingUrgent.length === 0) return;
+  if (pendingUrgent.length === 0 || !currentUser || currentUser.role !== 'medical_staff') return;
 
   const existing = readInbox();
-  const hasAggregate = existing.some((item) => item.sourceType === 'custom' && item.sourceId === 'derived-urgent-staff');
+  const hasAggregate = existing.some(
+    (item) => item.sourceType === 'custom' && item.sourceId === 'derived-urgent-staff' && item.ownerUserId === currentUser.id,
+  );
   if (hasAggregate) return;
 
   pushTask({
     role: 'medical_staff',
+    ownerUserId: currentUser.id,
     title: 'Urgent Queue Aggregate Alert',
     description: `${pendingUrgent.length} urgent requisition(s) require immediate review.`,
     priority: 'urgent',

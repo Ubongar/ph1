@@ -9,6 +9,7 @@ export interface AppNotification {
   severity: NotificationSeverity;
   createdAt: string;
   roleTargets: UserRole[];
+  userTargetIds?: string[];
   isReadBy: string[];
   actionPath?: string;
 }
@@ -38,6 +39,7 @@ export interface FollowUpAppointment {
   scheduledByUserId: string;
   scheduledByRole: UserRole;
   assignedRole: UserRole;
+  assignedUserId?: string;
   reason: string;
   scheduledFor: string;
   status: 'scheduled' | 'completed' | 'missed' | 'cancelled';

@@ -1,43 +1,38 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { CalendarCheck2, CheckCircle2, Languages, ListChecks, Search, ShieldAlert, Signal, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks';
-import { buildStudentTimeline, searchTimeline } from '../../services/timeline';
+import { searchTimelineForUser } from '../../services/timeline';
 import { getRoleInbox, updateInboxTaskStatus } from '../../services/inbox';
 import { getAppointmentsForRole, updateAppointmentStatus } from '../../services/appointments';
 import { runDataQualityScan } from '../../services/dataQuality';
-import { getNotificationsForRole, markNotificationRead } from '../../services/notifications';
+import { getNotificationsForUser, markNotificationRead } from '../../services/notifications';
 import { hasPermission } from '../../services/permissions';
-import { getLocale, setLocale } from '../../services/i18n';
+import { useLocale } from '../../services/i18n';
+
+const ROLE_INBOX_WITH_SLA_EN = 'Role Inbox with SLA';
+const UNIFIED_PATIENT_TIMELINE_SEARCH_EN = 'Unified Patient Timeline Search';
 
 export default function RoleWorkspacePage() {
   const { currentUser } = useAuth();
   const { toast } = useToast();
   const [query, setQuery] = useState('');
-  const [locale, setLocaleState] = useState(getLocale());
-
-  const timeline = useMemo(() => {
-    if (!currentUser) return [];
-
-    if (query.trim()) return searchTimeline(query).slice(0, 20);
-
-    if (currentUser.role === 'student') {
-      const studentId = currentUser.id.replace('student-', 'stu-');
-      return buildStudentTimeline(studentId).slice(0, 20);
-    }
-
-    return searchTimeline('').slice(0, 20);
-  }, [currentUser, query]);
+  const { locale, setLocale, t } = useLocale();
 
   if (!currentUser) return null;
 
-  const inbox = getRoleInbox(currentUser.role);
-  const notifications = getNotificationsForRole(currentUser.role);
-  const appointments = getAppointmentsForRole(currentUser.role, currentUser.id);
-  const quality = runDataQualityScan();
-
   const canQuality = hasPermission(currentUser.role, 'quality.view');
   const canObserve = hasPermission(currentUser.role, 'observability.view');
+
+  const inbox = getRoleInbox(currentUser.role);
+  const notifications = getNotificationsForUser(currentUser.role, currentUser.id);
+  const appointments = getAppointmentsForRole(currentUser.role, currentUser.id);
+  const quality = canQuality ? runDataQualityScan() : [];
+
+  const timeline = searchTimelineForUser(query, currentUser.role, currentUser.id).slice(0, 20);
+
+  const roleInboxTitle = locale === 'en' ? ROLE_INBOX_WITH_SLA_EN : t('roleInboxWithSla');
+  const timelineTitle = locale === 'en' ? UNIFIED_PATIENT_TIMELINE_SEARCH_EN : t('unifiedPatientTimelineSearch');
 
   function completeTask(taskId: string) {
     const next = updateInboxTaskStatus(taskId, 'done');
@@ -64,19 +59,18 @@ export default function RoleWorkspacePage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Workflow Center</p>
-              <h1 className="mt-1 text-2xl font-bold text-gray-900">Role Operations Workspace</h1>
-              <p className="mt-1 text-sm text-gray-600">Unified inbox, notifications, follow-ups, timeline, and quality visibility for {currentUser.role} role.</p>
+              <h1 className="mt-1 text-2xl font-bold text-gray-900">{t('roleOperationsWorkspace')}</h1>
+              <p className="mt-1 text-sm text-gray-600">{t('roleWorkspaceSubtitle')} ({currentUser.role})</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <label className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700">
                 <Languages className="h-4 w-4 text-gray-500" />
-                <span>Language</span>
+                <span>{t('language')}</span>
                 <select
                   value={locale}
                   onChange={(event) => {
                     const next = event.target.value as 'en' | 'fr' | 'yo';
                     setLocale(next);
-                    setLocaleState(next);
                   }}
                   className="rounded border border-gray-200 px-2 py-1 text-xs"
                 >
@@ -93,7 +87,7 @@ export default function RoleWorkspacePage() {
           <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm lg:col-span-1">
             <div className="mb-3 flex items-center gap-2">
               <ListChecks className="h-4 w-4 text-blue-700" />
-              <h2 className="text-sm font-semibold text-gray-900">Role Inbox with SLA</h2>
+              <h2 className="text-sm font-semibold text-gray-900">{roleInboxTitle}</h2>
             </div>
             <div className="space-y-2">
               {inbox.slice(0, 8).map((task) => (
@@ -119,7 +113,7 @@ export default function RoleWorkspacePage() {
                       className="mt-2 inline-flex items-center gap-1 rounded-md bg-blue-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-blue-700"
                     >
                       <CheckCircle2 className="h-3.5 w-3.5" />
-                      Mark Done
+                      {t('markDone')}
                     </button>
                   )}
                 </div>
@@ -130,7 +124,7 @@ export default function RoleWorkspacePage() {
           <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm lg:col-span-2">
             <div className="mb-3 flex items-center gap-2">
               <Search className="h-4 w-4 text-blue-700" />
-              <h2 className="text-sm font-semibold text-gray-900">Unified Patient Timeline Search</h2>
+              <h2 className="text-sm font-semibold text-gray-900">{timelineTitle}</h2>
             </div>
             <label className="relative block">
               <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
@@ -138,13 +132,13 @@ export default function RoleWorkspacePage() {
                 type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search timeline by student name, event, or detail"
+                placeholder={t('searchTimelinePlaceholder')}
                 className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-sm outline-none focus:border-blue-400"
               />
             </label>
             <div className="mt-3 space-y-2">
               {timeline.length === 0 && (
-                <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500">No timeline events found.</p>
+                <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500">{t('noTimelineFound')}</p>
               )}
               {timeline.map((event) => (
                 <div key={event.id} className="rounded-lg border border-gray-200 p-3">
@@ -164,7 +158,7 @@ export default function RoleWorkspacePage() {
           <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <div className="mb-3 flex items-center gap-2">
               <Signal className="h-4 w-4 text-blue-700" />
-              <h2 className="text-sm font-semibold text-gray-900">Real-Time Notifications</h2>
+              <h2 className="text-sm font-semibold text-gray-900">{t('realTimeNotifications')}</h2>
             </div>
             <div className="space-y-2">
               {notifications.slice(0, 6).map((note) => {
@@ -192,7 +186,7 @@ export default function RoleWorkspacePage() {
           <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <div className="mb-3 flex items-center gap-2">
               <CalendarCheck2 className="h-4 w-4 text-blue-700" />
-              <h2 className="text-sm font-semibold text-gray-900">Follow-Up Scheduling</h2>
+              <h2 className="text-sm font-semibold text-gray-900">{t('followUpScheduling')}</h2>
             </div>
             <div className="space-y-2">
               {appointments.slice(0, 6).map((item) => (
@@ -206,7 +200,7 @@ export default function RoleWorkspacePage() {
                       onClick={() => completeAppointment(item.id)}
                       className="mt-2 rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-emerald-700"
                     >
-                      Mark Completed
+                      {t('markCompleted')}
                     </button>
                   )}
                 </div>
@@ -217,15 +211,15 @@ export default function RoleWorkspacePage() {
           <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <div className="mb-3 flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-blue-700" />
-              <h2 className="text-sm font-semibold text-gray-900">Data Quality Signals</h2>
+              <h2 className="text-sm font-semibold text-gray-900">{t('dataQualitySignals')}</h2>
             </div>
             {!canQuality && (
               <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                Quality detail requires elevated permission.
+                {t('qualityRestricted')}
               </p>
             )}
             <div className="space-y-2">
-              {(canQuality ? quality : quality.slice(0, 4)).map((item) => (
+              {quality.map((item) => (
                 <div key={item.id} className="rounded-lg border border-gray-200 p-3">
                   <p className="text-sm font-semibold text-gray-900">{item.title}</p>
                   <p className="mt-1 text-xs text-gray-600">{item.description}</p>
@@ -240,7 +234,7 @@ export default function RoleWorkspacePage() {
           <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <div className="mb-2 flex items-center gap-2">
               <ShieldAlert className="h-4 w-4 text-blue-700" />
-              <h2 className="text-sm font-semibold text-gray-900">Security and Permission Model</h2>
+              <h2 className="text-sm font-semibold text-gray-900">{t('securityPermissionModel')}</h2>
             </div>
             <p className="text-xs text-gray-600">
               Fine-grained permission scopes are active for each role. Actions in this workspace are filtered by role capability checks.
@@ -250,7 +244,7 @@ export default function RoleWorkspacePage() {
           <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <div className="mb-2 flex items-center gap-2">
               <Signal className="h-4 w-4 text-blue-700" />
-              <h2 className="text-sm font-semibold text-gray-900">Observability Visibility</h2>
+              <h2 className="text-sm font-semibold text-gray-900">{t('observabilityVisibility')}</h2>
             </div>
             <p className="text-xs text-gray-600">
               Telemetry and operational traces are captured globally. {canObserve ? 'You have visibility from admin observability pages.' : 'Admin role can access full observability dashboards.'}

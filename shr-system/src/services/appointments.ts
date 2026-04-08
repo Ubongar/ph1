@@ -1,5 +1,6 @@
 import type { FollowUpAppointment } from '../types/enhancements';
 import type { UserRole } from '../types/types';
+import { getAll, StorageKey } from './storage';
 
 const APPOINTMENTS_KEY = 'shr_follow_up_appointments';
 
@@ -30,6 +31,7 @@ export function seedAppointmentsIfNeeded(): void {
       scheduledByUserId: 'staff-001',
       scheduledByRole: 'medical_staff',
       assignedRole: 'student',
+      assignedUserId: 'student-001',
       reason: 'Asthma follow-up and inhaler adherence review.',
       scheduledFor: new Date(now + 2 * 24 * 3600 * 1000).toISOString(),
       status: 'scheduled',
@@ -42,6 +44,7 @@ export function seedAppointmentsIfNeeded(): void {
       scheduledByUserId: 'specialist-001',
       scheduledByRole: 'specialist',
       assignedRole: 'specialist',
+      assignedUserId: 'specialist-001',
       reason: 'Cardiology follow-up with BP trend review.',
       scheduledFor: new Date(now + 3 * 24 * 3600 * 1000).toISOString(),
       status: 'scheduled',
@@ -52,25 +55,37 @@ export function seedAppointmentsIfNeeded(): void {
   writeAppointments(seed);
 }
 
+function resolveStudentIdFromUserId(userId: string): string | null {
+  const students = getAll<{ id: string; userId: string }>(StorageKey.STUDENTS);
+  return students.find((student) => student.userId === userId)?.id ?? null;
+}
+
 export function getAppointmentsForRole(role: UserRole, userId: string): FollowUpAppointment[] {
   const list = readAppointments();
 
   if (role === 'admin') return list.sort((a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime());
 
   if (role === 'student') {
+    const studentId = resolveStudentIdFromUserId(userId);
+    if (!studentId) return [];
+
     return list
-      .filter((item) => item.assignedRole === 'student' && item.studentId === userId.replace('student-', 'stu-'))
+      .filter((item) => item.studentId === studentId || item.assignedUserId === userId)
       .sort((a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime());
   }
 
   return list
-    .filter((item) => item.scheduledByRole === role || item.assignedRole === role)
+    .filter((item) => item.scheduledByUserId === userId || item.assignedUserId === userId)
     .sort((a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime());
 }
 
 export function createAppointment(input: Omit<FollowUpAppointment, 'id'>): FollowUpAppointment {
   const list = readAppointments();
-  const next: FollowUpAppointment = { ...input, id: crypto.randomUUID() };
+  const next: FollowUpAppointment = {
+    ...input,
+    assignedUserId: input.assignedUserId ?? input.scheduledByUserId,
+    id: crypto.randomUUID(),
+  };
   list.push(next);
   writeAppointments(list);
   return next;
