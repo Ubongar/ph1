@@ -13,7 +13,7 @@ export default function SpecialistDashboard() {
   );
 
   const myReferrals = useMemo(
-    () => referrals.filter((r) => !r.specialistId || r.specialistId === currentUser?.id),
+    () => referrals.filter((r) => r.specialistId === currentUser?.id),
     [currentUser?.id, referrals],
   );
 

@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import * as Dialog from '@radix-ui/react-dialog'
 import { AlertTriangle, X, CheckCircle, XCircle, Activity } from 'lucide-react'
 import { getAll, update, createAuditEntry, StorageKey } from '../../services/storage'
 import { useAuth } from '../../context/AuthContext'
+import { getScopedRequisitionsForUser, getScopedStudentsForUser } from '../../services/accessScope'
 import { runSafetyChecks, type SafetyIssue } from '../../services/clinicalSafety'
 import type {
   Student,
@@ -64,16 +65,28 @@ export default function DoctorReviewQueue() {
   const [showMedModal, setShowMedModal] = useState(false)
   const [medConfigs, setMedConfigs] = useState<MedConfig[]>([])
 
-  function loadData() {
-    const reqs = getAll<MedicationRequisition>(StorageKey.REQUISITIONS)
+  const loadData = useCallback(() => {
+    if (!currentUser) {
+      setRequisitions([])
+      setStudents([])
+      setSystemUsers([])
+      return
+    }
+
+    const reqs = getScopedRequisitionsForUser(currentUser.role, currentUser.id)
+    const scopedStudents = getScopedStudentsForUser(currentUser.role, currentUser.id)
+    const scopedStudentUserIds = new Set(scopedStudents.map((student) => student.userId))
+
     setRequisitions(reqs)
-    setStudents(getAll<Student>(StorageKey.STUDENTS))
-    setSystemUsers(getAll<SystemUser>(StorageKey.USERS))
-  }
+    setStudents(scopedStudents)
+    setSystemUsers(
+      getAll<SystemUser>(StorageKey.USERS).filter((user) => scopedStudentUserIds.has(user.id)),
+    )
+  }, [currentUser])
 
   useEffect(() => {
     loadData()
-  }, [])
+  }, [loadData])
 
   const selectedReq = selectedId ? requisitions.find((r) => r.id === selectedId) ?? null : null
   const selectedStudent = selectedReq

@@ -13,8 +13,14 @@ import {
   Heart,
   Wind,
 } from 'lucide-react'
-import { create, getAll, getById, getRequisitionsByStudentId, StorageKey, createAuditEntry } from '../../services/storage'
+import { create, getAll, getById, StorageKey, createAuditEntry } from '../../services/storage'
 import { useAuth } from '../../context/AuthContext'
+import {
+  canAccessStudentForUser,
+  getScopedEncountersForUser,
+  getScopedRequisitionsForUser,
+  getScopedResultsForUser,
+} from '../../services/accessScope'
 import { getHospitalNumber } from '../../utils/studentIdentifiers'
 import type {
   Student,
@@ -75,19 +81,25 @@ export default function PatientProfile() {
     if (!studentId) { setNotFound(true); return }
     const s = getById<Student>(StorageKey.STUDENTS, studentId)
     if (!s) { setNotFound(true); return }
+
+    if (!currentUser || !canAccessStudentForUser(currentUser.role, currentUser.id, studentId)) {
+      setNotFound(true)
+      return
+    }
+
     setStudent(s)
 
     const users = getAll<SystemUser>(StorageKey.USERS)
     setSystemUser(users.find((u) => u.id === s.userId) ?? null)
 
-    const allEncounters = getAll<Encounter>(StorageKey.ENCOUNTERS)
+    const allEncounters = getScopedEncountersForUser(currentUser.role, currentUser.id)
     setEncounters(
       allEncounters
         .filter((e) => e.studentId === studentId)
         .sort((a, b) => b.date.localeCompare(a.date)),
     )
 
-    const allResults = getAll<DiagnosticResult>(StorageKey.RESULTS)
+    const allResults = getScopedResultsForUser(currentUser.role, currentUser.id)
     setResults(
       allResults
         .filter((r) => r.studentId === studentId)
@@ -95,7 +107,9 @@ export default function PatientProfile() {
     )
 
     setRequisitions(
-      getRequisitionsByStudentId(studentId).sort(
+      getScopedRequisitionsForUser(currentUser.role, currentUser.id)
+        .filter((req) => req.studentId === studentId)
+        .sort(
         (a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime(),
       ),
     )

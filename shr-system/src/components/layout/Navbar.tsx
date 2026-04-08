@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getAll, StorageKey, update } from '../../services/storage';
-import type { MedicationRequisition, Referral, SystemAlert, SystemUser } from '../../types/types';
+import type { SystemAlert, SystemUser } from '../../types/types';
 import { useToast } from '../../hooks';
 import { useSimulatedPolling } from '../../hooks/useSimulatedPolling';
 import { CommandPalette, type CommandItem } from './CommandPalette';
@@ -22,6 +22,11 @@ import {
   promptPwaInstall,
   PWA_EVENT_INSTALL_AVAILABILITY,
 } from '../../services/registerServiceWorker';
+import {
+  getScopedReferralsForUser,
+  getScopedRequisitionsForUser,
+  getScopedResultsForUser,
+} from '../../services/accessScope';
 
 const ROLE_LABELS: Record<string, string> = {
   student: 'Student',
@@ -89,35 +94,41 @@ export function Navbar() {
   const unreadAlerts = unresolvedAlerts.filter((a) => !readAlertIds.includes(a.id));
   const alertCount = unreadAlerts.length;
 
-  const requisitions = getAll<MedicationRequisition>(StorageKey.REQUISITIONS);
-  const referrals = getAll<Referral>(StorageKey.REFERRALS);
-
   const quickWorkloadLabel = useMemo(() => {
     if (!currentUser) return '';
+
+    const scopedRequisitions = getScopedRequisitionsForUser(currentUser.role, currentUser.id);
+    const scopedReferrals = getScopedReferralsForUser(currentUser.role, currentUser.id);
+    const scopedResults = getScopedResultsForUser(currentUser.role, currentUser.id);
+
     if (currentUser.role === 'medical_staff') {
-      const pending = requisitions.filter((r) => r.status === 'Pending Review').length;
+      const pending = scopedRequisitions.filter((r) => r.status === 'Pending Review').length;
       return `${pending} pending reviews`;
     }
     if (currentUser.role === 'specialist') {
-      const pending = referrals.filter((r) => r.status === 'Requested' || r.status === 'Under Review').length;
+      const pending = scopedReferrals.filter(
+        (referral) => referral.status === 'Requested' || referral.status === 'Under Review',
+      ).length;
       return `${pending} referrals waiting`;
     }
     if (currentUser.role === 'pharmacy') {
-      const ready = requisitions.filter((r) => r.status === 'Approved' || r.status === 'Ready for Pickup').length;
+      const ready = scopedRequisitions.filter(
+        (req) => req.status === 'Approved' || req.status === 'Ready for Pickup',
+      ).length;
       return `${ready} ready to dispense`;
     }
     if (currentUser.role === 'technician') {
-      const pendingResults = getAll<{ status: string }>(StorageKey.RESULTS)
-        .filter((r) => r.status === 'Pending' || r.status === 'Processing').length;
+      const pendingResults = scopedResults
+        .filter((result) => result.status === 'Pending' || result.status === 'Processing').length;
       return `${pendingResults} results pending`;
     }
     if (currentUser.role === 'student') {
-      const myRequests = requisitions.filter((r) => r.studentId === currentUser.id || r.studentName === currentUser.name).length;
+      const myRequests = scopedRequisitions.length;
       return `${myRequests} total requests`;
     }
     const critical = unresolvedAlerts.filter((alert) => alert.type === 'Critical').length;
     return `${critical} critical alerts`;
-  }, [currentUser, requisitions, referrals, unresolvedAlerts]);
+  }, [currentUser, unresolvedAlerts]);
 
   const commandItems: CommandItem[] = useMemo(() => {
     if (!currentUser) return [];

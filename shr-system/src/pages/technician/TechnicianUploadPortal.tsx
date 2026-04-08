@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Search, Upload, X, FileText, Image, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { getAll, create, update, createAuditEntry, StorageKey } from '../../services/storage';
+import { create, update, createAuditEntry, StorageKey } from '../../services/storage';
+import { getScopedReferralsForUser, getScopedStudentsForUser } from '../../services/accessScope';
 import type { Student, DiagnosticResult, ResultType, Referral } from '../../types/types';
 import { useToast } from '../../components/shared/Toast';
 import { PageHeader } from '../../components/shared/PageHeader';
@@ -38,11 +39,17 @@ export default function TechnicianUploadPortal() {
   const [updatingReferral, setUpdatingReferral] = useState(false);
 
   const search = useCallback((q: string) => {
-    const students = getAll<Student>(StorageKey.STUDENTS);
+    if (!currentUser) {
+      setResults([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    const students = getScopedStudentsForUser(currentUser.role, currentUser.id);
     const lower = q.toLowerCase();
     setResults(students.filter(s => s.name.toLowerCase().includes(lower)).slice(0, 8));
     setShowDropdown(true);
-  }, []);
+  }, [currentUser]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -72,8 +79,8 @@ export default function TechnicianUploadPortal() {
 
   const disabled = !selectedPatient;
 
-  const patientReferrals = selectedPatient
-    ? getAll<Referral>(StorageKey.REFERRALS)
+  const patientReferrals = selectedPatient && currentUser
+    ? getScopedReferralsForUser(currentUser.role, currentUser.id)
         .filter((referral) => referral.studentId === selectedPatient.id)
         .sort((a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime())
     : [];
@@ -146,6 +153,14 @@ export default function TechnicianUploadPortal() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPatient || !currentUser) return;
+
+    const scopedStudents = getScopedStudentsForUser(currentUser.role, currentUser.id);
+    const canUploadForPatient = scopedStudents.some((student) => student.id === selectedPatient.id);
+    if (!canUploadForPatient) {
+      toast('You are not authorized to upload results for this patient', 'error');
+      return;
+    }
+
     if (findings.length < 20) { toast('Findings must be at least 20 characters', 'error'); return; }
     if (criticalFlag && !criticalReason.trim()) { toast('Critical reason required', 'error'); return; }
     setSubmitting(true);

@@ -2,19 +2,18 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AlertTriangle, Users, ClipboardList, FlaskConical, Search } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { getAuditLogs } from '../../services/storage'
 import {
-  getAll,
-  getPendingRequisitions,
-  getAuditLogs,
-  StorageKey,
-} from '../../services/storage'
+  getScopedEncountersForUser,
+  getScopedRequisitionsForUser,
+  getScopedResultsForUser,
+  getScopedReferralsForUser,
+  getScopedStudentsForUser,
+} from '../../services/accessScope'
 import type {
-  Student,
   MedicationRequisition,
   AuditLog,
-  Encounter,
-  DiagnosticResult,
-  Referral,
+  Student,
 } from '../../types/types'
 import { SeverityBadge } from '../../components/shared'
 
@@ -38,10 +37,17 @@ export default function StaffDashboard() {
   const searchRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const pendingRequisitions = getPendingRequisitions()
-  const allEncounters = getAll<Encounter>(StorageKey.ENCOUNTERS)
-  const allResults = getAll<DiagnosticResult>(StorageKey.RESULTS)
-  const auditLogs = getAuditLogs()
+  const scopedRequisitions = currentUser
+    ? getScopedRequisitionsForUser(currentUser.role, currentUser.id)
+    : []
+  const pendingRequisitions = scopedRequisitions.filter((req) => req.status === 'Pending Review')
+  const allEncounters = currentUser
+    ? getScopedEncountersForUser(currentUser.role, currentUser.id)
+    : []
+  const allResults = currentUser
+    ? getScopedResultsForUser(currentUser.role, currentUser.id)
+    : []
+  const auditLogs = getAuditLogs({ userId: currentUser?.id })
     .sort((a: AuditLog, b: AuditLog) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
     .slice(0, 10)
 
@@ -51,9 +57,12 @@ export default function StaffDashboard() {
   const pendingResults = allResults.filter(
     (r) => r.status === 'Pending' || r.status === 'Processing',
   )
-  const myReferralFeedback = getAll<Referral>(StorageKey.REFERRALS).filter(
-    (r) => r.requestingStaffId === currentUser?.id && r.status === 'Completed',
-  )
+  const myReferralFeedback = currentUser
+    ? getScopedReferralsForUser(currentUser.role, currentUser.id).filter(
+        (referral) =>
+          referral.requestingStaffId === currentUser.id && referral.status === 'Completed',
+      )
+    : []
 
   const topRequisitions = [...pendingRequisitions]
     .sort((a: MedicationRequisition, b: MedicationRequisition) => {
@@ -71,7 +80,12 @@ export default function StaffDashboard() {
       return
     }
     debounceRef.current = setTimeout(() => {
-      const students = getAll<Student>(StorageKey.STUDENTS)
+      if (!currentUser) {
+        setSearchResults([])
+        setShowDropdown(false)
+        return
+      }
+      const students = getScopedStudentsForUser(currentUser.role, currentUser.id)
       const q = searchQuery.toLowerCase()
       setSearchResults(students.filter((s) => s.name.toLowerCase().includes(q)).slice(0, 8))
       setShowDropdown(true)
@@ -79,7 +93,7 @@ export default function StaffDashboard() {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [searchQuery])
+  }, [searchQuery, currentUser])
 
   useEffect(() => {
     function handler(e: MouseEvent) {

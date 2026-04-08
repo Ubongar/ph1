@@ -46,7 +46,7 @@ export default function SpecialistReferrals() {
   );
 
   const myReferrals = useMemo(
-    () => allReferrals.filter((referral) => !referral.specialistId || referral.specialistId === currentUser?.id),
+    () => allReferrals.filter((referral) => referral.specialistId === currentUser?.id),
     [allReferrals, currentUser?.id],
   );
 

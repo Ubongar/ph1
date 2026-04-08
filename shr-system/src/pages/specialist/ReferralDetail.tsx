@@ -49,7 +49,7 @@ export default function ReferralDetail() {
     );
   }
 
-  const canManageReferral = !activeReferral.specialistId || activeReferral.specialistId === currentUser.id;
+  const canManageReferral = activeReferral.specialistId === currentUser.id;
 
   if (!canManageReferral) {
     return (

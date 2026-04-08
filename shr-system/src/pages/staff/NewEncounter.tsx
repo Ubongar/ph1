@@ -4,6 +4,7 @@ import { PlusCircle, Trash2, ArrowLeft, AlertTriangle, Save } from 'lucide-react
 import { getAll, getById, create, createAuditEntry, StorageKey } from '../../services/storage'
 import { useAuth } from '../../context/AuthContext'
 import { useFormDraft } from '../../hooks/useFormDraft'
+import { canAccessStudentForUser } from '../../services/accessScope'
 import type {
   Student,
   SystemUser,
@@ -137,6 +138,7 @@ export default function NewEncounter() {
 
   const [student, setStudent] = useState<Student | null>(null)
   const [systemUser, setSystemUser] = useState<SystemUser | null>(null)
+  const [accessDenied, setAccessDenied] = useState(false)
   const [form, setForm] = useState<EncounterFormData>(defaultForm)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
@@ -146,13 +148,24 @@ export default function NewEncounter() {
 
   useEffect(() => {
     if (!studentId) return
+    setAccessDenied(false)
     const s = getById<Student>(StorageKey.STUDENTS, studentId)
     if (s) {
+      if (currentUser && !canAccessStudentForUser(currentUser.role, currentUser.id, studentId)) {
+        setAccessDenied(true)
+        setStudent(null)
+        setSystemUser(null)
+        return
+      }
+
       setStudent(s)
       const users = getAll<SystemUser>(StorageKey.USERS)
       setSystemUser(users.find((u) => u.id === s.userId) ?? null)
+      return
     }
-  }, [studentId])
+    setStudent(null)
+    setSystemUser(null)
+  }, [studentId, currentUser])
 
   // Auto-save every 30s
   useEffect(() => {
@@ -345,6 +358,26 @@ export default function NewEncounter() {
 
   const bmi = calcBmi(form.weight, form.height)
   const bmiInfo = bmi !== null ? bmiLabel(bmi) : null
+
+  if (accessDenied) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <div className="bg-white rounded-xl border border-red-200 p-8 max-w-lg text-center">
+          <h1 className="text-xl font-bold text-gray-900 mb-2">Access denied</h1>
+          <p className="text-sm text-gray-600 mb-5">
+            You are not authorized to create an encounter for this patient.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/staff/search')}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg font-medium"
+          >
+            Back to Search
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

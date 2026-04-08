@@ -2,7 +2,13 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Eye, AlertTriangle } from 'lucide-react'
 import { getAll, StorageKey } from '../../services/storage'
-import type { Student, SystemUser, MedicationRequisition, Encounter } from '../../types/types'
+import {
+  getScopedEncountersForUser,
+  getScopedRequisitionsForUser,
+  getScopedStudentsForUser,
+} from '../../services/accessScope'
+import { useAuth } from '../../context/AuthContext'
+import type { Student, SystemUser } from '../../types/types'
 import { SkeletonRow, EmptyState } from '../../components/shared'
 import { getHospitalNumber } from '../../utils/studentIdentifiers'
 
@@ -38,6 +44,7 @@ interface StudentRow {
 
 export default function StudentSearch() {
   const navigate = useNavigate()
+  const { currentUser } = useAuth()
   const [nameQuery, setNameQuery] = useState('')
   const [department, setDepartment] = useState('')
   const [bloodGroup, setBloodGroup] = useState<Student['bloodGroup'] | ''>('')
@@ -52,10 +59,16 @@ export default function StudentSearch() {
     if (timerRef.current) clearTimeout(timerRef.current)
     setLoading(true)
     timerRef.current = setTimeout(() => {
-      const students = getAll<Student>(StorageKey.STUDENTS)
+      if (!currentUser) {
+        setRows([])
+        setLoading(false)
+        return
+      }
+
+      const students = getScopedStudentsForUser(currentUser.role, currentUser.id)
       const users = getAll<SystemUser>(StorageKey.USERS)
-      const encounters = getAll<Encounter>(StorageKey.ENCOUNTERS)
-      const requisitions = getAll<MedicationRequisition>(StorageKey.REQUISITIONS)
+      const encounters = getScopedEncountersForUser(currentUser.role, currentUser.id)
+      const requisitions = getScopedRequisitionsForUser(currentUser.role, currentUser.id)
 
       let filtered = [...students]
       if (nameQuery.trim()) {
@@ -100,7 +113,14 @@ export default function StudentSearch() {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
     }
-  }, [nameQuery, department, bloodGroup, hasActiveRequisition, hasCriticalAllergy])
+  }, [
+    nameQuery,
+    department,
+    bloodGroup,
+    hasActiveRequisition,
+    hasCriticalAllergy,
+    currentUser,
+  ])
 
   const totalPages = Math.max(1, Math.ceil(rows.length / ITEMS_PER_PAGE))
   const pageRows = rows.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)

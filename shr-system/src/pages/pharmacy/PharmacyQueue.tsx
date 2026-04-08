@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { List, LayoutGrid, Download } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getAll, update, createAuditEntry, StorageKey } from '../../services/storage';
+import { getScopedRequisitionsForUser } from '../../services/accessScope';
 import type { MedicationRequisition, Student } from '../../types/types';
 import { useToast } from '../../components/shared/Toast';
 import { useSimulatedPolling } from '../../hooks/useSimulatedPolling';
@@ -25,11 +26,21 @@ export default function PharmacyQueue() {
   const [dispenseTarget, setDispenseTarget] = useState<MedicationRequisition | null>(null);
 
   const loadData = useCallback(() => {
+    if (!currentUser) {
+      return {
+        requisitions: [],
+        students: [],
+      };
+    }
+
+    const requisitions = getScopedRequisitionsForUser(currentUser.role, currentUser.id);
+    const studentIds = new Set(requisitions.map((req) => req.studentId));
+
     return {
-      requisitions: getAll<MedicationRequisition>(StorageKey.REQUISITIONS),
-      students: getAll<Student>(StorageKey.STUDENTS),
+      requisitions,
+      students: getAll<Student>(StorageKey.STUDENTS).filter((student) => studentIds.has(student.id)),
     };
-  }, []);
+  }, [currentUser]);
 
   const [data, setData] = useState(loadData);
   useSimulatedPolling(15000, () => setData(loadData()));
