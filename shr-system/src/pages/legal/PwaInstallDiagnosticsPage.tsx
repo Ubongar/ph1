@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Download, RefreshCcw } from 'lucide-react';
+import { ArrowLeft, Download, RefreshCcw } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks';
 import {
   isPwaInstallAvailable,
@@ -19,6 +21,15 @@ interface ManifestInsights {
   hasScreenshots: boolean;
   startUrl: string | null;
 }
+
+const ROLE_HOME: Record<string, string> = {
+  student: '/student/dashboard',
+  medical_staff: '/staff/dashboard',
+  technician: '/technician/upload',
+  pharmacy: '/pharmacy/queue',
+  specialist: '/specialist/dashboard',
+  admin: '/admin/dashboard',
+};
 
 function getInstallCtaMode(installAvailable: boolean): InstallCtaMode {
   if (typeof window === 'undefined') return installAvailable ? 'prompt' : 'none';
@@ -44,6 +55,8 @@ function statusClass(status: CheckStatus): string {
 }
 
 export default function PwaInstallDiagnosticsPage() {
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [installAvailable, setInstallAvailable] = useState(() => isPwaInstallAvailable());
   const [manifestInsights, setManifestInsights] = useState<ManifestInsights>({
@@ -55,6 +68,8 @@ export default function PwaInstallDiagnosticsPage() {
   });
   const [serviceWorkerReady, setServiceWorkerReady] = useState(false);
   const [openIosGuide, setOpenIosGuide] = useState(false);
+  const backTarget = currentUser ? (ROLE_HOME[currentUser.role] ?? '/login') : '/login';
+  const backLabel = currentUser ? 'Back to Dashboard' : 'Back to Login';
 
   const installMode = useMemo(() => getInstallCtaMode(installAvailable), [installAvailable]);
 
@@ -161,6 +176,10 @@ export default function PwaInstallDiagnosticsPage() {
     toast('Install prompt is not ready yet.', 'warning');
   }
 
+  function handleBackNavigation() {
+    navigate(backTarget);
+  }
+
   const checks = [
     {
       label: 'Secure Context',
@@ -224,14 +243,24 @@ export default function PwaInstallDiagnosticsPage() {
                 Use this page on your phone or laptop to quickly see what blocks installation.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              <RefreshCcw className="h-4 w-4" />
-              Refresh Checks
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleBackNavigation}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                {backLabel}
+              </button>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                <RefreshCcw className="h-4 w-4" />
+                Refresh Checks
+              </button>
+            </div>
           </div>
 
           <div className="mt-5 grid grid-cols-1 gap-3">
