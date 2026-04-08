@@ -112,6 +112,12 @@ export function Sidebar() {
             {collapsed ? 'PP' : 'Privacy Policy'}
           </Link>
           <Link
+            to="/legal/faq"
+            className="block rounded-md px-2 py-1.5 text-xs font-medium text-gray-600 hover:bg-white hover:text-gray-900"
+          >
+            {collapsed ? 'FAQ' : 'Role FAQs'}
+          </Link>
+          <Link
             to="/legal/data-requests"
             className="block rounded-md px-2 py-1.5 text-xs font-medium text-gray-600 hover:bg-white hover:text-gray-900"
           >

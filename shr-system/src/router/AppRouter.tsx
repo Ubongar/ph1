@@ -40,6 +40,7 @@ import DataRequestCenter from '../pages/legal/DataRequestCenter';
 import PolicyAcceptancePage from '../pages/legal/PolicyAcceptancePage';
 import PolicyAcceptanceHistoryPage from '../pages/legal/PolicyAcceptanceHistoryPage';
 import PwaInstallDiagnosticsPage from '../pages/legal/PwaInstallDiagnosticsPage';
+import FaqPage from '../pages/legal/FaqPage';
 import AdminDataRequests from '../pages/admin/AdminDataRequests';
 import PolicyVersioning from '../pages/admin/PolicyVersioning';
 import ReconciliationCenter from '../pages/admin/ReconciliationCenter';
@@ -94,6 +95,7 @@ export function AppRouter() {
       <Route path="/legal/security" element={<SecurityRetentionPage />} />
       <Route path="/legal/role-matrix" element={<RolePrivacyMatrixPage />} />
       <Route path="/legal/medical-disclaimer" element={<MedicalDisclaimerPage />} />
+      <Route path="/legal/faq" element={<FaqPage />} />
       <Route path="/legal/pwa-diagnostics" element={<PwaInstallDiagnosticsPage />} />
       <Route
         path="/legal/data-requests"

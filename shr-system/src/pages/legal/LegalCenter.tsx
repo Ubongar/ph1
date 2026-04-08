@@ -43,6 +43,11 @@ const REQUIRED_PAGES = [
     reason: 'Clarifies that the platform does not replace emergency or direct clinical judgement.',
   },
   {
+    title: 'Role-Based FAQ Center',
+    to: '/legal/faq',
+    reason: 'Browse extensive role-specific answers. Login view shows tabs for all roles; signed-in users see only their role FAQ.',
+  },
+  {
     title: 'Data Request Center',
     to: '/legal/data-requests',
     reason: 'Submit access, correction, and deletion requests with audit ticket IDs and status tracking.',

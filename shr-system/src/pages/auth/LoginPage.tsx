@@ -288,6 +288,7 @@ export default function LoginPage() {
             </p>
             <div className="mt-4 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-gray-500">
               <Link to="/legal" className="hover:text-blue-700">Legal Center</Link>
+              <Link to="/legal/faq" className="hover:text-blue-700">Role FAQs</Link>
               <Link to="/legal/privacy" className="hover:text-blue-700">Privacy</Link>
               <Link to="/legal/terms" className="hover:text-blue-700">Terms</Link>
               <Link to="/legal/data-rights" className="hover:text-blue-700">Data Rights</Link>
