@@ -150,6 +150,44 @@ export interface DataRequest {
 export type ComplaintSeverity = 'Low' | 'Moderate' | 'High' | 'Critical';
 export type ComplaintStatus = 'Submitted' | 'Under Review' | 'Forwarded' | 'Awaiting Department Feedback' | 'Resolved' | 'Closed';
 
+export type ComplaintEscalationRoute = 'department-lead' | 'admin-lead' | 'emergency';
+export type ComplaintOwnershipStatus = 'Unassigned' | 'Pending Acknowledgement' | 'Acknowledged' | 'Timed Out';
+export type ComplaintContactChannel = 'in-app' | 'sms' | 'email' | 'call';
+
+export interface ComplaintEvidenceItem {
+  id: string;
+  label: string;
+  url: string;
+  uploadedAt: string;
+  uploadedByUserId: string;
+  uploadedByUserName: string;
+  note?: string;
+}
+
+export interface ComplaintTimelineEvent {
+  id: string;
+  createdAt: string;
+  actorUserId: string;
+  actorName: string;
+  actorRole: UserRole | 'system';
+  eventType:
+    | 'Submitted'
+    | 'Forwarded'
+    | 'Escalated'
+    | 'Acknowledged'
+    | 'OwnershipTimedOut'
+    | 'DepartmentFeedback'
+    | 'ThreadMessage'
+    | 'AdminResponse'
+    | 'ReadReceipt'
+    | 'EvidenceAdded'
+    | 'RootCauseUpdated'
+    | 'ResolutionRated'
+    | 'CriticalIncidentTriggered';
+  note: string;
+  metadata?: string;
+}
+
 export interface Complaint {
   id: string;
   ticketId: string;
@@ -179,7 +217,32 @@ export interface Complaint {
   adminRespondedAt?: string;
   adminResponderId?: string;
   adminResponderName?: string;
+  ownershipStatus?: ComplaintOwnershipStatus;
+  ownershipDueAt?: string;
+  acknowledgedAt?: string;
+  acknowledgedByUserId?: string;
+  acknowledgedByUserName?: string;
+  acknowledgementTimeoutCount?: number;
+  escalationLevel?: 0 | 1 | 2 | 3;
+  escalationRoute?: ComplaintEscalationRoute;
+  escalationStepDueAt?: string;
+  lastEscalationAt?: string;
   slaEscalatedAt?: string;
+  criticalIncidentChannels?: ComplaintContactChannel[];
+  isLifeThreatening?: boolean;
+  rootCauseSummary?: string;
+  correctiveAction?: string;
+  preventionAction?: string;
+  responseTemplateKey?: string;
+  complainantLastViewedAt?: string;
+  assigneeLastViewedAt?: string;
+  adminLastViewedAt?: string;
+  resolutionRating?: 1 | 2 | 3 | 4 | 5;
+  resolutionRatingComment?: string;
+  resolutionRatedAt?: string;
+  resolutionRatedByUserId?: string;
+  evidenceItems?: ComplaintEvidenceItem[];
+  timeline?: ComplaintTimelineEvent[];
 }
 
 export type PolicyType = 'privacy' | 'terms';
