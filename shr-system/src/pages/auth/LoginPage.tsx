@@ -154,7 +154,8 @@ export default function LoginPage() {
       from?.pathname && from.pathname !== '/login' && from.pathname !== '/onboarding',
     );
     if (hasValidFromPath) {
-      navigate(`${from?.pathname}${from?.search ?? ''}${from?.hash ?? ''}`, { replace: true });
+      const to = `${from.pathname}${from.search ?? ''}${from.hash ?? ''}`;
+      navigate(to, { replace: true });
       return;
     }
     navigate(ROLE_REDIRECT[user.role] ?? '/', { replace: true });
