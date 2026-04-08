@@ -16,6 +16,9 @@ This repository contains a role-based web app that simulates end-to-end student 
 - `shr-system/` → Main React + TypeScript + Vite application
 - `ui/` → Reference screenshots used for UI direction (`screen*.png`)
 - `structure/workflow.md` → Deep internal architecture and data/workflow mapping
+- `structure/technical-website-breakdown.md` → Full technical system breakdown (including offline/PWA/backend)
+- `structure/executive-summary.md` → Stakeholder-oriented non-technical summary
+- `structure/sequence-diagrams/` → Role-by-role sequence diagrams (student, staff, technician, pharmacy, specialist, admin)
 - `GUIDE.md` → Practical usage guide for operators/testers
 
 ## Tech Stack
@@ -100,12 +103,16 @@ The app is intentionally backend-free and uses browser `localStorage`:
 - Admin: `/admin/*`
 
 Detailed route and workflow mapping is documented in `structure/workflow.md`.
+Full-stack technical architecture and offline/sync internals are documented in `structure/technical-website-breakdown.md`.
 
 ## Documentation Map
 
 - Start here: `README.md`
 - How to operate and test role flows: `GUIDE.md`
 - Deep architecture and internals: `structure/workflow.md`
+- Full technical deep-dive (frontend + backend + offline + governance): `structure/technical-website-breakdown.md`
+- Executive summary for stakeholders: `structure/executive-summary.md`
+- Role sequence diagrams index: `structure/sequence-diagrams/index.md`
 - License terms: `license.md`
 
 ## License

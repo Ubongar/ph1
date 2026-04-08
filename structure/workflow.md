@@ -2,6 +2,12 @@
 
 This document provides an intensive breakdown of how the mock SHR system works internally.
 
+## Related Documentation
+
+- Executive summary: [executive-summary.md](executive-summary.md)
+- Full technical deep-dive: [technical-website-breakdown.md](technical-website-breakdown.md)
+- Role sequence diagrams index: [sequence-diagrams/index.md](sequence-diagrams/index.md)
+
 ## 1) Runtime Boot Sequence
 
 The app boot process is deterministic and local-storage driven:
