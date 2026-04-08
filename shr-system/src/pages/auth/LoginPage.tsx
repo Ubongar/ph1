@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Loader2, AlertCircle, Download } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getAll, StorageKey } from '../../services/storage';
@@ -38,6 +39,13 @@ const ROLE_REDIRECT: Record<string, string> = {
 };
 
 type InstallCtaMode = 'none' | 'prompt' | 'ios-manual' | 'https-required';
+type LoginRouteState = {
+  from?: {
+    pathname?: string;
+    search?: string;
+    hash?: string;
+  };
+};
 
 function getInstallCtaMode(installAvailable: boolean): InstallCtaMode {
   if (typeof window === 'undefined') return installAvailable ? 'prompt' : 'none';
@@ -60,6 +68,7 @@ export default function LoginPage() {
   const { login } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -139,6 +148,15 @@ export default function LoginPage() {
     setLoading(false);
     if (!user) {
       setError('Invalid email or account not found. Try a demo credential below.');
+      return;
+    }
+    const state = location.state as LoginRouteState | null;
+    const from = state?.from;
+    const hasValidFromPath = Boolean(
+      from?.pathname && from.pathname !== '/login' && from.pathname !== '/onboarding',
+    );
+    if (hasValidFromPath) {
+      navigate(`${from?.pathname}${from?.search ?? ''}${from?.hash ?? ''}`, { replace: true });
       return;
     }
     navigate(ROLE_REDIRECT[user.role] ?? '/', { replace: true });
