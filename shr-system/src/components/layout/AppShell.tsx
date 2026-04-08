@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, MessageSquare } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useOfflineSyncStatus } from '../../hooks';
@@ -61,6 +61,7 @@ export function AppShell({ children }: AppShellProps) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const openMobileSidebar = useCallback(() => setMobileSidebarOpen(true), []);
   const closeMobileSidebar = useCallback(() => setMobileSidebarOpen(false), []);
+  const showComplaintsQuickTab = Boolean(currentUser) && !location.pathname.startsWith('/complaints');
 
   useEffect(() => {
     const element = mainRef.current;
@@ -180,6 +181,7 @@ export function AppShell({ children }: AppShellProps) {
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-500">
               <span className="font-medium text-gray-600">Policies</span>
               <Link to="/settings" className="hover:text-blue-700">Settings</Link>
+              <Link to="/complaints" className="hover:text-blue-700">Complaints</Link>
               <Link to="/legal" className="hover:text-blue-700">Legal Center</Link>
               <Link to="/legal/privacy" className="hover:text-blue-700">Privacy</Link>
               <Link to="/legal/terms" className="hover:text-blue-700">Terms</Link>
@@ -190,6 +192,16 @@ export function AppShell({ children }: AppShellProps) {
               <Link to="/legal/security" className="hover:text-blue-700">Security</Link>
             </div>
           </footer>
+          {showComplaintsQuickTab && (
+            <Link
+              to="/complaints"
+              className="fixed right-0 top-1/2 z-20 inline-flex -translate-y-1/2 items-center gap-1.5 rounded-l-full border border-r-0 border-blue-200 bg-blue-600 px-3 py-2 text-xs font-semibold text-white shadow-md hover:bg-blue-700"
+              aria-label="Open complaints center"
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Complaints</span>
+            </Link>
+          )}
           {showScrollTop && (
             <button
               type="button"

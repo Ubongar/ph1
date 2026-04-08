@@ -1,10 +1,11 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, UserCircle, PlusCircle, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, UserCircle, PlusCircle, ClipboardList, MessageSquare } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const TABS = [
   { label: 'Dashboard', to: '/student/dashboard', icon: LayoutDashboard },
   { label: 'Profile', to: '/student/profile', icon: UserCircle },
+  { label: 'Complaints', to: '/complaints', icon: MessageSquare },
   { label: 'New Request', to: '/student/submit-symptom', icon: PlusCircle },
   { label: 'My Requests', to: '/student/my-requisitions', icon: ClipboardList },
 ] as const;

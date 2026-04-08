@@ -3,7 +3,7 @@ import { Link, NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Search, ClipboardList,
   ShoppingBag, Users, FileText, BarChart3, Upload, Stethoscope, ShieldCheck,
-  ChevronLeft, ChevronRight, UserCircle, PlusCircle, X,
+  ChevronLeft, ChevronRight, UserCircle, PlusCircle, MessageSquare, X,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import type { UserRole } from '../../types/types';
@@ -18,6 +18,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   student: [
     { label: 'Dashboard', to: '/student/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
     { label: 'Workspace', to: '/workspace', icon: <ClipboardList className="w-5 h-5" /> },
+    { label: 'Complaints', to: '/complaints', icon: <MessageSquare className="w-5 h-5" /> },
     { label: 'My Profile', to: '/student/profile', icon: <UserCircle className="w-5 h-5" /> },
     { label: 'New Request', to: '/student/submit-symptom', icon: <PlusCircle className="w-5 h-5" /> },
     { label: 'My Requests', to: '/student/my-requisitions', icon: <ClipboardList className="w-5 h-5" /> },
@@ -25,27 +26,32 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   medical_staff: [
     { label: 'Dashboard', to: '/staff/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
     { label: 'Workspace', to: '/workspace', icon: <ClipboardList className="w-5 h-5" /> },
+    { label: 'Complaints', to: '/complaints', icon: <MessageSquare className="w-5 h-5" /> },
     { label: 'Search Patients', to: '/staff/search', icon: <Search className="w-5 h-5" /> },
     { label: 'Review Queue', to: '/staff/review-queue', icon: <ClipboardList className="w-5 h-5" /> },
     { label: 'Referral Feedback', to: '/staff/referral-feedback', icon: <Stethoscope className="w-5 h-5" /> },
   ],
   technician: [
     { label: 'Workspace', to: '/workspace', icon: <ClipboardList className="w-5 h-5" /> },
+    { label: 'Complaints', to: '/complaints', icon: <MessageSquare className="w-5 h-5" /> },
     { label: 'Upload Results', to: '/technician/upload', icon: <Upload className="w-5 h-5" /> },
   ],
   pharmacy: [
     { label: 'Workspace', to: '/workspace', icon: <ClipboardList className="w-5 h-5" /> },
+    { label: 'Complaints', to: '/complaints', icon: <MessageSquare className="w-5 h-5" /> },
     { label: 'Dispensing Queue', to: '/pharmacy/queue', icon: <ShoppingBag className="w-5 h-5" /> },
   ],
   specialist: [
     { label: 'Dashboard', to: '/specialist/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
     { label: 'Workspace', to: '/workspace', icon: <ClipboardList className="w-5 h-5" /> },
+    { label: 'Complaints', to: '/complaints', icon: <MessageSquare className="w-5 h-5" /> },
     { label: 'Referrals', to: '/specialist/referrals', icon: <Stethoscope className="w-5 h-5" /> },
     { label: 'Analytics', to: '/specialist/analytics', icon: <BarChart3 className="w-5 h-5" /> },
   ],
   admin: [
     { label: 'Dashboard', to: '/admin/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
     { label: 'Workspace', to: '/workspace', icon: <ClipboardList className="w-5 h-5" /> },
+    { label: 'Complaints', to: '/complaints', icon: <MessageSquare className="w-5 h-5" /> },
     { label: 'Governance Center', to: '/admin/governance', icon: <ShieldCheck className="w-5 h-5" /> },
     { label: 'Users', to: '/admin/users', icon: <Users className="w-5 h-5" /> },
     { label: 'Audit Logs', to: '/admin/audit-logs', icon: <FileText className="w-5 h-5" /> },

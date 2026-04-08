@@ -142,6 +142,7 @@ export function Navbar({ onToggleMobileSidebar }: NavbarProps) {
       student: [
         { id: 'st-1', label: 'Go to Student Dashboard', hint: '/student/dashboard', keywords: ['home'], onSelect: () => navigate('/student/dashboard') },
         { id: 'st-w', label: 'Open Role Workspace', hint: '/workspace', keywords: ['inbox', 'timeline'], onSelect: () => navigate('/workspace') },
+        { id: 'st-c', label: 'Open Complaints Center', hint: '/complaints', keywords: ['complaint', 'issue', 'admin response'], onSelect: () => navigate('/complaints') },
         { id: 'st-2', label: 'Open My Profile', hint: '/student/profile', keywords: ['profile'], onSelect: () => navigate('/student/profile') },
         { id: 'st-3', label: 'Submit New Symptom Report', hint: '/student/submit-symptom', keywords: ['new request'], onSelect: () => navigate('/student/submit-symptom') },
         { id: 'st-4', label: 'Track My Requests', hint: '/student/my-requisitions', keywords: ['status'], onSelect: () => navigate('/student/my-requisitions') },
@@ -149,27 +150,32 @@ export function Navbar({ onToggleMobileSidebar }: NavbarProps) {
       medical_staff: [
         { id: 'ms-1', label: 'Go to Staff Dashboard', hint: '/staff/dashboard', keywords: ['home'], onSelect: () => navigate('/staff/dashboard') },
         { id: 'ms-w', label: 'Open Role Workspace', hint: '/workspace', keywords: ['inbox', 'timeline'], onSelect: () => navigate('/workspace') },
+        { id: 'ms-c', label: 'Open Complaints Center', hint: '/complaints', keywords: ['complaint', 'feedback'], onSelect: () => navigate('/complaints') },
         { id: 'ms-2', label: 'Search Patients', hint: '/staff/search', keywords: ['student search'], onSelect: () => navigate('/staff/search') },
         { id: 'ms-3', label: 'Open Review Queue', hint: '/staff/review-queue', keywords: ['pending requisitions'], onSelect: () => navigate('/staff/review-queue') },
         { id: 'ms-4', label: 'Open Referral Feedback', hint: '/staff/referral-feedback', keywords: ['referral'], onSelect: () => navigate('/staff/referral-feedback') },
       ],
       technician: [
         { id: 'te-w', label: 'Open Role Workspace', hint: '/workspace', keywords: ['inbox', 'timeline'], onSelect: () => navigate('/workspace') },
+        { id: 'te-c', label: 'Open Complaints Center', hint: '/complaints', keywords: ['complaint', 'feedback'], onSelect: () => navigate('/complaints') },
         { id: 'te-1', label: 'Open Upload Portal', hint: '/technician/upload', keywords: ['lab upload'], onSelect: () => navigate('/technician/upload') },
       ],
       pharmacy: [
         { id: 'ph-w', label: 'Open Role Workspace', hint: '/workspace', keywords: ['inbox', 'timeline'], onSelect: () => navigate('/workspace') },
+        { id: 'ph-c', label: 'Open Complaints Center', hint: '/complaints', keywords: ['complaint', 'feedback'], onSelect: () => navigate('/complaints') },
         { id: 'ph-1', label: 'Open Dispensing Queue', hint: '/pharmacy/queue', keywords: ['queue'], onSelect: () => navigate('/pharmacy/queue') },
       ],
       specialist: [
         { id: 'sp-1', label: 'Go to Specialist Dashboard', hint: '/specialist/dashboard', keywords: ['home'], onSelect: () => navigate('/specialist/dashboard') },
         { id: 'sp-w', label: 'Open Role Workspace', hint: '/workspace', keywords: ['inbox', 'timeline'], onSelect: () => navigate('/workspace') },
+        { id: 'sp-c', label: 'Open Complaints Center', hint: '/complaints', keywords: ['complaint', 'feedback'], onSelect: () => navigate('/complaints') },
         { id: 'sp-2', label: 'View Referrals', hint: '/specialist/referrals', keywords: ['cases'], onSelect: () => navigate('/specialist/referrals') },
         { id: 'sp-3', label: 'Open Consultation Analytics', hint: '/specialist/analytics', keywords: ['metrics', 'chart'], onSelect: () => navigate('/specialist/analytics') },
       ],
       admin: [
         { id: 'ad-1', label: 'Go to Admin Dashboard', hint: '/admin/dashboard', keywords: ['home'], onSelect: () => navigate('/admin/dashboard') },
         { id: 'ad-w', label: 'Open Role Workspace', hint: '/workspace', keywords: ['inbox', 'timeline'], onSelect: () => navigate('/workspace') },
+        { id: 'ad-c', label: 'Open Complaints Center', hint: '/complaints', keywords: ['complaint', 'triage', 'reply'], onSelect: () => navigate('/complaints') },
         { id: 'ad-g', label: 'Open Governance Center', hint: '/admin/governance', keywords: ['quality', 'security', 'observability'], onSelect: () => navigate('/admin/governance') },
         { id: 'ad-2', label: 'Open User Management', hint: '/admin/users', keywords: ['users'], onSelect: () => navigate('/admin/users') },
         { id: 'ad-3', label: 'Open Audit Logs', hint: '/admin/audit-logs', keywords: ['audit'], onSelect: () => navigate('/admin/audit-logs') },
@@ -334,6 +340,7 @@ export function Navbar({ onToggleMobileSidebar }: NavbarProps) {
     if (pathname.startsWith('/specialist/referral/')) return 'Referral Detail';
     if (pathname.startsWith('/admin/dashboard')) return 'Admin Dashboard';
     if (pathname.startsWith('/workspace')) return 'Role Operations Workspace';
+    if (pathname.startsWith('/complaints')) return 'Complaints Center';
     if (pathname.startsWith('/settings')) return 'Settings';
     if (pathname.startsWith('/admin/governance')) return 'Admin Governance Center';
     if (pathname.startsWith('/admin/users')) return 'User Management';

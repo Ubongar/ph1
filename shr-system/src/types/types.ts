@@ -102,11 +102,12 @@ export type AuditAction =
   | 'RESET_PASSWORD' | 'EXPORT_REPORT' | 'VIEW_AUDIT_LOG'
   | 'CREATE_REFERRAL' | 'ACCEPT_REFERRAL' | 'COMPLETE_REFERRAL' | 'DECLINE_REFERRAL'
   | 'SUBMIT_CONSULTATION_NOTES' | 'REFER_TO_SPECIALIST' | 'CLOSE_REFERRAL' | 'GENERATE_QA_REPORT'
-  | 'SUBMIT_DATA_REQUEST' | 'REVIEW_DATA_REQUEST' | 'UPDATE_POLICY_VERSION' | 'ACCEPT_POLICY_UPDATE';
+  | 'SUBMIT_DATA_REQUEST' | 'REVIEW_DATA_REQUEST' | 'UPDATE_POLICY_VERSION' | 'ACCEPT_POLICY_UPDATE'
+  | 'SUBMIT_COMPLAINT' | 'FORWARD_COMPLAINT' | 'SUBMIT_COMPLAINT_FEEDBACK' | 'RESPOND_COMPLAINT';
 export interface AuditLog {
   id: string; timestamp: string; userId: string; userName: string;
   userRole: UserRole; action: AuditAction;
-  resourceType: 'Student' | 'Requisition' | 'DiagnosticResult' | 'User' | 'System' | 'Report' | 'Referral' | 'DataRequest' | 'Policy';
+  resourceType: 'Student' | 'Requisition' | 'DiagnosticResult' | 'User' | 'System' | 'Report' | 'Referral' | 'DataRequest' | 'Policy' | 'Complaint';
   resourceId?: string; resourceDescription: string;
   ipAddress: string; sessionId: string; changeDetails?: string;
   status: 'Success' | 'Failed' | 'Suspicious';
@@ -144,6 +145,40 @@ export interface DataRequest {
   adminReviewerId?: string;
   adminReviewerName?: string;
   adminNotes?: string;
+}
+
+export type ComplaintSeverity = 'Low' | 'Moderate' | 'High' | 'Critical';
+export type ComplaintStatus = 'Submitted' | 'Under Review' | 'Forwarded' | 'Awaiting Department Feedback' | 'Resolved' | 'Closed';
+
+export interface Complaint {
+  id: string;
+  ticketId: string;
+  submittedByUserId: string;
+  submittedByName: string;
+  submittedByRole: UserRole;
+  subject: string;
+  details: string;
+  concernedDepartment: string;
+  severity: ComplaintSeverity;
+  status: ComplaintStatus;
+  createdAt: string;
+  updatedAt: string;
+  adminReviewerId?: string;
+  adminReviewerName?: string;
+  forwardNote?: string;
+  forwardedAt?: string;
+  forwardedToDepartment?: string;
+  forwardedToRole?: UserRole;
+  forwardedToUserId?: string;
+  forwardedToUserName?: string;
+  departmentFeedback?: string;
+  departmentFeedbackAt?: string;
+  departmentFeedbackByUserId?: string;
+  departmentFeedbackByUserName?: string;
+  adminResponse?: string;
+  adminRespondedAt?: string;
+  adminResponderId?: string;
+  adminResponderName?: string;
 }
 
 export type PolicyType = 'privacy' | 'terms';

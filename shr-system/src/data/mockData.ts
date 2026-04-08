@@ -1,6 +1,6 @@
 import type {
   Student, SystemUser, Encounter, MedicationRequisition,
-  DiagnosticResult, AuditLog, SystemAlert, Referral, PolicyVersion, PolicyAcceptance, DataRequest,
+  DiagnosticResult, AuditLog, SystemAlert, Referral, PolicyVersion, PolicyAcceptance, DataRequest, Complaint,
 } from '../types/types';
 import { StorageKey } from '../services/storage';
 
@@ -137,6 +137,42 @@ export function initializeMockData(): void {
         },
       ];
       localStorage.setItem(StorageKey.DATA_REQUESTS, JSON.stringify(dataRequests));
+    }
+
+    if (!localStorage.getItem(StorageKey.COMPLAINTS)) {
+      const complaints: Complaint[] = [
+        {
+          id: 'cmp-001',
+          ticketId: 'CMP-20260321-5512',
+          submittedByUserId: 'student-001',
+          submittedByName: 'Adaeze Okonkwo',
+          submittedByRole: 'student',
+          subject: 'No update on medication tracking for over 24 hours',
+          details: 'My approved inhaler request has had no tracking update for 24+ hours. Breathing episodes are getting worse.',
+          concernedDepartment: 'Pharmacy',
+          severity: 'Critical',
+          status: 'Resolved',
+          createdAt: '2026-03-21T09:00:00Z',
+          updatedAt: '2026-03-21T12:15:00Z',
+          adminReviewerId: 'admin-001',
+          adminReviewerName: 'Chidi Okwu',
+          forwardNote: 'Please confirm queue position and expected pickup time urgently.',
+          forwardedAt: '2026-03-21T09:20:00Z',
+          forwardedToDepartment: 'Pharmacy',
+          forwardedToRole: 'pharmacy',
+          forwardedToUserId: 'pharm-001',
+          forwardedToUserName: 'Pharmacist Remi Soyinka',
+          departmentFeedback: 'Medication was held due to stock reconciliation. Replacement stock arrived and item is now ready.',
+          departmentFeedbackAt: '2026-03-21T11:05:00Z',
+          departmentFeedbackByUserId: 'pharm-001',
+          departmentFeedbackByUserName: 'Pharmacist Remi Soyinka',
+          adminResponse: 'Your medication is now marked ready for pickup. We have also tightened urgent queue escalation checks.',
+          adminRespondedAt: '2026-03-21T12:15:00Z',
+          adminResponderId: 'admin-001',
+          adminResponderName: 'Chidi Okwu',
+        },
+      ];
+      localStorage.setItem(StorageKey.COMPLAINTS, JSON.stringify(complaints));
     }
     return;
   }
@@ -904,6 +940,53 @@ export function initializeMockData(): void {
     },
   ];
 
+  const complaints: Complaint[] = [
+    {
+      id: 'cmp-001',
+      ticketId: 'CMP-20260321-5512',
+      submittedByUserId: 'student-001',
+      submittedByName: 'Adaeze Okonkwo',
+      submittedByRole: 'student',
+      subject: 'No update on medication tracking for over 24 hours',
+      details: 'My approved inhaler request has had no tracking update for 24+ hours. Breathing episodes are getting worse.',
+      concernedDepartment: 'Pharmacy',
+      severity: 'Critical',
+      status: 'Resolved',
+      createdAt: '2026-03-21T09:00:00Z',
+      updatedAt: '2026-03-21T12:15:00Z',
+      adminReviewerId: 'admin-001',
+      adminReviewerName: 'Chidi Okwu',
+      forwardNote: 'Please confirm queue position and expected pickup time urgently.',
+      forwardedAt: '2026-03-21T09:20:00Z',
+      forwardedToDepartment: 'Pharmacy',
+      forwardedToRole: 'pharmacy',
+      forwardedToUserId: 'pharm-001',
+      forwardedToUserName: 'Pharmacist Remi Soyinka',
+      departmentFeedback: 'Medication was held due to stock reconciliation. Replacement stock arrived and item is now ready.',
+      departmentFeedbackAt: '2026-03-21T11:05:00Z',
+      departmentFeedbackByUserId: 'pharm-001',
+      departmentFeedbackByUserName: 'Pharmacist Remi Soyinka',
+      adminResponse: 'Your medication is now marked ready for pickup. We have also tightened urgent queue escalation checks.',
+      adminRespondedAt: '2026-03-21T12:15:00Z',
+      adminResponderId: 'admin-001',
+      adminResponderName: 'Chidi Okwu',
+    },
+    {
+      id: 'cmp-002',
+      ticketId: 'CMP-20260325-8840',
+      submittedByUserId: 'tech-001',
+      submittedByName: 'Amaka Okafor',
+      submittedByRole: 'technician',
+      subject: 'Intermittent scanner outage in Laboratory bay 2',
+      details: 'Image scanner in bay 2 keeps disconnecting every 15-20 minutes and delays upload workflow.',
+      concernedDepartment: 'IT / Technical Support',
+      severity: 'Moderate',
+      status: 'Under Review',
+      createdAt: '2026-03-25T08:40:00Z',
+      updatedAt: '2026-03-25T08:40:00Z',
+    },
+  ];
+
   localStorage.setItem(StorageKey.STUDENTS, JSON.stringify(students));
   localStorage.setItem(StorageKey.USERS, JSON.stringify(systemUsers));
   localStorage.setItem(StorageKey.ENCOUNTERS, JSON.stringify(encounters));
@@ -915,5 +998,6 @@ export function initializeMockData(): void {
   localStorage.setItem(StorageKey.POLICY_VERSIONS, JSON.stringify(policyVersions));
   localStorage.setItem(StorageKey.POLICY_ACCEPTANCES, JSON.stringify(policyAcceptances));
   localStorage.setItem(StorageKey.DATA_REQUESTS, JSON.stringify(dataRequests));
+  localStorage.setItem(StorageKey.COMPLAINTS, JSON.stringify(complaints));
   localStorage.setItem(INITIALIZED_KEY, 'true');
 }

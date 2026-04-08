@@ -1,5 +1,6 @@
 import { getAll, getStudentByUserId, StorageKey } from './storage';
 import type {
+  Complaint,
   DiagnosticResult,
   Encounter,
   MedicationRequisition,
@@ -60,6 +61,24 @@ export function getScopedReferralsForUser(role: UserRole, userId: string): Refer
     default:
       return [];
   }
+}
+
+export function getScopedComplaintsForUser(role: UserRole, userId: string): Complaint[] {
+  const complaints = getAll<Complaint>(StorageKey.COMPLAINTS)
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+  if (role === 'admin') return complaints;
+
+  return complaints.filter((complaint) => {
+    if (complaint.submittedByUserId === userId) return true;
+    if (complaint.forwardedToUserId) return complaint.forwardedToUserId === userId;
+
+    const queuedForRole = complaint.forwardedToRole === role;
+    if (!queuedForRole) return false;
+
+    const deterministicAssigneeId = getDeterministicAssigneeId(role, complaint.id);
+    return deterministicAssigneeId === userId;
+  });
 }
 
 export function getScopedRequisitionsForUser(role: UserRole, userId: string): MedicationRequisition[] {

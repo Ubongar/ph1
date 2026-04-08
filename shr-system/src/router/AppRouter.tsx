@@ -48,6 +48,7 @@ import PolicyVersioning from '../pages/admin/PolicyVersioning';
 import ReconciliationCenter from '../pages/admin/ReconciliationCenter';
 import AdminResolutionAuditLogs from '../pages/admin/AdminResolutionAuditLogs';
 import SettingsPage from '../pages/shared/SettingsPage';
+import ComplaintsCenterPage from '../pages/shared/ComplaintsCenterPage';
 
 const RoleWorkspacePage = lazy(() => import('../pages/shared/RoleWorkspacePage'));
 const AdminGovernanceCenter = lazy(() => import('../pages/admin/AdminGovernanceCenter'));
@@ -317,6 +318,14 @@ export function AppRouter() {
         element={
           <ProtectedRoute roles={ALL_ROLES}>
             <AppShell><SettingsPage /></AppShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/complaints"
+        element={
+          <ProtectedRoute roles={ALL_ROLES}>
+            <AppShell><ComplaintsCenterPage /></AppShell>
           </ProtectedRoute>
         }
       />
