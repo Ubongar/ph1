@@ -2,13 +2,18 @@
   "name": "SHR System",
   "short_name": "SHR",
   "description": "Student Health Record system with offline-first sync support.",
+  "lang": "en",
+  "dir": "ltr",
   "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "orientation": "portrait-primary",
   "background_color": "#f8fafc",
   "theme_color": "#0f172a",
+  "categories": ["medical", "health", "productivity", "education"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/pwa-192.png",
@@ -74,12 +79,16 @@
     {
       "src": "/pwa-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "label": "SHR mobile view",
+      "form_factor": "narrow"
     },
     {
       "src": "/pwa-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "label": "SHR dashboard view",
+      "form_factor": "wide"
     }
   ]
 }
