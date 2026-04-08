@@ -1,7 +1,7 @@
 export function getHospitalNumber(matricNumber: string | undefined, studentId: string): string {
   if (!matricNumber) return '—';
 
-  const tokens = matricNumber.split(/[\/-]/).map((token) => token.trim());
+  const tokens = matricNumber.split(/[/-]/).map((token) => token.trim());
   const yearToken = tokens.find((token) => /^\d{2}$/.test(token) || /^\d{4}$/.test(token));
 
   if (!yearToken) return '—';

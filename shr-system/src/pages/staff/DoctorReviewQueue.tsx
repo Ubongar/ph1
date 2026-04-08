@@ -4,6 +4,7 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { AlertTriangle, X, CheckCircle, XCircle, Activity } from 'lucide-react'
 import { getAll, update, createAuditEntry, StorageKey } from '../../services/storage'
 import { useAuth } from '../../context/AuthContext'
+import { runSafetyChecks, type SafetyIssue } from '../../services/clinicalSafety'
 import type {
   Student,
   SystemUser,
@@ -57,7 +58,7 @@ export default function DoctorReviewQueue() {
 
   // Allergy conflict modal
   const [showAllergyModal, setShowAllergyModal] = useState(false)
-  const [allergyConflicts, setAllergyConflicts] = useState<string[]>([])
+  const [safetyIssues, setSafetyIssues] = useState<SafetyIssue[]>([])
 
   // Medication config modal
   const [showMedModal, setShowMedModal] = useState(false)
@@ -91,20 +92,6 @@ export default function DoctorReviewQueue() {
       return new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime()
     })
 
-  function checkAllergyConflicts(req: MedicationRequisition, student: Student): string[] {
-    const conflicts: string[] = []
-    for (const med of req.requestedMedications) {
-      for (const allergy of student.allergies) {
-        if (med.toLowerCase().includes(allergy.allergen.toLowerCase())) {
-          conflicts.push(
-            `${student.name} is allergic to ${allergy.allergen} (${allergy.severity}) — conflicts with "${med}"`,
-          )
-        }
-      }
-    }
-    return conflicts
-  }
-
   function handleApproveClick() {
     if (!selectedReq || !selectedStudent || !currentUser) return
     if (!doctorNote.trim()) {
@@ -112,9 +99,11 @@ export default function DoctorReviewQueue() {
       return
     }
 
-    const conflicts = checkAllergyConflicts(selectedReq, selectedStudent)
-    if (conflicts.length > 0) {
-      setAllergyConflicts(conflicts)
+    const issues = runSafetyChecks(selectedReq, selectedStudent)
+    const blockingIssues = issues.filter((issue) => issue.severity === 'critical' || issue.severity === 'high')
+
+    if (blockingIssues.length > 0) {
+      setSafetyIssues(blockingIssues)
       setShowAllergyModal(true)
       return
     }
@@ -618,7 +607,7 @@ export default function DoctorReviewQueue() {
                 <AlertTriangle className="w-5 h-5 text-red-600" />
               </div>
               <Dialog.Title className="text-lg font-semibold text-gray-900">
-                ⚠️ Allergy Conflict Detected
+                ⚠️ Clinical Safety Alert
               </Dialog.Title>
               <Dialog.Close asChild>
                 <button
@@ -633,12 +622,14 @@ export default function DoctorReviewQueue() {
               </Dialog.Close>
             </div>
             <div className="space-y-2 mb-5">
-              {allergyConflicts.map((c, i) => (
+              {safetyIssues.map((issue) => (
                 <div
-                  key={i}
+                  key={issue.id}
                   className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-3"
                 >
-                  {c}
+                  <p className="font-semibold">{issue.title}</p>
+                  <p className="mt-1">{issue.details}</p>
+                  <p className="mt-1 text-xs text-red-800">Recommendation: {issue.recommendation}</p>
                 </div>
               ))}
             </div>

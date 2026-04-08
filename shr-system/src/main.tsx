@@ -5,6 +5,7 @@ import { initializeOfflineSync } from './services/offlineSync'
 import { registerServiceWorker } from './services/registerServiceWorker'
 import { StorageKey } from './services/storage'
 import { registerGlobalErrorHandlers } from './services/clientErrors'
+import { bootstrapEnhancements } from './services/enhancementsBootstrap'
 import './index.css'
 import App from './App'
 
@@ -33,6 +34,7 @@ bootstrapMockDataSafely()
 initializeOfflineSync()
 registerServiceWorker()
 registerGlobalErrorHandlers()
+bootstrapEnhancements()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

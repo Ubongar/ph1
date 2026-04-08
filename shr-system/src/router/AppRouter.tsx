@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import type { UserRole } from '../types/types';
@@ -46,6 +47,9 @@ import PolicyVersioning from '../pages/admin/PolicyVersioning';
 import ReconciliationCenter from '../pages/admin/ReconciliationCenter';
 import AdminResolutionAuditLogs from '../pages/admin/AdminResolutionAuditLogs';
 
+const RoleWorkspacePage = lazy(() => import('../pages/shared/RoleWorkspacePage'));
+const AdminGovernanceCenter = lazy(() => import('../pages/admin/AdminGovernanceCenter'));
+
 const ALL_ROLES: UserRole[] = ['student', 'medical_staff', 'technician', 'pharmacy', 'specialist', 'admin'];
 
 interface ProtectedRouteProps {
@@ -83,6 +87,7 @@ function RoleRedirect() {
 
 export function AppRouter() {
   return (
+    <Suspense fallback={<div className="p-6 text-sm text-gray-600">Loading page...</div>}>
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
@@ -278,6 +283,22 @@ export function AppRouter() {
         }
       />
       <Route
+        path="/workspace"
+        element={
+          <ProtectedRoute roles={ALL_ROLES}>
+            <AppShell><RoleWorkspacePage /></AppShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/governance"
+        element={
+          <ProtectedRoute roles={['admin']}>
+            <AppShell><AdminGovernanceCenter /></AppShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/admin/audit-logs"
         element={
           <ProtectedRoute roles={['admin']}>
@@ -337,5 +358,6 @@ export function AppRouter() {
       <Route path="/" element={<RoleRedirect />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </Suspense>
   );
 }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks';
@@ -23,7 +23,7 @@ function getLatestVersions(): Record<PolicyType, PolicyVersion | null> {
 export default function PolicyVersioning() {
   const { currentUser } = useAuth();
   const { toast } = useToast();
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [, setRefreshKey] = useState(0);
   const [summary, setSummary] = useState<Record<PolicyType, string>>({
     privacy: '',
     terms: '',
@@ -33,9 +33,9 @@ export default function PolicyVersioning() {
     terms: '1.1',
   });
 
-  const latestByType = useMemo(() => getLatestVersions(), [refreshKey]);
-  const users = useMemo(() => getAll<SystemUser>(StorageKey.USERS), [refreshKey]);
-  const acceptances = useMemo(() => getAll<PolicyAcceptance>(StorageKey.POLICY_ACCEPTANCES), [refreshKey]);
+  const latestByType = getLatestVersions();
+  const users = getAll<SystemUser>(StorageKey.USERS);
+  const acceptances = getAll<PolicyAcceptance>(StorageKey.POLICY_ACCEPTANCES);
 
   function publishPolicy(policyType: PolicyType) {
     if (!currentUser) return;

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { FileBadge2, ShieldCheck } from 'lucide-react';
 import LegalPageFrame from './LegalPageFrame';
 import { useAuth } from '../../context/AuthContext';
@@ -22,15 +22,15 @@ export default function DataRequestCenter() {
   const { toast } = useToast();
   const [requestType, setRequestType] = useState<DataRequestType>('Access');
   const [requestDetails, setRequestDetails] = useState('');
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [, setRefreshKey] = useState(0);
 
-  const myRequests = useMemo(() => {
+  const myRequests = (() => {
     if (!currentUser) return [];
 
     return getAll<DataRequest>(StorageKey.DATA_REQUESTS)
       .filter((request) => request.userId === currentUser.id)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [currentUser, refreshKey]);
+  })();
 
   function handleSubmitRequest(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();

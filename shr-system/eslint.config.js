@@ -3,10 +3,26 @@ import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
-import { defineConfig, globalIgnores } from 'eslint/config'
 
-export default defineConfig([
-  globalIgnores(['dist']),
+export default [
+  {
+    ignores: ['dist'],
+  },
+  {
+    files: ['backend/**/*.js', 'scripts/**/*.mjs'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
+  {
+    files: ['public/sw.js'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.serviceworker,
+      },
+    },
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   reactRefresh.configs.vite,
@@ -25,4 +41,4 @@ export default defineConfig([
       'react-refresh/only-export-components': 'off',
     },
   },
-])
+]

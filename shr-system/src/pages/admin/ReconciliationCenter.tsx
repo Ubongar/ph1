@@ -112,6 +112,19 @@ export default function ReconciliationCenter() {
                 <div className="text-xs text-gray-700">
                   <span className="font-semibold">{conflict.storageKey}</span> / {conflict.entityId}
                   <p className="text-amber-900 mt-1">{conflict.reason}</p>
+                  <details className="mt-2 rounded border border-amber-200 bg-white p-2">
+                    <summary className="cursor-pointer text-[11px] font-semibold text-amber-800">Compare local vs remote payload</summary>
+                    <div className="mt-2 grid gap-2 md:grid-cols-2">
+                      <div>
+                        <p className="text-[11px] font-semibold text-blue-700">Local</p>
+                        <pre className="mt-1 max-h-32 overflow-auto rounded bg-slate-900 p-2 text-[10px] text-slate-100">{JSON.stringify(conflict.localValue, null, 2)}</pre>
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-semibold text-slate-700">Remote</p>
+                        <pre className="mt-1 max-h-32 overflow-auto rounded bg-slate-900 p-2 text-[10px] text-slate-100">{JSON.stringify(conflict.remoteValue, null, 2)}</pre>
+                      </div>
+                    </div>
+                  </details>
                 </div>
                 <div className="flex gap-2">
                   <button type="button" onClick={() => resolveOfflineConflict(conflict.id, 'keep_local')} className="px-2.5 py-1 rounded bg-blue-600 text-white text-xs">Keep Local</button>
@@ -134,6 +147,19 @@ export default function ReconciliationCenter() {
                 <div className="text-xs text-gray-700">
                   <p><span className="font-semibold">{conflict.storageKey}</span> / {conflict.entityId}</p>
                   <p className="mt-1 text-red-800 inline-flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" />{conflict.reason}</p>
+                  <details className="mt-2 rounded border border-red-200 bg-white p-2">
+                    <summary className="cursor-pointer text-[11px] font-semibold text-red-800">Compare local vs remote payload</summary>
+                    <div className="mt-2 grid gap-2 md:grid-cols-2">
+                      <div>
+                        <p className="text-[11px] font-semibold text-blue-700">Local</p>
+                        <pre className="mt-1 max-h-32 overflow-auto rounded bg-slate-900 p-2 text-[10px] text-slate-100">{JSON.stringify(conflict.localValue, null, 2)}</pre>
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-semibold text-slate-700">Remote</p>
+                        <pre className="mt-1 max-h-32 overflow-auto rounded bg-slate-900 p-2 text-[10px] text-slate-100">{JSON.stringify(conflict.remoteValue, null, 2)}</pre>
+                      </div>
+                    </div>
+                  </details>
                 </div>
                 <div className="flex gap-2">
                   <button type="button" onClick={() => void handleResolveServerConflict(conflict.id, 'keep_local')} className="px-2.5 py-1 rounded bg-blue-600 text-white text-xs">Apply Local to Server</button>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks';
@@ -20,18 +20,16 @@ export default function AdminDataRequests() {
   const { toast } = useToast();
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('');
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [, setRefreshKey] = useState(0);
   const [adminNote, setAdminNote] = useState('');
 
-  const requests = useMemo(
-    () => getAll<DataRequest>(StorageKey.DATA_REQUESTS).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()),
-    [refreshKey],
-  );
+  const requests = getAll<DataRequest>(StorageKey.DATA_REQUESTS)
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
-  const filtered = useMemo(() => {
+  const filtered = (() => {
     if (!statusFilter) return requests;
     return requests.filter((request) => request.status === statusFilter);
-  }, [requests, statusFilter]);
+  })();
 
   const activeRequest = filtered.find((request) => request.id === activeRequestId) ?? null;
 

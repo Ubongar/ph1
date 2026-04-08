@@ -11,6 +11,37 @@ const DB_PATH = path.join(__dirname, 'data', 'sync-db.json');
 const VALID_ROLES = new Set(['student', 'medical_staff', 'technician', 'pharmacy', 'specialist', 'admin']);
 const TOKEN_SECRET = process.env.SHR_SYNC_TOKEN_SECRET || 'shr-sync-dev-secret-change-me';
 const TOKEN_TTL_SECONDS = Number(process.env.SHR_SYNC_TOKEN_TTL_SECONDS || 3600);
+const RATE_LIMIT_WINDOW_MS = Number(process.env.SHR_RATE_LIMIT_WINDOW_MS || 60_000);
+const RATE_LIMIT_MAX_REQUESTS = Number(process.env.SHR_RATE_LIMIT_MAX_REQUESTS || 120);
+const rateLimitStore = new Map();
+
+function getClientAddress(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string' && forwarded.trim()) {
+    return forwarded.split(',')[0].trim();
+  }
+
+  const socketAddress = req.socket?.remoteAddress;
+  return typeof socketAddress === 'string' ? socketAddress : 'unknown';
+}
+
+function isRateLimited(req) {
+  const now = Date.now();
+  const key = `${getClientAddress(req)}:${req.method}:${req.url}`;
+  const current = rateLimitStore.get(key);
+
+  if (!current || now - current.windowStart > RATE_LIMIT_WINDOW_MS) {
+    rateLimitStore.set(key, { windowStart: now, count: 1 });
+    return false;
+  }
+
+  current.count += 1;
+  if (current.count > RATE_LIMIT_MAX_REQUESTS) {
+    return true;
+  }
+
+  return false;
+}
 
 function readDb() {
   try {
@@ -22,6 +53,9 @@ function readDb() {
       conflicts: [],
       adminAuditLogs: [],
       clientErrors: [],
+      telemetry: [],
+      securityEvents: [],
+      reports: [],
       updatedAt: new Date().toISOString(),
     };
   }
@@ -98,6 +132,10 @@ function sendJson(res, statusCode, payload) {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-shr-user-id, x-shr-user-role',
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Referrer-Policy': 'no-referrer',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
   });
   res.end(JSON.stringify(payload));
 }
@@ -380,6 +418,85 @@ function handleClientErrorReport(req, res) {
     });
 }
 
+function handleTelemetryIngest(req, res) {
+  const identity = requireAuthenticated(req, res);
+  if (!identity) return;
+
+  parseJsonBody(req)
+    .then((body) => {
+      const db = readDb();
+      const list = Array.isArray(db.telemetry) ? db.telemetry : [];
+
+      const event = {
+        id: typeof body.id === 'string' ? body.id : randomUUID(),
+        name: typeof body.name === 'string' ? body.name : 'unknown',
+        level: typeof body.level === 'string' ? body.level : 'info',
+        userId: identity.userId,
+        role: identity.role,
+        route: typeof body.route === 'string' ? body.route : undefined,
+        context: body.context && typeof body.context === 'object' ? body.context : undefined,
+        timestamp: new Date().toISOString(),
+      };
+
+      list.push(event);
+      db.telemetry = list.slice(-1000);
+      writeDb(db);
+
+      sendJson(res, 202, { ok: true, received: event.id });
+    })
+    .catch((err) => sendJson(res, 400, { error: err.message || 'Invalid request' }));
+}
+
+function handleSecurityEventIngest(req, res) {
+  const identity = requireAuthenticated(req, res);
+  if (!identity) return;
+
+  parseJsonBody(req)
+    .then((body) => {
+      const db = readDb();
+      const list = Array.isArray(db.securityEvents) ? db.securityEvents : [];
+
+      const event = {
+        id: typeof body.id === 'string' ? body.id : randomUUID(),
+        category: typeof body.category === 'string' ? body.category : 'admin',
+        severity: typeof body.severity === 'string' ? body.severity : 'medium',
+        message: typeof body.message === 'string' ? body.message : 'Security event',
+        userId: identity.userId,
+        role: identity.role,
+        metadata: body.metadata && typeof body.metadata === 'object' ? body.metadata : undefined,
+        timestamp: new Date().toISOString(),
+      };
+
+      list.push(event);
+      db.securityEvents = list.slice(-1000);
+      writeDb(db);
+
+      sendJson(res, 202, { ok: true, received: event.id });
+    })
+    .catch((err) => sendJson(res, 400, { error: err.message || 'Invalid request' }));
+}
+
+function handleReports(req, res) {
+  const identity = requireAdmin(req, res);
+  if (!identity) return;
+
+  const db = readDb();
+  const telemetry = Array.isArray(db.telemetry) ? db.telemetry : [];
+  const securityEvents = Array.isArray(db.securityEvents) ? db.securityEvents : [];
+  const clientErrors = Array.isArray(db.clientErrors) ? db.clientErrors : [];
+  const conflicts = Array.isArray(db.conflicts) ? db.conflicts : [];
+
+  const summary = {
+    generatedAt: new Date().toISOString(),
+    telemetryCount: telemetry.length,
+    securityEventCount: securityEvents.length,
+    clientErrorCount: clientErrors.length,
+    pendingConflictCount: conflicts.filter((item) => item.status === 'pending').length,
+  };
+
+  sendJson(res, 200, { requestedBy: identity.userId, summary });
+}
+
 function handleResolveConflict(req, res) {
   const identity = requireAdmin(req, res);
   if (!identity) return;
@@ -457,6 +574,18 @@ const server = http.createServer((req, res) => {
   const method = req.method || 'GET';
   const url = req.url || '/';
 
+  const isSensitiveRoute =
+    url.startsWith('/api/auth/token') ||
+    url.startsWith('/api/sync/batch') ||
+    url.startsWith('/api/client-errors') ||
+    url.startsWith('/api/telemetry') ||
+    url.startsWith('/api/security/events');
+
+  if (isSensitiveRoute && isRateLimited(req)) {
+    sendJson(res, 429, { error: 'Rate limit exceeded. Please retry shortly.' });
+    return;
+  }
+
   if (method === 'OPTIONS') {
     sendJson(res, 200, { ok: true });
     return;
@@ -494,6 +623,21 @@ const server = http.createServer((req, res) => {
 
   if (method === 'POST' && url === '/api/client-errors') {
     handleClientErrorReport(req, res);
+    return;
+  }
+
+  if (method === 'POST' && url === '/api/telemetry') {
+    handleTelemetryIngest(req, res);
+    return;
+  }
+
+  if (method === 'POST' && url === '/api/security/events') {
+    handleSecurityEventIngest(req, res);
+    return;
+  }
+
+  if (method === 'GET' && url === '/api/admin/reports/summary') {
+    handleReports(req, res);
     return;
   }
 
