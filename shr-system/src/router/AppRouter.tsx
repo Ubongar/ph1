@@ -61,7 +61,7 @@ interface ProtectedRouteProps {
 function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
   const { isAuthenticated, hasRole, currentUser } = useAuth();
   const location = useLocation();
-  if (!isAuthenticated) return <Navigate to="/" replace />;
+  if (!isAuthenticated) return <Navigate to="/onboarding" replace />;
   if (!hasRole(roles)) return <Navigate to="/unauthorized" replace />;
   if (currentUser) {
     const pending = getPendingPolicyTypes(currentUser.id);
@@ -96,7 +96,7 @@ export function AppRouter() {
   return (
     <Suspense fallback={<div className="p-6 text-sm text-gray-600">Loading page...</div>}>
     <Routes>
-      <Route path="/" element={<RoleRedirect />} />
+      <Route path="/" element={<OnboardingRoute />} />
       <Route path="/onboarding" element={<OnboardingRoute />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
