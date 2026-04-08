@@ -25,6 +25,9 @@ export default function OnboardingPage() {
 
         <main className="grid flex-1 gap-8 lg:grid-cols-[1.2fr_1fr]">
           <section className="rounded-3xl border border-white/15 bg-white/10 p-7 shadow-2xl backdrop-blur-xl md:p-10">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/40 bg-cyan-400/15 px-3 py-1 text-xs font-semibold tracking-wide text-cyan-100">
+              Health platform onboarding
+            </div>
             <h1 className="text-3xl font-bold leading-tight md:text-5xl">
               Welcome to the Student Health Records System
             </h1>
@@ -65,6 +68,21 @@ export default function OnboardingPage() {
               >
                 Installation Diagnostics
               </Link>
+            </div>
+
+            <div className="mt-8 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-xl border border-emerald-300/30 bg-emerald-500/10 px-3 py-2">
+                <p className="text-lg font-bold text-emerald-200">6+</p>
+                <p className="text-xs text-emerald-100/90">Role-aware workflows</p>
+              </div>
+              <div className="rounded-xl border border-violet-300/30 bg-violet-500/10 px-3 py-2">
+                <p className="text-lg font-bold text-violet-200">PWA</p>
+                <p className="text-xs text-violet-100/90">Mobile install support</p>
+              </div>
+              <div className="rounded-xl border border-amber-300/30 bg-amber-500/10 px-3 py-2">
+                <p className="text-lg font-bold text-amber-200">24/7</p>
+                <p className="text-xs text-amber-100/90">Anytime record access</p>
+              </div>
             </div>
           </section>
 
