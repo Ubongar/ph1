@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, ArrowRightCircle, MessageSquareWarning, Send, ShieldAlert } from 'lucide-react';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { useAuth } from '../../context/AuthContext';
@@ -9,8 +9,11 @@ import {
   COMPLAINT_DEPARTMENTS,
   COMPLAINT_SEVERITIES,
   complaintSeverityToAlertType,
+  getComplaintSlaHours,
+  hasComplaintBreachedSla,
   inferForwardRoleFromDepartment,
   isComplaintAssignedToUserOrRoleQueue,
+  PHARMACY_COMPLAINT_SLA_HOURS,
   shouldTriggerAdminAlert,
 } from '../../services/complaints';
 import { pushNotification } from '../../services/notifications';
@@ -81,6 +84,7 @@ export default function ComplaintsCenterPage() {
   const { currentUser } = useAuth();
   const { toast } = useToast();
   const isAdmin = currentUser?.role === 'admin';
+  const autoEscalatedIdsRef = useRef<Set<string>>(new Set());
 
   const [refreshKey, setRefreshKey] = useState(0);
   const [subject, setSubject] = useState('');
@@ -156,6 +160,68 @@ export default function ComplaintsCenterPage() {
     setForwardNote(activeComplaint.forwardNote ?? '');
     setAdminResponse(activeComplaint.adminResponse ?? '');
   }, [activeComplaint?.id]);
+
+  useEffect(() => {
+    if (!isAdmin || !currentUser) return;
+
+    const now = new Date();
+    const nowIso = now.toISOString();
+    const adminIds = getAdminUserIds(users);
+    const overdueComplaints = complaints.filter((complaint) => (
+      hasComplaintBreachedSla(complaint, now)
+      && !autoEscalatedIdsRef.current.has(complaint.id)
+    ));
+
+    if (overdueComplaints.length === 0) return;
+
+    let escalatedCount = 0;
+
+    overdueComplaints.forEach((complaint) => {
+      autoEscalatedIdsRef.current.add(complaint.id);
+      const slaHours = getComplaintSlaHours(complaint) ?? PHARMACY_COMPLAINT_SLA_HOURS;
+
+      const updatedComplaint = update<Complaint>(
+        StorageKey.COMPLAINTS,
+        complaint.id,
+        {
+          slaEscalatedAt: nowIso,
+          updatedAt: nowIso,
+        },
+        { autoAudit: false },
+      );
+
+      if (!updatedComplaint) return;
+
+      create<SystemAlert>(
+        StorageKey.ALERTS,
+        {
+          type: 'Critical',
+          title: `SLA breach: ${updatedComplaint.ticketId}`,
+          message: `${updatedComplaint.ticketId} has had no update for over ${slaHours} hours in the pharmacy workflow.`,
+          timestamp: nowIso,
+          isResolved: false,
+        },
+        { autoAudit: false },
+      );
+
+      pushNotification({
+        title: `SLA escalation: ${updatedComplaint.ticketId}`,
+        message: `No update for ${slaHours} hours. Immediate admin action is required.`,
+        severity: 'critical',
+        roleTargets: ['admin'],
+        userTargetIds: adminIds,
+        actionPath: '/complaints',
+      });
+
+      escalatedCount += 1;
+    });
+
+    if (escalatedCount > 0) {
+      setRefreshKey((value) => value + 1);
+      const noun = escalatedCount === 1 ? 'complaint was' : 'complaints were';
+      toast(`${escalatedCount} pharmacy ${noun} auto-escalated after 24 hours without updates.`, 'warning');
+    }
+  }, [complaints, currentUser, isAdmin, toast, users]);
 
   if (!currentUser) return null;
 
@@ -481,8 +547,9 @@ export default function ComplaintsCenterPage() {
           <h2 className="mb-3 text-base font-semibold text-gray-900">Submit New Complaint</h2>
           <form onSubmit={handleSubmitComplaint} className="grid gap-4 md:grid-cols-2">
             <div className="md:col-span-2">
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Subject</label>
+              <label htmlFor="complaint-subject" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Subject</label>
               <input
+                id="complaint-subject"
                 value={subject}
                 onChange={(event) => setSubject(event.target.value)}
                 placeholder="Short summary of the issue"
@@ -491,10 +558,13 @@ export default function ComplaintsCenterPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Affected Department</label>
+              <label htmlFor="complaint-department" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Affected Department</label>
               <select
+                id="complaint-department"
                 value={department}
                 onChange={(event) => setDepartment(event.target.value)}
+                aria-label="Affected department"
+                title="Affected department"
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {COMPLAINT_DEPARTMENTS.map((option) => (
@@ -504,10 +574,13 @@ export default function ComplaintsCenterPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Seriousness</label>
+              <label htmlFor="complaint-severity" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Seriousness</label>
               <select
+                id="complaint-severity"
                 value={severity}
                 onChange={(event) => setSeverity(event.target.value as ComplaintSeverity)}
+                aria-label="Complaint seriousness"
+                title="Complaint seriousness"
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {COMPLAINT_SEVERITIES.map((option) => (
@@ -517,8 +590,9 @@ export default function ComplaintsCenterPage() {
             </div>
 
             <div className="md:col-span-2">
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Details</label>
+              <label htmlFor="complaint-details" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Details</label>
               <textarea
+                id="complaint-details"
                 rows={4}
                 value={details}
                 onChange={(event) => setDetails(event.target.value)}
@@ -547,6 +621,8 @@ export default function ComplaintsCenterPage() {
               <select
                 value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value as ComplaintStatus | 'all')}
+                aria-label="Filter complaints by status"
+                title="Filter complaints by status"
                 className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
               >
                 <option value="all">All statuses</option>
@@ -561,6 +637,8 @@ export default function ComplaintsCenterPage() {
               <select
                 value={severityFilter}
                 onChange={(event) => setSeverityFilter(event.target.value as ComplaintSeverity | 'all')}
+                aria-label="Filter complaints by severity"
+                title="Filter complaints by severity"
                 className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
               >
                 <option value="all">All severities</option>
@@ -651,6 +729,8 @@ export default function ComplaintsCenterPage() {
                       setForwardDepartment(event.target.value);
                       setForwardToUserId('');
                     }}
+                    aria-label="Select department to forward complaint"
+                    title="Select department to forward complaint"
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                   >
                     {COMPLAINT_DEPARTMENTS.map((option) => (
@@ -661,6 +741,8 @@ export default function ComplaintsCenterPage() {
                   <select
                     value={forwardToUserId}
                     onChange={(event) => setForwardToUserId(event.target.value)}
+                    aria-label="Select specific user for complaint forwarding"
+                    title="Select specific user for complaint forwarding"
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                   >
                     <option value="">Department queue only (no specific user)</option>

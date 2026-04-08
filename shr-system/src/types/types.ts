@@ -179,6 +179,7 @@ export interface Complaint {
   adminRespondedAt?: string;
   adminResponderId?: string;
   adminResponderName?: string;
+  slaEscalatedAt?: string;
 }
 
 export type PolicyType = 'privacy' | 'terms';
