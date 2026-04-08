@@ -61,7 +61,7 @@ interface ProtectedRouteProps {
 function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
   const { isAuthenticated, hasRole, currentUser } = useAuth();
   const location = useLocation();
-  if (!isAuthenticated) return <Navigate to="/onboarding" replace />;
+  if (!isAuthenticated) return <Navigate to="/onboarding" replace state={{ from: location }} />;
   if (!hasRole(roles)) return <Navigate to="/unauthorized" replace />;
   if (currentUser) {
     const pending = getPendingPolicyTypes(currentUser.id);
@@ -74,7 +74,8 @@ function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
 
 function RoleRedirect() {
   const { currentUser, isAuthenticated } = useAuth();
-  if (!isAuthenticated) return <Navigate to="/onboarding" replace />;
+  const location = useLocation();
+  if (!isAuthenticated) return <Navigate to="/onboarding" replace state={{ from: location }} />;
   switch (currentUser?.role) {
     case 'student': return <Navigate to="/student/dashboard" replace />;
     case 'medical_staff': return <Navigate to="/staff/dashboard" replace />;
