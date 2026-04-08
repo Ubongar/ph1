@@ -3,7 +3,7 @@ import { Link, NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Search, ClipboardList,
   ShoppingBag, Users, FileText, BarChart3, Upload, Stethoscope, ShieldCheck,
-  ChevronLeft, ChevronRight, UserCircle, PlusCircle,
+  ChevronLeft, ChevronRight, UserCircle, PlusCircle, X,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import type { UserRole } from '../../types/types';
@@ -58,8 +58,20 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   ],
 };
 
+const LEGAL_LINKS = [
+  { to: '/legal', short: 'LC', label: 'Legal Center' },
+  { to: '/legal/privacy', short: 'PP', label: 'Privacy Policy' },
+  { to: '/legal/faq', short: 'FAQ', label: 'Role FAQs' },
+  { to: '/legal/data-requests', short: 'DR', label: 'Data Requests' },
+  { to: '/legal/pwa-diagnostics', short: 'PD', label: 'PWA Diagnostics' },
+] as const;
 
-export function Sidebar() {
+interface SidebarProps {
+  readonly mobileOpen: boolean;
+  readonly onMobileClose: () => void;
+}
+
+export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const { currentUser } = useAuth();
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     try {
@@ -70,90 +82,152 @@ export function Sidebar() {
   });
 
   useEffect(() => {
-    localStorage.setItem('shr_sidebar_collapsed', String(collapsed));
+    try {
+      localStorage.setItem('shr_sidebar_collapsed', String(collapsed));
+    } catch {
+      // Ignore storage write errors and continue with in-memory state.
+    }
   }, [collapsed]);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') onMobileClose();
+    }
+
+    globalThis.addEventListener('keydown', onKeyDown);
+    return () => globalThis.removeEventListener('keydown', onKeyDown);
+  }, [mobileOpen, onMobileClose]);
 
   if (!currentUser) return null;
 
   const items = NAV_ITEMS[currentUser.role] ?? [];
 
   return (
-    <aside
-      className={`hidden md:flex flex-col border-r border-gray-200 bg-white transition-all duration-200 ${
-        collapsed ? 'w-16' : 'w-[220px]'
-      }`}
-    >
-      {/* Nav items */}
-      <nav className="flex-1 py-4 overflow-y-auto">
-        {items.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 mx-2 rounded-lg text-sm font-medium transition-colors ${
-                isActive
-                  ? 'bg-blue-50 text-blue-700'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`
-            }
-          >
-            <span className="shrink-0">{item.icon}</span>
-            {!collapsed && <span className="truncate">{item.label}</span>}
-          </NavLink>
-        ))}
-      </nav>
+    <>
+      <aside
+        className={`hidden md:flex flex-col border-r border-gray-200 bg-white transition-all duration-200 ${
+          collapsed ? 'w-16' : 'w-[220px]'
+        }`}
+      >
+        {/* Nav items */}
+        <nav className="flex-1 py-4 overflow-y-auto">
+          {items.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 mx-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`
+              }
+            >
+              <span className="shrink-0">{item.icon}</span>
+              {!collapsed && <span className="truncate">{item.label}</span>}
+            </NavLink>
+          ))}
+        </nav>
 
-      <div className="mx-2 mb-2 rounded-lg border border-gray-200 bg-gray-50 p-2">
-        {!collapsed && <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500">Legal</p>}
-        <div className="space-y-1">
-          <Link
-            to="/legal"
-            className="block rounded-md px-2 py-1.5 text-xs font-medium text-gray-600 hover:bg-white hover:text-gray-900"
-          >
-            {collapsed ? 'LC' : 'Legal Center'}
-          </Link>
-          <Link
-            to="/legal/privacy"
-            className="block rounded-md px-2 py-1.5 text-xs font-medium text-gray-600 hover:bg-white hover:text-gray-900"
-          >
-            {collapsed ? 'PP' : 'Privacy Policy'}
-          </Link>
-          <Link
-            to="/legal/faq"
-            className="block rounded-md px-2 py-1.5 text-xs font-medium text-gray-600 hover:bg-white hover:text-gray-900"
-          >
-            {collapsed ? 'FAQ' : 'Role FAQs'}
-          </Link>
-          <Link
-            to="/legal/data-requests"
-            className="block rounded-md px-2 py-1.5 text-xs font-medium text-gray-600 hover:bg-white hover:text-gray-900"
-          >
-            {collapsed ? 'DR' : 'Data Requests'}
-          </Link>
-          <Link
-            to="/legal/pwa-diagnostics"
-            className="block rounded-md px-2 py-1.5 text-xs font-medium text-gray-600 hover:bg-white hover:text-gray-900"
-          >
-            {collapsed ? 'PD' : 'PWA Diagnostics'}
-          </Link>
+        <div className="mx-2 mb-2 rounded-lg border border-gray-200 bg-gray-50 p-2">
+          {!collapsed && <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500">Legal</p>}
+          <div className="space-y-1">
+            {LEGAL_LINKS.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className="block rounded-md px-2 py-1.5 text-xs font-medium text-gray-600 hover:bg-white hover:text-gray-900"
+              >
+                {collapsed ? item.short : item.label}
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Collapse toggle */}
-      <div className="border-t border-gray-200 p-2">
+        {/* Collapse toggle */}
+        <div className="border-t border-gray-200 p-2">
+          <button
+            type="button"
+            onClick={() => setCollapsed((v) => !v)}
+            className="w-full flex items-center justify-center p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {collapsed ? (
+              <ChevronRight className="w-4 h-4" />
+            ) : (
+              <ChevronLeft className="w-4 h-4" />
+            )}
+          </button>
+        </div>
+      </aside>
+
+      <div
+        className={`fixed inset-0 z-40 md:hidden ${mobileOpen ? '' : 'pointer-events-none'}`}
+      >
         <button
           type="button"
-          onClick={() => setCollapsed((v) => !v)}
-          className="w-full flex items-center justify-center p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          className={`absolute inset-0 bg-black/45 transition-opacity duration-200 ${mobileOpen ? 'opacity-100' : 'opacity-0'}`}
+          onClick={onMobileClose}
+          aria-label="Close navigation menu backdrop"
+        />
+
+        <aside
+          className={`absolute inset-y-0 left-0 flex w-[84vw] max-w-[320px] flex-col border-r border-gray-200 bg-white shadow-xl transition-transform duration-200 ${
+            mobileOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+          aria-label="Mobile navigation menu"
         >
-          {collapsed ? (
-            <ChevronRight className="w-4 h-4" />
-          ) : (
-            <ChevronLeft className="w-4 h-4" />
-          )}
-        </button>
+          <div className="flex items-center justify-between border-b border-gray-200 p-3">
+            <p className="text-sm font-semibold text-gray-800">Navigation</p>
+            <button
+              type="button"
+              onClick={onMobileClose}
+              className="inline-flex items-center justify-center rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+              aria-label="Close navigation menu"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <nav className="flex-1 overflow-y-auto py-3">
+            {items.map((item) => (
+              <NavLink
+                key={`mobile-${item.to}`}
+                to={item.to}
+                onClick={onMobileClose}
+                className={({ isActive }) =>
+                  `mx-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`
+                }
+              >
+                <span className="shrink-0">{item.icon}</span>
+                <span className="truncate">{item.label}</span>
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="border-t border-gray-200 p-3">
+            <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">Legal</p>
+            <div className="space-y-1">
+              {LEGAL_LINKS.map((item) => (
+                <Link
+                  key={`mobile-${item.to}`}
+                  to={item.to}
+                  onClick={onMobileClose}
+                  className="block rounded-md px-2 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </aside>
       </div>
-    </aside>
+    </>
   );
 }

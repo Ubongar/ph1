@@ -7,6 +7,7 @@ import {
   Command,
   Download,
   LogOut,
+  Menu,
   Search,
   UserCircle,
 } from 'lucide-react';
@@ -39,6 +40,10 @@ const ROLE_LABELS: Record<string, string> = {
 
 type InstallCtaMode = 'none' | 'prompt' | 'ios-manual' | 'https-required';
 
+interface NavbarProps {
+  readonly onToggleMobileSidebar?: () => void;
+}
+
 function getInstallCtaMode(installAvailable: boolean): InstallCtaMode {
   if (typeof window === 'undefined') return installAvailable ? 'prompt' : 'none';
 
@@ -56,7 +61,7 @@ function getInstallCtaMode(installAvailable: boolean): InstallCtaMode {
   return 'none';
 }
 
-export function Navbar() {
+export function Navbar({ onToggleMobileSidebar }: NavbarProps) {
   const { currentUser, logout, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -370,6 +375,16 @@ export function Navbar() {
       <div className="flex items-center justify-between h-14 px-4 md:px-6">
         {/* Logo */}
         <div className="flex items-center gap-2">
+          {currentUser && onToggleMobileSidebar && (
+            <button
+              type="button"
+              onClick={onToggleMobileSidebar}
+              className="inline-flex md:hidden items-center justify-center rounded-lg border border-gray-200 p-2 text-gray-600 hover:bg-gray-50"
+              aria-label="Open navigation menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          )}
           <div className="bg-blue-600 text-white rounded-md px-2 py-1 font-bold text-sm tracking-wider">
             SHR
           </div>

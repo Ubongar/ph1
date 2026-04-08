@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowUp } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -11,7 +11,7 @@ import { MobileBottomNav } from './MobileBottomNav';
 import type { ReactNode } from 'react';
 
 interface AppShellProps {
-  children: ReactNode;
+  readonly children: ReactNode;
 }
 
 const ROLE_THEME: Record<string, { label: string; badgeClass: string; stripClass: string }> = {
@@ -58,6 +58,9 @@ export function AppShell({ children }: AppShellProps) {
   const [scrollProgress, setScrollProgress] = useState(0);
   const roleTheme = currentUser ? ROLE_THEME[currentUser.role] : null;
   const [syncingNow, setSyncingNow] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const openMobileSidebar = useCallback(() => setMobileSidebarOpen(true), []);
+  const closeMobileSidebar = useCallback(() => setMobileSidebarOpen(false), []);
 
   useEffect(() => {
     const element = mainRef.current;
@@ -81,8 +84,20 @@ export function AppShell({ children }: AppShellProps) {
     const node = mainRef.current;
     if (!node) return;
 
+    setMobileSidebarOpen(false);
     node.scrollTo({ top: 0, behavior: 'auto' });
   }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    if (!mobileSidebarOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileSidebarOpen]);
 
   function scrollToTop() {
     mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -108,7 +123,7 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <Navbar />
+      <Navbar onToggleMobileSidebar={openMobileSidebar} />
       <progress
         className="h-0.5 w-full bg-gray-100 [&::-webkit-progress-bar]:bg-gray-100 [&::-webkit-progress-value]:bg-blue-600 [&::-moz-progress-bar]:bg-blue-600"
         max={100}
@@ -162,7 +177,7 @@ export function AppShell({ children }: AppShellProps) {
         </div>
       )}
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
+        <Sidebar mobileOpen={mobileSidebarOpen} onMobileClose={closeMobileSidebar} />
         <main ref={mainRef} className="relative flex-1 overflow-y-auto">
           <div className={`${isStudent ? 'pb-28 md:pb-6' : 'pb-6'} p-3 sm:p-4 md:p-6`}>
             {children}
