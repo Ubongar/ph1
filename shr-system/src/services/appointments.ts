@@ -27,7 +27,7 @@ export function seedAppointmentsIfNeeded(): void {
     {
       id: crypto.randomUUID(),
       studentId: 'stu-001',
-      studentName: 'Adaeze Okonkwo',
+      studentName: 'Simioluwa Okonkwo',
       scheduledByUserId: 'staff-001',
       scheduledByRole: 'medical_staff',
       assignedRole: 'student',
