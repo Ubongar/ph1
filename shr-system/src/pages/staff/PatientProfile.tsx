@@ -16,6 +16,8 @@ import {
   User,
 } from 'lucide-react'
 import { create, getAll, getById, StorageKey, createAuditEntry } from '../../services/storage'
+import { pushTask } from '../../services/inbox'
+import { pushNotification } from '../../services/notifications'
 import { useAuth } from '../../context/AuthContext'
 import {
   canAccessStudentForUser,
@@ -56,6 +58,26 @@ function initials(name: string): string {
     .join('')
     .slice(0, 2)
     .toUpperCase()
+}
+
+function hashString(value: string): number {
+  let hash = 0
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + (value.codePointAt(index) ?? 0)) >>> 0
+  }
+  return hash
+}
+
+function resolveAssignedTechnician(studentId: string, testName: string): SystemUser | null {
+  const technicians = getAll<SystemUser>(StorageKey.USERS)
+    .filter((user) => user.isActive && user.role === 'technician')
+    .sort((left, right) => left.id.localeCompare(right.id))
+
+  if (technicians.length === 0) return null
+
+  const assignmentSeed = `${studentId}:${testName.toLowerCase()}`
+  const assignedIndex = hashString(assignmentSeed) % technicians.length
+  return technicians[assignedIndex] ?? null
 }
 
 export default function PatientProfile() {
@@ -243,6 +265,13 @@ export default function PatientProfile() {
       toast('Test name is required', 'error')
       return
     }
+
+    const assignedTechnician = resolveAssignedTechnician(student.id, labTestName.trim())
+    if (!assignedTechnician) {
+      toast('No active technician is available for assignment', 'error')
+      return
+    }
+
     const pending = create<DiagnosticResult>(StorageKey.RESULTS, {
       studentId: student.id,
       requestingStaffId: currentUser.id,
@@ -250,8 +279,8 @@ export default function PatientProfile() {
       type: labTestType,
       testName: labTestName.trim(),
       facility: labTestType === 'Imaging' ? 'Radiology' : 'Lab',
-      uploadedByTechnicianId: '—',
-      uploadedByTechnicianName: '—',
+      uploadedByTechnicianId: assignedTechnician.id,
+      uploadedByTechnicianName: assignedTechnician.name,
       uploadedAt: new Date().toISOString(),
       status: 'Pending',
       findings: labNotes.trim(),
@@ -259,6 +288,29 @@ export default function PatientProfile() {
       fileType: 'PDF',
       criticalFlag: false,
     }, { autoAudit: false })
+
+    pushTask({
+      role: 'technician',
+      ownerUserId: assignedTechnician.id,
+      title: 'New Lab Test Request',
+      description: `${pending.testName} requested for ${student.name}.`,
+      priority: 'high',
+      status: 'open',
+      sourceType: 'result',
+      sourceId: pending.id,
+      dueAt: new Date(Date.now() + 3 * 3600 * 1000).toISOString(),
+      escalationPath: 'Escalate to medical staff if result upload is overdue.',
+    })
+
+    pushNotification({
+      title: 'Lab Test Request Assigned',
+      message: `${pending.testName} for ${student.name} is assigned to ${assignedTechnician.name}.`,
+      severity: 'warning',
+      roleTargets: ['technician', 'medical_staff'],
+      userTargetIds: [assignedTechnician.id, currentUser.id],
+      actionPath: '/workspace',
+    })
+
     createAuditEntry({
       userId: currentUser.id,
       userName: currentUser.name,
@@ -274,7 +326,7 @@ export default function PatientProfile() {
     setLabTestName('')
     setLabNotes('')
     setLabTestType('Blood Test')
-    toast('Lab test request submitted', 'success')
+    toast(`Lab test request submitted and assigned to ${assignedTechnician.name}`, 'success')
   }
 
   return (

@@ -159,7 +159,7 @@ export function getRoleInbox(role: UserRole): RoleInboxTask[] {
     if (item.role !== role) continue;
 
     // Migrate legacy role-only tasks to current user ownership.
-    if (!item.ownerUserId && currentUser && currentUser.role === role) {
+    if (!item.ownerUserId && currentUser?.role === role) {
       item.ownerUserId = currentUser.id;
       changed = true;
     }
@@ -211,28 +211,74 @@ export function pushTask(task: Omit<RoleInboxTask, 'id' | 'createdAt' | 'slaStat
 }
 
 export function deriveInboxFromData(): void {
-  const requisitions = getAll<{ id: string; status: string; priority: 'Normal' | 'Urgent' }>(StorageKey.REQUISITIONS);
-  const pendingUrgent = requisitions.filter((item) => item.status === 'Pending Review' && item.priority === 'Urgent');
   const currentUser = getCurrentSessionIdentity();
+  if (!currentUser) return;
 
-  if (pendingUrgent.length === 0 || !currentUser || currentUser.role !== 'medical_staff') return;
+  if (currentUser.role === 'medical_staff') {
+    const requisitions = getAll<{ id: string; status: string; priority: 'Normal' | 'Urgent' }>(StorageKey.REQUISITIONS);
+    const pendingUrgent = requisitions.filter((item) => item.status === 'Pending Review' && item.priority === 'Urgent');
+    if (pendingUrgent.length === 0) return;
+
+    const existing = readInbox();
+    const hasAggregate = existing.some(
+      (item) => item.sourceType === 'custom' && item.sourceId === 'derived-urgent-staff' && item.ownerUserId === currentUser.id,
+    );
+    if (hasAggregate) return;
+
+    pushTask({
+      role: 'medical_staff',
+      ownerUserId: currentUser.id,
+      title: 'Urgent Queue Aggregate Alert',
+      description: `${pendingUrgent.length} urgent requisition(s) require immediate review.`,
+      priority: 'urgent',
+      status: 'open',
+      sourceType: 'custom',
+      sourceId: 'derived-urgent-staff',
+      dueAt: new Date(Date.now() + 2 * 3600 * 1000).toISOString(),
+      escalationPath: 'Escalate to admin if unresolved after 2 hours.',
+    });
+    return;
+  }
+
+  if (currentUser.role !== 'technician') return;
+
+  const results = getAll<{
+    id: string;
+    status: string;
+    testName: string;
+    studentId: string;
+    uploadedByTechnicianId?: string;
+  }>(StorageKey.RESULTS);
+  const students = getAll<{ id: string; name: string }>(StorageKey.STUDENTS);
+  const studentNameById = new Map(students.map((student) => [student.id, student.name]));
+
+  const pendingAssigned = results.filter((result) => (
+    (result.status === 'Pending' || result.status === 'Processing' || result.status === 'Requires Review')
+    && result.uploadedByTechnicianId === currentUser.id
+  ));
+
+  if (pendingAssigned.length === 0) return;
 
   const existing = readInbox();
-  const hasAggregate = existing.some(
-    (item) => item.sourceType === 'custom' && item.sourceId === 'derived-urgent-staff' && item.ownerUserId === currentUser.id,
-  );
-  if (hasAggregate) return;
 
-  pushTask({
-    role: 'medical_staff',
-    ownerUserId: currentUser.id,
-    title: 'Urgent Queue Aggregate Alert',
-    description: `${pendingUrgent.length} urgent requisition(s) require immediate review.`,
-    priority: 'urgent',
-    status: 'open',
-    sourceType: 'custom',
-    sourceId: 'derived-urgent-staff',
-    dueAt: new Date(Date.now() + 2 * 3600 * 1000).toISOString(),
-    escalationPath: 'Escalate to admin if unresolved after 2 hours.',
+  pendingAssigned.forEach((result) => {
+    const alreadyExists = existing.some(
+      (item) => item.sourceType === 'result' && item.sourceId === result.id && item.ownerUserId === currentUser.id,
+    );
+    if (alreadyExists) return;
+
+    const studentLabel = studentNameById.get(result.studentId) ?? result.studentId;
+    pushTask({
+      role: 'technician',
+      ownerUserId: currentUser.id,
+      title: 'Pending Lab Result Upload',
+      description: `${result.testName} for ${studentLabel} is waiting for technician action.`,
+      priority: 'high',
+      status: 'open',
+      sourceType: 'result',
+      sourceId: result.id,
+      dueAt: new Date(Date.now() + 3 * 3600 * 1000).toISOString(),
+      escalationPath: 'Escalate to medical staff if the test remains pending beyond SLA.',
+    });
   });
 }

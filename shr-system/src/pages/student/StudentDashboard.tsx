@@ -70,9 +70,11 @@ export default function StudentDashboard() {
     ? getHospitalNumber(currentUser?.matricNumber, currentStudent.id)
     : '—';
 
+  const displayName = currentStudent?.name ?? currentUser?.name ?? 'Student';
+
   const tip = HEALTH_TIPS[new Date().getDay() % HEALTH_TIPS.length];
   const initials = currentUser
-    ? currentUser.name
+    ? displayName
         .split(' ')
         .map((n) => n[0])
         .slice(0, 2)
@@ -97,7 +99,7 @@ export default function StudentDashboard() {
         </div>
         <div>
           <p className="text-sm text-blue-100">{getGreeting()},</p>
-          <h1 className="text-lg font-bold">{currentUser?.name ?? 'Student'}</h1>
+          <h1 className="text-lg font-bold">{displayName}</h1>
           {currentStudent && (
             <>
               <p className="text-xs text-blue-200 mt-0.5">

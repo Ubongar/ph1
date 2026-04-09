@@ -15,6 +15,13 @@ function formatBytes(b: number) {
   return `${(b / 1024 / 1024).toFixed(1)} MB`;
 }
 
+function inferFileType(extension: string): DiagnosticResult['fileType'] {
+  if (extension === 'pdf') return 'PDF';
+  if (extension === 'dcm') return 'DICOM';
+  if (extension === 'png') return 'PNG';
+  return 'JPEG';
+}
+
 export default function TechnicianUploadPortal() {
   const { currentUser } = useAuth();
   const { toast } = useToast();
@@ -38,6 +45,17 @@ export default function TechnicianUploadPortal() {
   const [reviewNotes, setReviewNotes] = useState('');
   const [updatingReferral, setUpdatingReferral] = useState(false);
   const [fulfillingRequestId, setFulfillingRequestId] = useState<string | null>(null);
+  const scopedStudents = currentUser ? getScopedStudentsForUser(currentUser.role, currentUser.id) : [];
+  const scopedStudentById = new Map(scopedStudents.map((student) => [student.id, student]));
+
+  const assignedPendingRequests = currentUser
+    ? getAll<DiagnosticResult>(StorageKey.RESULTS)
+        .filter((result) => (
+          (result.status === 'Pending' || result.status === 'Processing' || result.status === 'Requires Review')
+          && result.uploadedByTechnicianId === currentUser.id
+        ))
+        .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+    : [];
 
   const search = useCallback((q: string) => {
     if (!currentUser) {
@@ -46,11 +64,10 @@ export default function TechnicianUploadPortal() {
       return;
     }
 
-    const students = getScopedStudentsForUser(currentUser.role, currentUser.id);
     const lower = q.toLowerCase();
-    setResults(students.filter(s => s.name.toLowerCase().includes(lower)).slice(0, 8));
+    setResults(scopedStudents.filter(s => s.name.toLowerCase().includes(lower)).slice(0, 8));
     setShowDropdown(true);
-  }, [currentUser]);
+  }, [currentUser, scopedStudents]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -93,9 +110,26 @@ export default function TechnicianUploadPortal() {
 
   const pendingLabRequests = selectedPatient
     ? getAll<DiagnosticResult>(StorageKey.RESULTS)
-        .filter((r) => r.studentId === selectedPatient.id && r.status === 'Pending')
+        .filter((r) => (
+          r.studentId === selectedPatient.id
+          && (r.status === 'Pending' || r.status === 'Processing' || r.status === 'Requires Review')
+          && (!currentUser || r.uploadedByTechnicianId === currentUser.id)
+        ))
         .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
     : [];
+
+  const openAssignedRequest = (request: DiagnosticResult) => {
+    const student = scopedStudentById.get(request.studentId);
+
+    if (!student) {
+      toast('Assigned request student is outside your access scope.', 'error');
+      return;
+    }
+
+    selectPatient(student);
+    startFulfillingRequest(request);
+    toast(`Loaded ${request.testName} for ${student.name}`, 'info');
+  };
 
   const startFulfillingRequest = (req: DiagnosticResult) => {
     setFulfillingRequestId(req.id);
@@ -190,7 +224,7 @@ export default function TechnicianUploadPortal() {
     setSubmitting(true);
     await new Promise(r => setTimeout(r, 1500));
     const ext = fileInfo?.name.split('.').pop()?.toLowerCase() ?? '';
-    const fileType: DiagnosticResult['fileType'] = ext === 'pdf' ? 'PDF' : ext === 'dcm' ? 'DICOM' : ext === 'png' ? 'PNG' : 'JPEG';
+    const fileType = inferFileType(ext);
 
     if (fulfillingRequestId) {
       // Fulfill an existing pending lab/radiology request
@@ -254,6 +288,43 @@ export default function TechnicianUploadPortal() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <PageHeader title="Upload Diagnostic Results" subtitle="Search for a patient and upload test results" />
+
+      <section className="mb-6 rounded-xl border border-teal-200 bg-teal-50 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold text-teal-900">Assigned Lab Work Queue</h2>
+          <span className="rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-teal-700">
+            {assignedPendingRequests.length} assigned
+          </span>
+        </div>
+        {assignedPendingRequests.length === 0 ? (
+          <p className="mt-2 text-xs text-teal-800">No assigned pending diagnostic requests right now.</p>
+        ) : (
+          <div className="mt-3 space-y-2">
+            {assignedPendingRequests.slice(0, 6).map((request) => {
+              const student = scopedStudentById.get(request.studentId);
+              const studentName = student?.name ?? request.studentId;
+
+              return (
+                <div key={request.id} className="flex items-center justify-between gap-3 rounded-lg border border-teal-200 bg-white p-3">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{request.testName}</p>
+                    <p className="text-xs text-gray-600">{studentName} · {request.type}</p>
+                    <p className="text-xs text-gray-500">Requested by {request.requestingStaffName}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openAssignedRequest(request)}
+                    className="shrink-0 rounded-md bg-teal-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-teal-700"
+                  >
+                    Open
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left: Patient Search */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">

@@ -6,6 +6,12 @@ import { StorageKey } from '../services/storage';
 
 const INITIALIZED_KEY = 'shr_initialized';
 const SPECIALIST_USER_ID = 'specialist-001';
+const APPOINTMENTS_KEY = 'shr_follow_up_appointments';
+const INBOX_KEY = 'shr_role_inbox_tasks';
+const NOTIFICATIONS_KEY = 'shr_notifications';
+
+const LEGACY_STUDENT_NAME_PATTERNS = [/\bAdaeze Okonkwo\b/gi, /\bAdazeze Okonkwo\b/gi, /\bAdaeze\b/gi];
+const CANONICAL_STUDENT_NAME = 'Simioluwa Okonkwo';
 
 function readStoredUsersSafely(): SystemUser[] {
   try {
@@ -18,7 +24,116 @@ function readStoredUsersSafely(): SystemUser[] {
   }
 }
 
+function hashString(value: string): number {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + (value.codePointAt(index) ?? 0)) >>> 0;
+  }
+  return hash;
+}
+
+function replaceLegacyStudentName(value: string): string {
+  let next = value;
+  for (const pattern of LEGACY_STUDENT_NAME_PATTERNS) {
+    next = next.replace(pattern, CANONICAL_STUDENT_NAME);
+  }
+  return next;
+}
+
+function deepReplaceLegacyStudentName<T>(value: T): T {
+  if (typeof value === 'string') {
+    return replaceLegacyStudentName(value) as T;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((entry) => deepReplaceLegacyStudentName(entry)) as T;
+  }
+
+  if (value && typeof value === 'object') {
+    const nextEntries = Object.entries(value as Record<string, unknown>).map(([key, entryValue]) => [
+      key,
+      deepReplaceLegacyStudentName(entryValue),
+    ]);
+    return Object.fromEntries(nextEntries) as T;
+  }
+
+  return value;
+}
+
+function migrateLegacyStudentNameAcrossStorage(): void {
+  const keysToMigrate = [
+    ...Object.values(StorageKey),
+    APPOINTMENTS_KEY,
+    INBOX_KEY,
+    NOTIFICATIONS_KEY,
+  ];
+
+  for (const key of keysToMigrate) {
+    const raw = localStorage.getItem(key);
+    if (!raw) continue;
+
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      const migrated = deepReplaceLegacyStudentName(parsed);
+      const serialized = JSON.stringify(migrated);
+      if (serialized !== raw) {
+        localStorage.setItem(key, serialized);
+      }
+    } catch {
+      // Ignore non-JSON values.
+    }
+  }
+}
+
+function migratePendingResultAssignments(): void {
+  const users = readStoredUsersSafely();
+  const activeTechnicians = users
+    .filter((user) => user.isActive && user.role === 'technician')
+    .sort((left, right) => left.id.localeCompare(right.id));
+
+  if (activeTechnicians.length === 0) return;
+
+  const raw = localStorage.getItem(StorageKey.RESULTS);
+  if (!raw) return;
+
+  try {
+    const results = JSON.parse(raw) as DiagnosticResult[];
+    if (!Array.isArray(results)) return;
+
+    let changed = false;
+    const migrated = results.map((result) => {
+      const isPending = result.status === 'Pending' || result.status === 'Processing' || result.status === 'Requires Review';
+      const isUnassigned = !result.uploadedByTechnicianId || result.uploadedByTechnicianId === '—';
+      if (!isPending || !isUnassigned) return result;
+
+      const assignedIndex = hashString(result.id) % activeTechnicians.length;
+      const assignedTechnician = activeTechnicians[assignedIndex];
+      if (!assignedTechnician) return result;
+
+      changed = true;
+      return {
+        ...result,
+        uploadedByTechnicianId: assignedTechnician.id,
+        uploadedByTechnicianName: assignedTechnician.name,
+      };
+    });
+
+    if (changed) {
+      localStorage.setItem(StorageKey.RESULTS, JSON.stringify(migrated));
+    }
+  } catch {
+    // Ignore malformed payloads.
+  }
+}
+
+function runStorageMigrations(): void {
+  migrateLegacyStudentNameAcrossStorage();
+  migratePendingResultAssignments();
+}
+
 export function initializeMockData(): void {
+  runStorageMigrations();
+
   if (localStorage.getItem(INITIALIZED_KEY)) {
     const users = readStoredUsersSafely();
     if (!users.some((u) => u.id === SPECIALIST_USER_ID)) {
