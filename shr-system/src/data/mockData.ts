@@ -111,7 +111,7 @@ export function initializeMockData(): void {
         {
           id: 'dr-001',
           userId: 'student-001',
-          userName: 'Adaeze Okonkwo',
+          userName: 'Simioluwa Okonkwo',
           userRole: 'student',
           requestType: 'Access',
           requestDetails: 'Requesting complete copy of my encounter history for scholarship documentation.',
@@ -126,7 +126,7 @@ export function initializeMockData(): void {
         {
           id: 'dr-002',
           userId: 'student-001',
-          userName: 'Adaeze Okonkwo',
+          userName: 'Simioluwa Okonkwo',
           userRole: 'student',
           requestType: 'Correction',
           requestDetails: 'My emergency contact phone number should be updated to 08087654322.',
@@ -145,7 +145,7 @@ export function initializeMockData(): void {
           id: 'cmp-001',
           ticketId: 'CMP-20260321-5512',
           submittedByUserId: 'student-001',
-          submittedByName: 'Adaeze Okonkwo',
+          submittedByName: 'Simioluwa Okonkwo',
           submittedByRole: 'student',
           subject: 'No update on medication tracking for over 24 hours',
           details: 'My approved inhaler request has had no tracking update for 24+ hours. Breathing episodes are getting worse.',
@@ -179,7 +179,7 @@ export function initializeMockData(): void {
 
   const students: Student[] = [
     {
-      id: 'stu-001', userId: 'student-001', name: 'Adaeze Okonkwo',
+      id: 'stu-001', userId: 'student-001', name: 'Simioluwa Okonkwo',
       dateOfBirth: '2002-03-15', gender: 'Female', department: 'Computer Science',
       level: '300', phoneNumber: '08012345678', email: 'student@babcock.edu.ng',
       bloodGroup: 'O+', genotype: 'AS',
@@ -263,7 +263,7 @@ export function initializeMockData(): void {
 
   const systemUsers: SystemUser[] = [
     {
-      id: 'student-001', name: 'Adaeze Okonkwo', email: 'student@babcock.edu.ng',
+      id: 'student-001', name: 'Simioluwa Okonkwo', email: 'student@babcock.edu.ng',
       role: 'student', department: 'Computer Science', matricNumber: 'BU/21/CS/001',
       isActive: true, createdAt: '2023-09-01T08:00:00Z', lastLogin: '2024-01-15T09:30:00Z',
       createdBy: 'admin-001',
@@ -531,7 +531,7 @@ export function initializeMockData(): void {
 
   const requisitions: MedicationRequisition[] = [
     {
-      id: 'req-001', studentId: 'stu-001', studentName: 'Adaeze Okonkwo',
+      id: 'req-001', studentId: 'stu-001', studentName: 'Simioluwa Okonkwo',
       submittedAt: '2024-01-14T08:30:00Z',
       symptoms: ['Headache', 'Fever'], symptomDescription: 'Mild headache and low-grade fever since yesterday. No other symptoms.',
       severity: 'Mild', requestedMedications: ['Paracetamol', 'Ibuprofen'],
@@ -627,7 +627,7 @@ export function initializeMockData(): void {
       priority: 'Normal',
     },
     {
-      id: 'req-009', studentId: 'stu-001', studentName: 'Adaeze Okonkwo',
+      id: 'req-009', studentId: 'stu-001', studentName: 'Simioluwa Okonkwo',
       submittedAt: '2023-12-20T09:00:00Z',
       symptoms: ['Cough', 'Wheezing'], symptomDescription: 'Asthma worsening. Cold weather triggering symptoms.',
       severity: 'Moderate', requestedMedications: ['Salbutamol Inhaler'],
@@ -770,15 +770,15 @@ export function initializeMockData(): void {
 
   const auditLogs: AuditLog[] = [
     { id: 'aud-001', timestamp: '2024-01-15T07:45:00Z', userId: 'staff-001', userName: 'Dr. Olusegun Bello', userRole: 'medical_staff', action: 'LOGIN', resourceType: 'System', resourceDescription: 'User logged in', ipAddress: '192.168.1.42', sessionId: 'sess-001', status: 'Success' },
-    { id: 'aud-002', timestamp: '2024-01-15T08:00:00Z', userId: 'staff-001', userName: 'Dr. Olusegun Bello', userRole: 'medical_staff', action: 'VIEW_RECORD', resourceType: 'Student', resourceId: 'stu-001', resourceDescription: 'Viewed patient record: Adaeze Okonkwo', ipAddress: '192.168.1.42', sessionId: 'sess-001', status: 'Success' },
-    { id: 'aud-003', timestamp: '2024-01-15T08:15:00Z', userId: 'staff-001', userName: 'Dr. Olusegun Bello', userRole: 'medical_staff', action: 'CREATE_RECORD', resourceType: 'Student', resourceId: 'enc-001', resourceDescription: 'Created encounter for Adaeze Okonkwo', ipAddress: '192.168.1.42', sessionId: 'sess-001', status: 'Success' },
+    { id: 'aud-002', timestamp: '2024-01-15T08:00:00Z', userId: 'staff-001', userName: 'Dr. Olusegun Bello', userRole: 'medical_staff', action: 'VIEW_RECORD', resourceType: 'Student', resourceId: 'stu-001', resourceDescription: 'Viewed patient record: Simioluwa Okonkwo', ipAddress: '192.168.1.42', sessionId: 'sess-001', status: 'Success' },
+    { id: 'aud-003', timestamp: '2024-01-15T08:15:00Z', userId: 'staff-001', userName: 'Dr. Olusegun Bello', userRole: 'medical_staff', action: 'CREATE_RECORD', resourceType: 'Student', resourceId: 'enc-001', resourceDescription: 'Created encounter for Simioluwa Okonkwo', ipAddress: '192.168.1.42', sessionId: 'sess-001', status: 'Success' },
     { id: 'aud-004', timestamp: '2024-01-15T09:00:00Z', userId: 'pharm-001', userName: 'Pharmacist Remi Soyinka', userRole: 'pharmacy', action: 'LOGIN', resourceType: 'System', resourceDescription: 'User logged in', ipAddress: '192.168.1.55', sessionId: 'sess-002', status: 'Success' },
     { id: 'aud-005', timestamp: '2024-01-15T09:10:00Z', userId: 'pharm-001', userName: 'Pharmacist Remi Soyinka', userRole: 'pharmacy', action: 'DISPENSE_MEDICATION', resourceType: 'Requisition', resourceId: 'req-004', resourceDescription: 'Dispensed medication for Tunde Adeyemi — Salbutamol Inhaler', ipAddress: '192.168.1.55', sessionId: 'sess-002', changeDetails: 'Status changed from Approved to Dispensed', status: 'Success' },
-    { id: 'aud-006', timestamp: '2024-01-15T09:30:00Z', userId: 'student-001', userName: 'Adaeze Okonkwo', userRole: 'student', action: 'LOGIN', resourceType: 'System', resourceDescription: 'Student logged in', ipAddress: '192.168.1.88', sessionId: 'sess-003', status: 'Success' },
-    { id: 'aud-007', timestamp: '2024-01-15T09:35:00Z', userId: 'student-001', userName: 'Adaeze Okonkwo', userRole: 'student', action: 'VIEW_RECORD', resourceType: 'Student', resourceId: 'stu-001', resourceDescription: 'Student viewed own health record', ipAddress: '192.168.1.88', sessionId: 'sess-003', status: 'Success' },
-    { id: 'aud-008', timestamp: '2024-01-15T09:40:00Z', userId: 'student-001', userName: 'Adaeze Okonkwo', userRole: 'student', action: 'CREATE_RECORD', resourceType: 'Requisition', resourceId: 'req-001', resourceDescription: 'Submitted medication requisition — Headache/Fever', ipAddress: '192.168.1.88', sessionId: 'sess-003', status: 'Success' },
+    { id: 'aud-006', timestamp: '2024-01-15T09:30:00Z', userId: 'student-001', userName: 'Simioluwa Okonkwo', userRole: 'student', action: 'LOGIN', resourceType: 'System', resourceDescription: 'Student logged in', ipAddress: '192.168.1.88', sessionId: 'sess-003', status: 'Success' },
+    { id: 'aud-007', timestamp: '2024-01-15T09:35:00Z', userId: 'student-001', userName: 'Simioluwa Okonkwo', userRole: 'student', action: 'VIEW_RECORD', resourceType: 'Student', resourceId: 'stu-001', resourceDescription: 'Student viewed own health record', ipAddress: '192.168.1.88', sessionId: 'sess-003', status: 'Success' },
+    { id: 'aud-008', timestamp: '2024-01-15T09:40:00Z', userId: 'student-001', userName: 'Simioluwa Okonkwo', userRole: 'student', action: 'CREATE_RECORD', resourceType: 'Requisition', resourceId: 'req-001', resourceDescription: 'Submitted medication requisition — Headache/Fever', ipAddress: '192.168.1.88', sessionId: 'sess-003', status: 'Success' },
     { id: 'aud-009', timestamp: '2024-01-15T10:00:00Z', userId: 'tech-001', userName: 'Amaka Okafor', userRole: 'technician', action: 'LOGIN', resourceType: 'System', resourceDescription: 'Technician logged in', ipAddress: '192.168.1.71', sessionId: 'sess-004', status: 'Success' },
-    { id: 'aud-010', timestamp: '2024-01-15T10:15:00Z', userId: 'tech-001', userName: 'Amaka Okafor', userRole: 'technician', action: 'UPLOAD_RESULT', resourceType: 'DiagnosticResult', resourceId: 'res-001', resourceDescription: 'Uploaded FBC result for Adaeze Okonkwo', ipAddress: '192.168.1.71', sessionId: 'sess-004', status: 'Success' },
+    { id: 'aud-010', timestamp: '2024-01-15T10:15:00Z', userId: 'tech-001', userName: 'Amaka Okafor', userRole: 'technician', action: 'UPLOAD_RESULT', resourceType: 'DiagnosticResult', resourceId: 'res-001', resourceDescription: 'Uploaded FBC result for Simioluwa Okonkwo', ipAddress: '192.168.1.71', sessionId: 'sess-004', status: 'Success' },
     { id: 'aud-011', timestamp: '2024-01-14T16:00:00Z', userId: 'admin-001', userName: 'Chidi Okwu', userRole: 'admin', action: 'LOGIN', resourceType: 'System', resourceDescription: 'Admin logged in', ipAddress: '192.168.1.10', sessionId: 'sess-005', status: 'Success' },
     { id: 'aud-012', timestamp: '2024-01-14T16:10:00Z', userId: 'admin-001', userName: 'Chidi Okwu', userRole: 'admin', action: 'VIEW_AUDIT_LOG', resourceType: 'System', resourceDescription: 'Viewed system audit logs', ipAddress: '192.168.1.10', sessionId: 'sess-005', status: 'Success' },
     { id: 'aud-013', timestamp: '2024-01-14T16:20:00Z', userId: 'admin-001', userName: 'Chidi Okwu', userRole: 'admin', action: 'CREATE_USER', resourceType: 'User', resourceId: 'stu-user-008', resourceDescription: 'Created user account for Seun Adeola', ipAddress: '192.168.1.10', sessionId: 'sess-005', changeDetails: 'New student account created', status: 'Success' },
@@ -796,9 +796,9 @@ export function initializeMockData(): void {
     { id: 'aud-025', timestamp: '2024-01-05T09:00:00Z', userId: 'staff-001', userName: 'Dr. Olusegun Bello', userRole: 'medical_staff', action: 'EDIT_RECORD', resourceType: 'Student', resourceId: 'stu-003', resourceDescription: 'Updated allergy record for Fatima Aliyu', ipAddress: '192.168.1.42', sessionId: 'sess-015', changeDetails: 'Added Sulfonamide allergy', status: 'Success' },
     { id: 'aud-026', timestamp: '2024-01-04T11:00:00Z', userId: 'admin-001', userName: 'Chidi Okwu', userRole: 'admin', action: 'DEACTIVATE_USER', resourceType: 'User', resourceDescription: 'Deactivated former student account (graduated)', ipAddress: '192.168.1.10', sessionId: 'sess-016', changeDetails: 'Account deactivated — graduation', status: 'Success' },
     { id: 'aud-027', timestamp: '2024-01-03T08:00:00Z', userId: 'tech-001', userName: 'Amaka Okafor', userRole: 'technician', action: 'UPLOAD_RESULT', resourceType: 'DiagnosticResult', resourceId: 'res-007', resourceDescription: 'Uploaded urine microscopy for Chidinma Obi', ipAddress: '192.168.1.71', sessionId: 'sess-017', status: 'Success' },
-    { id: 'aud-028', timestamp: '2024-01-02T16:30:00Z', userId: 'student-001', userName: 'Adaeze Okonkwo', userRole: 'student', action: 'VIEW_RECORD', resourceType: 'DiagnosticResult', resourceId: 'res-001', resourceDescription: 'Student viewed own lab result', ipAddress: '192.168.1.99', sessionId: 'sess-018', status: 'Success' },
+    { id: 'aud-028', timestamp: '2024-01-02T16:30:00Z', userId: 'student-001', userName: 'Simioluwa Okonkwo', userRole: 'student', action: 'VIEW_RECORD', resourceType: 'DiagnosticResult', resourceId: 'res-001', resourceDescription: 'Student viewed own lab result', ipAddress: '192.168.1.99', sessionId: 'sess-018', status: 'Success' },
     { id: 'aud-029', timestamp: '2023-12-28T10:00:00Z', userId: 'admin-001', userName: 'Chidi Okwu', userRole: 'admin', action: 'EXPORT_REPORT', resourceType: 'Report', resourceDescription: 'Exported end-of-year summary report — December 2023', ipAddress: '192.168.1.10', sessionId: 'sess-019', status: 'Success' },
-    { id: 'aud-030', timestamp: '2023-12-20T13:00:00Z', userId: 'pharm-001', userName: 'Pharmacist Remi Soyinka', userRole: 'pharmacy', action: 'DISPENSE_MEDICATION', resourceType: 'Requisition', resourceId: 'req-009', resourceDescription: 'Dispensed Salbutamol inhaler for Adaeze Okonkwo', ipAddress: '192.168.1.55', sessionId: 'sess-020', status: 'Success' },
+    { id: 'aud-030', timestamp: '2023-12-20T13:00:00Z', userId: 'pharm-001', userName: 'Pharmacist Remi Soyinka', userRole: 'pharmacy', action: 'DISPENSE_MEDICATION', resourceType: 'Requisition', resourceId: 'req-009', resourceDescription: 'Dispensed Salbutamol inhaler for Simioluwa Okonkwo', ipAddress: '192.168.1.55', sessionId: 'sess-020', status: 'Success' },
     { id: 'aud-031', timestamp: '2023-12-15T09:00:00Z', userId: 'staff-001', userName: 'Dr. Olusegun Bello', userRole: 'medical_staff', action: 'CREATE_RECORD', resourceType: 'Student', resourceId: 'enc-005', resourceDescription: 'Created encounter for Ngozi Eze — Tonsillitis', ipAddress: '192.168.1.42', sessionId: 'sess-021', status: 'Success' },
     { id: 'aud-032', timestamp: '2023-12-05T17:00:00Z', userId: 'staff-001', userName: 'Dr. Olusegun Bello', userRole: 'medical_staff', action: 'REJECT_REQUISITION', resourceType: 'Requisition', resourceId: 'req-010', resourceDescription: 'Rejected requisition for Emeka Nwosu — Insomnia/Anxiety', ipAddress: '192.168.1.42', sessionId: 'sess-022', status: 'Success' },
     { id: 'aud-033', timestamp: '2023-11-30T10:30:00Z', userId: 'tech-001', userName: 'Amaka Okafor', userRole: 'technician', action: 'UPLOAD_RESULT', resourceType: 'DiagnosticResult', resourceId: 'res-006', resourceDescription: 'Uploaded Hb electrophoresis for Ibrahim Musa', ipAddress: '192.168.1.71', sessionId: 'sess-023', status: 'Success' },
@@ -823,8 +823,8 @@ export function initializeMockData(): void {
       timestamp: '2024-01-14T08:00:00Z', isResolved: false,
     },
     {
-      id: 'alert-004', type: 'Warning', title: 'Penicillin Allergy Alert — Adaeze Okonkwo',
-      message: 'Patient Adaeze Okonkwo (stu-001) has a life-threatening Penicillin allergy on record. Ensure all prescribers are aware before prescribing.',
+      id: 'alert-004', type: 'Warning', title: 'Penicillin Allergy Alert — Simioluwa Okonkwo',
+      message: 'Patient Simioluwa Okonkwo (stu-001) has a life-threatening Penicillin allergy on record. Ensure all prescribers are aware before prescribing.',
       timestamp: '2024-01-10T09:00:00Z', isResolved: false,
     },
     {
@@ -914,7 +914,7 @@ export function initializeMockData(): void {
     {
       id: 'dr-001',
       userId: 'student-001',
-      userName: 'Adaeze Okonkwo',
+      userName: 'Simioluwa Okonkwo',
       userRole: 'student',
       requestType: 'Access',
       requestDetails: 'Requesting complete copy of my encounter history for scholarship documentation.',
@@ -929,7 +929,7 @@ export function initializeMockData(): void {
     {
       id: 'dr-002',
       userId: 'student-001',
-      userName: 'Adaeze Okonkwo',
+      userName: 'Simioluwa Okonkwo',
       userRole: 'student',
       requestType: 'Correction',
       requestDetails: 'My emergency contact phone number should be updated to 08087654322.',
@@ -945,7 +945,7 @@ export function initializeMockData(): void {
       id: 'cmp-001',
       ticketId: 'CMP-20260321-5512',
       submittedByUserId: 'student-001',
-      submittedByName: 'Adaeze Okonkwo',
+      submittedByName: 'Simioluwa Okonkwo',
       submittedByRole: 'student',
       subject: 'No update on medication tracking for over 24 hours',
       details: 'My approved inhaler request has had no tracking update for 24+ hours. Breathing episodes are getting worse.',

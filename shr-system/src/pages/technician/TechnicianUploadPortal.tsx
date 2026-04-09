@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Search, Upload, X, FileText, Image, AlertTriangle } from 'lucide-react';
+import { Search, Upload, X, FileText, Image, AlertTriangle, FlaskConical } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { create, update, createAuditEntry, StorageKey } from '../../services/storage';
+import { create, update, getAll, createAuditEntry, StorageKey } from '../../services/storage';
 import { getScopedReferralsForUser, getScopedStudentsForUser } from '../../services/accessScope';
 import type { Student, DiagnosticResult, ResultType, Referral } from '../../types/types';
 import { useToast } from '../../components/shared/Toast';
@@ -37,6 +37,7 @@ export default function TechnicianUploadPortal() {
   const [reviewStatus, setReviewStatus] = useState<Extract<Referral['status'], 'Under Review' | 'In Consultation' | 'Completed'>>('Under Review');
   const [reviewNotes, setReviewNotes] = useState('');
   const [updatingReferral, setUpdatingReferral] = useState(false);
+  const [fulfillingRequestId, setFulfillingRequestId] = useState<string | null>(null);
 
   const search = useCallback((q: string) => {
     if (!currentUser) {
@@ -65,6 +66,11 @@ export default function TechnicianUploadPortal() {
     setEditingReferralId(null);
     setReviewNotes('');
     setReviewStatus('Under Review');
+    setFulfillingRequestId(null);
+    setFindings('');
+    setFileInfo(null);
+    setCriticalFlag(false);
+    setCriticalReason('');
   };
 
   const handleFile = (file: File) => {
@@ -84,6 +90,23 @@ export default function TechnicianUploadPortal() {
         .filter((referral) => referral.studentId === selectedPatient.id)
         .sort((a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime())
     : [];
+
+  const pendingLabRequests = selectedPatient
+    ? getAll<DiagnosticResult>(StorageKey.RESULTS)
+        .filter((r) => r.studentId === selectedPatient.id && r.status === 'Pending')
+        .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+    : [];
+
+  const startFulfillingRequest = (req: DiagnosticResult) => {
+    setFulfillingRequestId(req.id);
+    setTestType(req.type);
+    setTestName(req.testName);
+    setDoctorName(req.requestingStaffName);
+    setFindings('');
+    setFileInfo(null);
+    setCriticalFlag(false);
+    setCriticalReason('');
+  };
 
   const startEditingReferral = (referral: Referral) => {
     setEditingReferralId(referral.id);
@@ -148,6 +171,7 @@ export default function TechnicianUploadPortal() {
   const resetForm = () => {
     setTestType('Blood Test'); setTestName(''); setDoctorName(currentUser?.name ?? '');
     setFileInfo(null); setFindings(''); setCriticalFlag(false); setCriticalReason('');
+    setFulfillingRequestId(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -167,31 +191,59 @@ export default function TechnicianUploadPortal() {
     await new Promise(r => setTimeout(r, 1500));
     const ext = fileInfo?.name.split('.').pop()?.toLowerCase() ?? '';
     const fileType: DiagnosticResult['fileType'] = ext === 'pdf' ? 'PDF' : ext === 'dcm' ? 'DICOM' : ext === 'png' ? 'PNG' : 'JPEG';
-    const result: DiagnosticResult = {
-      id: `res-${Date.now()}`,
-      studentId: selectedPatient.id,
-      requestingStaffId: currentUser.id,
-      requestingStaffName: doctorName,
-      type: testType,
-      testName,
-      facility: testType === 'Imaging' ? 'Radiology' : 'Lab',
-      uploadedByTechnicianId: currentUser.id,
-      uploadedByTechnicianName: currentUser.name,
-      uploadedAt: new Date().toISOString(),
-      status: 'Completed',
-      findings,
-      fileSimulatedUrl: fileInfo ? `simulated://${fileInfo.name}` : 'simulated://no-file',
-      fileType,
-      criticalFlag,
-      criticalFlagReason: criticalFlag ? criticalReason : undefined,
-    };
-    create(StorageKey.RESULTS, result, { autoAudit: false });
-    createAuditEntry({
-      userId: currentUser.id, userName: currentUser.name, userRole: currentUser.role,
-      action: 'UPLOAD_RESULT', resourceType: 'DiagnosticResult', resourceId: result.id,
-      resourceDescription: `Uploaded ${testName} for ${selectedPatient.name}`,
-      status: 'Success', changeDetails: JSON.stringify({ testType, criticalFlag }),
-    });
+
+    if (fulfillingRequestId) {
+      // Fulfill an existing pending lab/radiology request
+      const updated = update<DiagnosticResult>(StorageKey.RESULTS, fulfillingRequestId, {
+        uploadedByTechnicianId: currentUser.id,
+        uploadedByTechnicianName: currentUser.name,
+        uploadedAt: new Date().toISOString(),
+        status: criticalFlag ? 'Flagged' : 'Completed',
+        findings,
+        fileSimulatedUrl: fileInfo ? `simulated://${fileInfo.name}` : 'simulated://no-file',
+        fileType,
+        criticalFlag,
+        criticalFlagReason: criticalFlag ? criticalReason : undefined,
+      }, { autoAudit: false });
+      if (!updated) {
+        toast('Unable to fulfill request — it may have been removed. Please refresh.', 'error');
+        setSubmitting(false);
+        return;
+      }
+      createAuditEntry({
+        userId: currentUser.id, userName: currentUser.name, userRole: currentUser.role,
+        action: 'UPLOAD_RESULT', resourceType: 'DiagnosticResult', resourceId: fulfillingRequestId,
+        resourceDescription: `Fulfilled diagnostic request: ${testName} for ${selectedPatient.name}`,
+        status: 'Success', changeDetails: JSON.stringify({ testType, criticalFlag }),
+      });
+      setFulfillingRequestId(null);
+    } else {
+      const result: DiagnosticResult = {
+        id: `res-${Date.now()}`,
+        studentId: selectedPatient.id,
+        requestingStaffId: currentUser.id,
+        requestingStaffName: doctorName,
+        type: testType,
+        testName,
+        facility: testType === 'Imaging' ? 'Radiology' : 'Lab',
+        uploadedByTechnicianId: currentUser.id,
+        uploadedByTechnicianName: currentUser.name,
+        uploadedAt: new Date().toISOString(),
+        status: criticalFlag ? 'Flagged' : 'Completed',
+        findings,
+        fileSimulatedUrl: fileInfo ? `simulated://${fileInfo.name}` : 'simulated://no-file',
+        fileType,
+        criticalFlag,
+        criticalFlagReason: criticalFlag ? criticalReason : undefined,
+      };
+      create(StorageKey.RESULTS, result, { autoAudit: false });
+      createAuditEntry({
+        userId: currentUser.id, userName: currentUser.name, userRole: currentUser.role,
+        action: 'UPLOAD_RESULT', resourceType: 'DiagnosticResult', resourceId: result.id,
+        resourceDescription: `Uploaded ${testName} for ${selectedPatient.name}`,
+        status: 'Success', changeDetails: JSON.stringify({ testType, criticalFlag }),
+      });
+    }
     toast('Result uploaded successfully', 'success');
     setSubmitting(false);
     resetForm();
@@ -327,6 +379,44 @@ export default function TechnicianUploadPortal() {
                   </div>
                 )}
               </div>
+
+              {/* Pending Diagnostic Requests */}
+              <div className="p-4 bg-white border border-gray-200 rounded-lg mt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-gray-800">Pending Diagnostic Requests</h3>
+                  <span className="text-xs text-gray-500">{pendingLabRequests.length} pending</span>
+                </div>
+                {pendingLabRequests.length === 0 ? (
+                  <p className="text-xs text-gray-500">No pending diagnostic requests for this student.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {pendingLabRequests.map((req) => (
+                      <div key={req.id} className={`border rounded-lg p-3 ${fulfillingRequestId === req.id ? 'border-teal-400 bg-teal-50' : 'border-gray-200 bg-gray-50'}`}>
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <FlaskConical className="w-3.5 h-3.5 text-teal-600" />
+                              <p className="text-sm font-medium text-gray-900">{req.testName}</p>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-0.5">{req.type} · Requested by {req.requestingStaffName}</p>
+                            <p className="text-xs text-gray-500">{new Date(req.uploadedAt).toLocaleDateString('en-GB')}</p>
+                            {req.findings && (
+                              <p className="text-xs text-gray-600 mt-1 italic">Notes: {req.findings}</p>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => startFulfillingRequest(req)}
+                            className="text-xs px-2.5 py-1 rounded-md bg-teal-600 text-white hover:bg-teal-700 shrink-0"
+                          >
+                            {fulfillingRequestId === req.id ? 'Selected' : 'Fulfill'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg text-center text-sm text-gray-500">
@@ -342,7 +432,16 @@ export default function TechnicianUploadPortal() {
               <div className="bg-gray-800 text-white text-sm px-4 py-2 rounded-lg">Select a patient first to enable upload</div>
             </div>
           )}
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Upload Form</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            {fulfillingRequestId ? 'Fulfill Lab Request' : 'Upload Form'}
+          </h2>
+          {fulfillingRequestId && (
+            <div className="mb-4 flex items-center gap-2 p-3 bg-teal-50 border border-teal-200 rounded-lg">
+              <FlaskConical className="w-4 h-4 text-teal-600 shrink-0" />
+              <p className="text-xs text-teal-800 font-medium">Fulfilling a pending diagnostic request — fill in findings and upload the result.</p>
+              <button type="button" onClick={resetForm} className="ml-auto text-xs text-teal-600 hover:underline shrink-0">Cancel</button>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Test Type</label>

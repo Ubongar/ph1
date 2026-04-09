@@ -1,8 +1,7 @@
 import { Fragment } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, CheckCircle, ClipboardList, FileText, Heart, User } from 'lucide-react';
+import { AlertCircle, CheckCircle, ClipboardList, Heart, MessageSquare, PlusCircle, User } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { useToast } from '../../components/shared';
 import { StorageKey, getAll, getRequisitionsByStudentId } from '../../services/storage';
 import type { Encounter, MedicationRequisition } from '../../types/types';
 import { getHospitalNumber } from '../../utils/studentIdentifiers';
@@ -48,7 +47,6 @@ function getGreeting(): string {
 export default function StudentDashboard() {
   const { currentUser, currentStudent } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const encounters = currentStudent
     ? getAll<Encounter>(StorageKey.ENCOUNTERS).filter((e) => e.studentId === currentStudent.id)
@@ -83,18 +81,19 @@ export default function StudentDashboard() {
     : '??';
 
   const quickActions = [
-    { label: 'Submit Report', Icon: FileText, path: '/student/submit-symptom', color: 'text-blue-600 bg-blue-50' },
+    { label: 'New Request', Icon: PlusCircle, path: '/student/submit-symptom', color: 'text-blue-600 bg-blue-50' },
     { label: 'Track Requests', Icon: ClipboardList, path: '/student/my-requisitions', color: 'text-purple-600 bg-purple-50' },
     { label: 'My Profile', Icon: User, path: '/student/profile', color: 'text-green-600 bg-green-50' },
-    { label: 'Health Tips', Icon: Heart, path: null as string | null, color: 'text-pink-600 bg-pink-50' },
+    { label: 'Complaints', Icon: MessageSquare, path: '/complaints', color: 'text-orange-600 bg-orange-50' },
   ];
 
   return (
     <div className="w-full space-y-4 max-w-lg mx-auto md:max-w-2xl">
       {/* Greeting Card */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-500 rounded-2xl p-4 sm:p-5 text-white flex items-center gap-3 sm:gap-4 shadow-md">
-        <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-xl font-bold shrink-0">
-          {initials}
+        <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center shrink-0 overflow-hidden relative">
+          <User className="w-10 h-10 text-white/40 absolute" />
+          <span className="text-xl font-bold text-white relative z-10">{initials}</span>
         </div>
         <div>
           <p className="text-sm text-blue-100">{getGreeting()},</p>
@@ -137,11 +136,7 @@ export default function StudentDashboard() {
               key={label}
               type="button"
               onClick={() => {
-                if (path) {
-                  navigate(path);
-                } else {
-                  toast("Stay healthy! Check today's health tip at the bottom.", 'info');
-                }
+                if (path) navigate(path);
               }}
               className="flex flex-col items-center justify-center gap-2 bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md active:scale-95 transition-all"
             >
