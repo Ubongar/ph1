@@ -215,7 +215,7 @@ export default function TechnicianUploadPortal() {
         uploadedByTechnicianId: currentUser.id,
         uploadedByTechnicianName: currentUser.name,
         uploadedAt: new Date().toISOString(),
-        status: 'Completed',
+        status: criticalFlag ? 'Flagged' : 'Completed',
         findings,
         fileSimulatedUrl: fileInfo ? `simulated://${fileInfo.name}` : 'simulated://no-file',
         fileType,
@@ -395,7 +395,7 @@ export default function TechnicianUploadPortal() {
                             onClick={() => startFulfillingRequest(req)}
                             className="text-xs px-2.5 py-1 rounded-md bg-teal-600 text-white hover:bg-teal-700 shrink-0"
                           >
-                            {fulfillingRequestId === req.id ? 'Filling...' : 'Fulfill'}
+                            {fulfillingRequestId === req.id ? 'Selected' : 'Fulfill'}
                           </button>
                         </div>
                       </div>
