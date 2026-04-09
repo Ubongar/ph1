@@ -12,6 +12,8 @@ import {
   Thermometer,
   Heart,
   Wind,
+  FlaskConical,
+  User,
 } from 'lucide-react'
 import { create, getAll, getById, StorageKey, createAuditEntry } from '../../services/storage'
 import { useAuth } from '../../context/AuthContext'
@@ -30,6 +32,7 @@ import type {
   MedicationRequisition,
   Prescription,
   Referral,
+  ResultType,
 } from '../../types/types'
 import { StatusBadge, SeverityBadge, VitalsCard, useToast } from '../../components/shared'
 
@@ -76,6 +79,10 @@ export default function PatientProfile() {
   const [referralSpecialty, setReferralSpecialty] = useState('Cardiology')
   const [referralPriority, setReferralPriority] = useState<'Routine' | 'Urgent' | 'Emergency'>('Routine')
   const [referralReason, setReferralReason] = useState('')
+  const [showLabModal, setShowLabModal] = useState(false)
+  const [labTestType, setLabTestType] = useState<ResultType>('Blood Test')
+  const [labTestName, setLabTestName] = useState('')
+  const [labNotes, setLabNotes] = useState('')
 
   useEffect(() => {
     if (!studentId) { setNotFound(true); return }
@@ -231,6 +238,45 @@ export default function PatientProfile() {
     toast('Referral created', 'success')
   }
 
+  function submitLabRequest() {
+    if (!currentUser || !student || !labTestName.trim()) {
+      toast('Test name is required', 'error')
+      return
+    }
+    const pending = create<DiagnosticResult>(StorageKey.RESULTS, {
+      studentId: student.id,
+      requestingStaffId: currentUser.id,
+      requestingStaffName: currentUser.name,
+      type: labTestType,
+      testName: labTestName.trim(),
+      facility: labTestType === 'Imaging' ? 'Radiology' : 'Lab',
+      uploadedByTechnicianId: '',
+      uploadedByTechnicianName: '',
+      uploadedAt: new Date().toISOString(),
+      status: 'Pending',
+      findings: labNotes.trim(),
+      fileSimulatedUrl: '',
+      fileType: 'PDF',
+      criticalFlag: false,
+    }, { autoAudit: false })
+    createAuditEntry({
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userRole: currentUser.role,
+      action: 'CREATE_RECORD',
+      resourceType: 'DiagnosticResult',
+      resourceId: pending.id,
+      resourceDescription: `Requested ${labTestName.trim()} lab test for ${student.name}`,
+      status: 'Success',
+    })
+    setResults((prev) => [pending, ...prev])
+    setShowLabModal(false)
+    setLabTestName('')
+    setLabNotes('')
+    setLabTestType('Blood Test')
+    toast('Lab test request submitted', 'success')
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Back nav */}
@@ -251,8 +297,9 @@ export default function PatientProfile() {
           {/* Identity */}
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <div className="flex flex-col items-center text-center mb-4">
-              <div className="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center text-white text-xl font-bold mb-3">
-                {initials(student.name)}
+              <div className="w-16 h-16 rounded-full bg-blue-100 border-2 border-blue-200 flex items-center justify-center mb-3 relative overflow-hidden">
+                <User className="w-10 h-10 text-blue-300 absolute" />
+                <span className="text-xl font-bold text-blue-700 relative z-10">{initials(student.name)}</span>
               </div>
               <h2 className="text-lg font-bold text-gray-900">{student.name}</h2>
               {systemUser?.matricNumber && (
@@ -429,6 +476,14 @@ export default function PatientProfile() {
             className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-colors"
           >
             Create Referral
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowLabModal(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-xl transition-colors"
+          >
+            <FlaskConical className="w-4 h-4" />
+            Request Lab Test
           </button>
         </div>
 
@@ -875,6 +930,65 @@ export default function PatientProfile() {
                 className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm"
               >
                 Create Referral
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showLabModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowLabModal(false)} />
+          <div className="relative bg-white rounded-xl border border-gray-200 shadow-xl w-full max-w-lg p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Request Lab Test</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Test Type</label>
+                <select
+                  value={labTestType}
+                  onChange={(e) => setLabTestType(e.target.value as ResultType)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                >
+                  {(['Blood Test', 'Urinalysis', 'Imaging', 'Microbiology', 'Histology', 'ECG', 'Other'] as const).map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Test Name</label>
+                <input
+                  type="text"
+                  value={labTestName}
+                  onChange={(e) => setLabTestName(e.target.value)}
+                  placeholder="e.g. Full Blood Count, Malaria RDT..."
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Clinical Notes (optional)</label>
+                <textarea
+                  rows={3}
+                  value={labNotes}
+                  onChange={(e) => setLabNotes(e.target.value)}
+                  placeholder="Provide clinical context for the lab technician..."
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowLabModal(false)}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitLabRequest}
+                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm"
+              >
+                Submit Request
               </button>
             </div>
           </div>
