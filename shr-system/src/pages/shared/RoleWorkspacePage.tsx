@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CalendarCheck2, CheckCircle2, Languages, ListChecks, Search, ShieldAlert, Signal, AlertTriangle } from 'lucide-react';
+import { CalendarCheck2, CheckCircle2, ListChecks, Search, ShieldAlert, Signal, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../hooks';
 import { searchTimelineForUser } from '../../services/timeline';
@@ -8,16 +8,43 @@ import { getAppointmentsForRole, updateAppointmentStatus } from '../../services/
 import { runDataQualityScan } from '../../services/dataQuality';
 import { getNotificationsForUser, markNotificationRead } from '../../services/notifications';
 import { hasPermission } from '../../services/permissions';
-import { useLocale } from '../../services/i18n';
+import { type LocaleCode, useLocale } from '../../services/i18n';
 
-const ROLE_INBOX_WITH_SLA_EN = 'Role Inbox with SLA';
-const UNIFIED_PATIENT_TIMELINE_SEARCH_EN = 'Unified Patient Timeline Search';
+function getLocalizedRoleName(role: string, t: (key: string) => string): string {
+  if (role === 'student') return t('roleStudent');
+  if (role === 'medical_staff') return t('roleMedicalStaff');
+  if (role === 'technician') return t('roleTechnician');
+  if (role === 'pharmacy') return t('rolePharmacy');
+  if (role === 'specialist') return t('roleSpecialist');
+  if (role === 'admin') return t('roleAdmin');
+  return role;
+}
+
+function getSlaLabel(status: string, t: (key: string) => string): string {
+  if (status === 'overdue') return t('slaOverdue');
+  if (status === 'due-soon') return t('slaDueSoon');
+  return t('slaOnTrack');
+}
+
+function getSlaBadgeClass(status: string): string {
+  if (status === 'overdue') return 'bg-red-100 text-red-700';
+  if (status === 'due-soon') return 'bg-amber-100 text-amber-700';
+  return 'bg-emerald-100 text-emerald-700';
+}
+
+function getNotificationClass(isRead: boolean): string {
+  return isRead ? 'w-full rounded-lg border p-3 text-left border-gray-200 bg-white' : 'w-full rounded-lg border p-3 text-left border-blue-200 bg-blue-50';
+}
+
+function formatTimestamp(value: string, locale: LocaleCode): string {
+  return new Date(value).toLocaleString(locale);
+}
 
 export default function RoleWorkspacePage() {
   const { currentUser } = useAuth();
   const { toast } = useToast();
   const [query, setQuery] = useState('');
-  const { locale, setLocale, t } = useLocale();
+  const { locale, t } = useLocale();
 
   if (!currentUser) return null;
 
@@ -30,26 +57,28 @@ export default function RoleWorkspacePage() {
   const quality = canQuality ? runDataQualityScan() : [];
 
   const timeline = searchTimelineForUser(query, currentUser.role, currentUser.id).slice(0, 20);
+  const localizedRole = getLocalizedRoleName(currentUser.role, t);
+  const observabilityDescription = canObserve ? t('observabilityWithAccessDescription') : t('observabilityNoAccessDescription');
 
-  const roleInboxTitle = locale === 'en' ? ROLE_INBOX_WITH_SLA_EN : t('roleInboxWithSla');
-  const timelineTitle = locale === 'en' ? UNIFIED_PATIENT_TIMELINE_SEARCH_EN : t('unifiedPatientTimelineSearch');
+  const roleInboxTitle = t('roleInboxWithSla');
+  const timelineTitle = t('unifiedPatientTimelineSearch');
 
   function completeTask(taskId: string) {
     const next = updateInboxTaskStatus(taskId, 'done');
     if (!next) {
-      toast('Unable to update task status.', 'error');
+      toast(t('unableUpdateTaskStatus'), 'error');
       return;
     }
-    toast('Task marked as done.', 'success');
+    toast(t('taskMarkedDoneToast'), 'success');
   }
 
   function completeAppointment(id: string) {
     const updated = updateAppointmentStatus(id, 'completed');
     if (!updated) {
-      toast('Unable to complete appointment.', 'error');
+      toast(t('unableCompleteAppointment'), 'error');
       return;
     }
-    toast('Appointment marked completed.', 'success');
+    toast(t('appointmentMarkedCompletedToast'), 'success');
   }
 
   return (
@@ -58,27 +87,9 @@ export default function RoleWorkspacePage() {
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Workflow Center</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">{t('workflowCenter')}</p>
               <h1 className="mt-1 text-2xl font-bold text-gray-900">{t('roleOperationsWorkspace')}</h1>
-              <p className="mt-1 text-sm text-gray-600">{t('roleWorkspaceSubtitle')} ({currentUser.role})</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <label className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700">
-                <Languages className="h-4 w-4 text-gray-500" />
-                <span>{t('language')}</span>
-                <select
-                  value={locale}
-                  onChange={(event) => {
-                    const next = event.target.value as 'en' | 'fr' | 'yo';
-                    setLocale(next);
-                  }}
-                  className="rounded border border-gray-200 px-2 py-1 text-xs"
-                >
-                  <option value="en">EN</option>
-                  <option value="fr">FR</option>
-                  <option value="yo">YO</option>
-                </select>
-              </label>
+              <p className="mt-1 text-sm text-gray-600">{t('roleWorkspaceSubtitle')} ({localizedRole})</p>
             </div>
           </div>
         </div>
@@ -94,18 +105,12 @@ export default function RoleWorkspacePage() {
                 <div key={task.id} className="rounded-xl border border-gray-200 p-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm font-semibold text-gray-900">{task.title}</p>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                      task.slaStatus === 'overdue'
-                        ? 'bg-red-100 text-red-700'
-                        : task.slaStatus === 'due-soon'
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'bg-emerald-100 text-emerald-700'
-                    }`}>
-                      {task.slaStatus}
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${getSlaBadgeClass(task.slaStatus)}`}>
+                      {getSlaLabel(task.slaStatus, t)}
                     </span>
                   </div>
                   <p className="mt-1 text-xs text-gray-600">{task.description}</p>
-                  <p className="mt-2 text-[11px] text-gray-500">Escalation: {task.escalationPath}</p>
+                  <p className="mt-2 text-[11px] text-gray-500">{t('escalationLabel')}: {task.escalationPath}</p>
                   {task.status !== 'done' && (
                     <button
                       type="button"
@@ -147,7 +152,7 @@ export default function RoleWorkspacePage() {
                     <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-700">{event.eventType}</span>
                   </div>
                   <p className="mt-1 text-xs text-gray-600">{event.studentName} • {event.details}</p>
-                  <p className="mt-1 text-[11px] text-gray-500">{new Date(event.timestamp).toLocaleString()}</p>
+                  <p className="mt-1 text-[11px] text-gray-500">{formatTimestamp(event.timestamp, locale)}</p>
                 </div>
               ))}
             </div>
@@ -169,11 +174,9 @@ export default function RoleWorkspacePage() {
                     type="button"
                     onClick={() => {
                       markNotificationRead(note.id, currentUser.id);
-                      toast('Notification marked as read.', 'info');
+                      toast(t('notificationMarkedReadToast'), 'info');
                     }}
-                    className={`w-full rounded-lg border p-3 text-left ${
-                      isRead ? 'border-gray-200 bg-white' : 'border-blue-200 bg-blue-50'
-                    }`}
+                    className={getNotificationClass(isRead)}
                   >
                     <p className="text-sm font-semibold text-gray-900">{note.title}</p>
                     <p className="mt-1 text-xs text-gray-600">{note.message}</p>
@@ -193,7 +196,7 @@ export default function RoleWorkspacePage() {
                 <div key={item.id} className="rounded-lg border border-gray-200 p-3">
                   <p className="text-sm font-semibold text-gray-900">{item.studentName}</p>
                   <p className="mt-1 text-xs text-gray-600">{item.reason}</p>
-                  <p className="mt-1 text-[11px] text-gray-500">{new Date(item.scheduledFor).toLocaleString()}</p>
+                  <p className="mt-1 text-[11px] text-gray-500">{formatTimestamp(item.scheduledFor, locale)}</p>
                   {item.status === 'scheduled' && (
                     <button
                       type="button"
@@ -223,7 +226,7 @@ export default function RoleWorkspacePage() {
                 <div key={item.id} className="rounded-lg border border-gray-200 p-3">
                   <p className="text-sm font-semibold text-gray-900">{item.title}</p>
                   <p className="mt-1 text-xs text-gray-600">{item.description}</p>
-                  <p className="mt-1 text-[11px] text-gray-500">Suggestion: {item.suggestedAction}</p>
+                  <p className="mt-1 text-[11px] text-gray-500">{t('suggestionLabel')}: {item.suggestedAction}</p>
                 </div>
               ))}
             </div>
@@ -237,7 +240,7 @@ export default function RoleWorkspacePage() {
               <h2 className="text-sm font-semibold text-gray-900">{t('securityPermissionModel')}</h2>
             </div>
             <p className="text-xs text-gray-600">
-              Fine-grained permission scopes are active for each role. Actions in this workspace are filtered by role capability checks.
+              {t('securityModelDescription')}
             </p>
           </section>
 
@@ -247,7 +250,7 @@ export default function RoleWorkspacePage() {
               <h2 className="text-sm font-semibold text-gray-900">{t('observabilityVisibility')}</h2>
             </div>
             <p className="text-xs text-gray-600">
-              Telemetry and operational traces are captured globally. {canObserve ? 'You have visibility from admin observability pages.' : 'Admin role can access full observability dashboards.'}
+              {observabilityDescription}
             </p>
           </section>
         </div>
