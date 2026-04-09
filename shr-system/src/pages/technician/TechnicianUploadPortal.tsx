@@ -66,6 +66,11 @@ export default function TechnicianUploadPortal() {
     setEditingReferralId(null);
     setReviewNotes('');
     setReviewStatus('Under Review');
+    setFulfillingRequestId(null);
+    setFindings('');
+    setFileInfo(null);
+    setCriticalFlag(false);
+    setCriticalReason('');
   };
 
   const handleFile = (file: File) => {
@@ -97,6 +102,10 @@ export default function TechnicianUploadPortal() {
     setTestType(req.type);
     setTestName(req.testName);
     setDoctorName(req.requestingStaffName);
+    setFindings('');
+    setFileInfo(null);
+    setCriticalFlag(false);
+    setCriticalReason('');
   };
 
   const startEditingReferral = (referral: Referral) => {
@@ -184,8 +193,8 @@ export default function TechnicianUploadPortal() {
     const fileType: DiagnosticResult['fileType'] = ext === 'pdf' ? 'PDF' : ext === 'dcm' ? 'DICOM' : ext === 'png' ? 'PNG' : 'JPEG';
 
     if (fulfillingRequestId) {
-      // Fulfill an existing pending lab request
-      update<DiagnosticResult>(StorageKey.RESULTS, fulfillingRequestId, {
+      // Fulfill an existing pending lab/radiology request
+      const updated = update<DiagnosticResult>(StorageKey.RESULTS, fulfillingRequestId, {
         uploadedByTechnicianId: currentUser.id,
         uploadedByTechnicianName: currentUser.name,
         uploadedAt: new Date().toISOString(),
@@ -196,10 +205,15 @@ export default function TechnicianUploadPortal() {
         criticalFlag,
         criticalFlagReason: criticalFlag ? criticalReason : undefined,
       }, { autoAudit: false });
+      if (!updated) {
+        toast('Unable to fulfill request — it may have been removed. Please refresh.', 'error');
+        setSubmitting(false);
+        return;
+      }
       createAuditEntry({
         userId: currentUser.id, userName: currentUser.name, userRole: currentUser.role,
         action: 'UPLOAD_RESULT', resourceType: 'DiagnosticResult', resourceId: fulfillingRequestId,
-        resourceDescription: `Fulfilled lab request: ${testName} for ${selectedPatient.name}`,
+        resourceDescription: `Fulfilled diagnostic request: ${testName} for ${selectedPatient.name}`,
         status: 'Success', changeDetails: JSON.stringify({ testType, criticalFlag }),
       });
       setFulfillingRequestId(null);
@@ -366,14 +380,14 @@ export default function TechnicianUploadPortal() {
                 )}
               </div>
 
-              {/* Pending Lab Requests */}
+              {/* Pending Diagnostic Requests */}
               <div className="p-4 bg-white border border-gray-200 rounded-lg mt-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-gray-800">Pending Lab Requests</h3>
+                  <h3 className="text-sm font-semibold text-gray-800">Pending Diagnostic Requests</h3>
                   <span className="text-xs text-gray-500">{pendingLabRequests.length} pending</span>
                 </div>
                 {pendingLabRequests.length === 0 ? (
-                  <p className="text-xs text-gray-500">No pending lab requests for this student.</p>
+                  <p className="text-xs text-gray-500">No pending diagnostic requests for this student.</p>
                 ) : (
                   <div className="space-y-2">
                     {pendingLabRequests.map((req) => (
@@ -424,7 +438,7 @@ export default function TechnicianUploadPortal() {
           {fulfillingRequestId && (
             <div className="mb-4 flex items-center gap-2 p-3 bg-teal-50 border border-teal-200 rounded-lg">
               <FlaskConical className="w-4 h-4 text-teal-600 shrink-0" />
-              <p className="text-xs text-teal-800 font-medium">Fulfilling a pending lab request — fill in findings and upload the result.</p>
+              <p className="text-xs text-teal-800 font-medium">Fulfilling a pending diagnostic request — fill in findings and upload the result.</p>
               <button type="button" onClick={resetForm} className="ml-auto text-xs text-teal-600 hover:underline shrink-0">Cancel</button>
             </div>
           )}

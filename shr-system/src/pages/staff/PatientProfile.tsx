@@ -250,8 +250,8 @@ export default function PatientProfile() {
       type: labTestType,
       testName: labTestName.trim(),
       facility: labTestType === 'Imaging' ? 'Radiology' : 'Lab',
-      uploadedByTechnicianId: '',
-      uploadedByTechnicianName: '',
+      uploadedByTechnicianId: '—',
+      uploadedByTechnicianName: '—',
       uploadedAt: new Date().toISOString(),
       status: 'Pending',
       findings: labNotes.trim(),
@@ -737,24 +737,30 @@ export default function PatientProfile() {
                             >
                               {r.status}
                             </span>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                toast(
-                                  `Simulated download: ${r.testName}.${r.fileType.toLowerCase()}`,
-                                  'info',
-                                )
-                              }
-                              className="flex items-center gap-1 px-3 py-1.5 border border-gray-200 hover:bg-gray-50 rounded-lg text-xs text-gray-700 transition-colors"
-                            >
-                              <Download className="w-3 h-3" />
-                              Download
-                            </button>
+                            {r.fileSimulatedUrl ? (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  toast(
+                                    `Simulated download: ${r.testName}.${r.fileType.toLowerCase()}`,
+                                    'info',
+                                  )
+                                }
+                                className="flex items-center gap-1 px-3 py-1.5 border border-gray-200 hover:bg-gray-50 rounded-lg text-xs text-gray-700 transition-colors"
+                              >
+                                <Download className="w-3 h-3" />
+                                Download
+                              </button>
+                            ) : (
+                              <span className="text-xs text-gray-400 italic">Awaiting upload</span>
+                            )}
                           </div>
                         </div>
-                        <p className="text-sm text-gray-700">{r.findings}</p>
+                        {r.findings && <p className="text-sm text-gray-700">{r.findings}</p>}
                         <p className="text-xs text-gray-400 mt-1">
-                          Uploaded by {r.uploadedByTechnicianName}
+                          {r.uploadedByTechnicianName && r.uploadedByTechnicianName !== '—'
+                            ? `Uploaded by ${r.uploadedByTechnicianName}`
+                            : `Requested by ${r.requestingStaffName}`}
                         </p>
                       </div>
                     </div>
