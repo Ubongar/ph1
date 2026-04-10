@@ -55,13 +55,13 @@ export default function FaqPage() {
             <div>
               <p className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-700">
                 <HelpCircle className="h-3.5 w-3.5" />
-                FAQ Center
+                Frequently Asked Questions Center
               </p>
               <h1 className="mt-3 text-2xl font-bold text-slate-900 sm:text-3xl">System Questions and Answers</h1>
               <p className="mt-2 max-w-3xl text-sm text-slate-600 sm:text-base">
                 {currentUser
-                  ? `Showing FAQ for ${FAQ_ROLE_LABELS[currentUser.role]} role only.`
-                  : 'Choose a role tab to browse complete role-specific FAQs before sign-in.'}
+                  ? `Showing questions and answers for ${FAQ_ROLE_LABELS[currentUser.role]} role only.`
+                  : 'Choose a role tab to browse complete role-specific questions and answers before sign-in.'}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -116,14 +116,14 @@ export default function FaqPage() {
               />
             </label>
             <div className="text-xs font-medium text-slate-500">
-              Showing {filteredFaqs.length} of {ROLE_FAQS[activeRole].length} FAQs for {FAQ_ROLE_LABELS[activeRole]}
+              Showing {filteredFaqs.length} of {ROLE_FAQS[activeRole].length} questions and answers for {FAQ_ROLE_LABELS[activeRole]}
             </div>
           </div>
 
           <div className="mt-5 space-y-3">
             {filteredFaqs.length === 0 && (
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                No matching FAQ found for this role. Try a broader keyword.
+                No matching question found for this role. Try a broader keyword.
               </div>
             )}
 

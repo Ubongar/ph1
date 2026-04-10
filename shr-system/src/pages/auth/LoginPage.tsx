@@ -49,7 +49,7 @@ const RESOURCE_LINKS: ResourceLink[] = [
     description: 'Policy hub and compliance pages.',
   },
   {
-    title: 'Role FAQs',
+    title: 'Role Frequently Asked Questions',
     to: '/legal/faq',
     description: 'Role-based platform guidance.',
   },
@@ -69,7 +69,7 @@ const RESOURCE_LINKS: ResourceLink[] = [
     description: 'Access, correction, and deletion rights.',
   },
   {
-    title: 'PWA Diagnostics',
+    title: 'Progressive Web App Diagnostics',
     to: '/legal/pwa-diagnostics',
     description: 'Check app install readiness.',
   },

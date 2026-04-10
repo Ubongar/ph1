@@ -12,6 +12,8 @@ const NOTIFICATIONS_KEY = 'shr_notifications';
 
 const LEGACY_STUDENT_NAME_PATTERNS = [/\bAdaeze Okonkwo\b/gi, /\bAdazeze Okonkwo\b/gi, /\bAdaeze\b/gi];
 const CANONICAL_STUDENT_NAME = 'Simioluwa Okonkwo';
+const LEGACY_IT_DEPARTMENT_LABEL = 'IT / Technical Support';
+const CANONICAL_IT_DEPARTMENT_LABEL = 'Information Technology / Technical Support';
 
 function readStoredUsersSafely(): SystemUser[] {
   try {
@@ -85,6 +87,46 @@ function migrateLegacyStudentNameAcrossStorage(): void {
   }
 }
 
+function deepReplaceLegacyDepartmentLabel<T>(value: T): T {
+  if (typeof value === 'string') {
+    return (value === LEGACY_IT_DEPARTMENT_LABEL ? CANONICAL_IT_DEPARTMENT_LABEL : value) as T;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((entry) => deepReplaceLegacyDepartmentLabel(entry)) as T;
+  }
+
+  if (value && typeof value === 'object') {
+    const nextEntries = Object.entries(value as Record<string, unknown>).map(([key, entryValue]) => [
+      key,
+      deepReplaceLegacyDepartmentLabel(entryValue),
+    ]);
+    return Object.fromEntries(nextEntries) as T;
+  }
+
+  return value;
+}
+
+function migrateLegacyDepartmentLabels(): void {
+  const keysToMigrate = [StorageKey.COMPLAINTS];
+
+  for (const key of keysToMigrate) {
+    const raw = localStorage.getItem(key);
+    if (!raw) continue;
+
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      const migrated = deepReplaceLegacyDepartmentLabel(parsed);
+      const serialized = JSON.stringify(migrated);
+      if (serialized !== raw) {
+        localStorage.setItem(key, serialized);
+      }
+    } catch {
+      // Ignore non-JSON values.
+    }
+  }
+}
+
 function migratePendingResultAssignments(): void {
   const users = readStoredUsersSafely();
   const activeTechnicians = users
@@ -128,6 +170,7 @@ function migratePendingResultAssignments(): void {
 
 function runStorageMigrations(): void {
   migrateLegacyStudentNameAcrossStorage();
+  migrateLegacyDepartmentLabels();
   migratePendingResultAssignments();
 }
 
@@ -1094,7 +1137,7 @@ export function initializeMockData(): void {
       submittedByRole: 'technician',
       subject: 'Intermittent scanner outage in Laboratory bay 2',
       details: 'Image scanner in bay 2 keeps disconnecting every 15-20 minutes and delays upload workflow.',
-      concernedDepartment: 'IT / Technical Support',
+      concernedDepartment: 'Information Technology / Technical Support',
       severity: 'Moderate',
       status: 'Under Review',
       createdAt: '2026-03-25T08:40:00Z',

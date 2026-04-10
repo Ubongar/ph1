@@ -68,7 +68,7 @@ export function seedRoleInboxIfNeeded(): void {
       createdAt: new Date(now - 2 * 3600 * 1000).toISOString(),
       dueAt: plusHours(2),
       slaStatus: 'due-soon',
-      escalationPath: 'Escalate to on-call physician and admin after SLA breach.',
+      escalationPath: 'Escalate to on-call physician and admin after Service Level Agreement breach.',
     },
     {
       id: crypto.randomUUID(),
@@ -278,7 +278,7 @@ export function deriveInboxFromData(): void {
       sourceType: 'result',
       sourceId: result.id,
       dueAt: new Date(Date.now() + 3 * 3600 * 1000).toISOString(),
-      escalationPath: 'Escalate to medical staff if the test remains pending beyond SLA.',
+      escalationPath: 'Escalate to medical staff if the test remains pending beyond Service Level Agreement.',
     });
   });
 }

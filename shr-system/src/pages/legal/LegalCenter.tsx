@@ -43,9 +43,9 @@ const REQUIRED_PAGES = [
     reason: 'Clarifies that the platform does not replace emergency or direct clinical judgement.',
   },
   {
-    title: 'Role-Based FAQ Center',
+    title: 'Role-Based Frequently Asked Questions Center',
     to: '/legal/faq',
-    reason: 'Browse extensive role-specific answers. Login view shows tabs for all roles; signed-in users see only their role FAQ.',
+    reason: 'Browse extensive role-specific answers. Login view shows tabs for all roles; signed-in users see only their role question and answer list.',
   },
   {
     title: 'Data Request Center',
@@ -63,7 +63,7 @@ const REQUIRED_PAGES = [
     reason: 'Re-accept terms and privacy updates before continuing to role dashboards.',
   },
   {
-    title: 'PWA Install Diagnostics',
+    title: 'Progressive Web App Install Diagnostics',
     to: '/legal/pwa-diagnostics',
     reason: 'Checks install readiness on current device and explains why install prompt may be missing.',
   },

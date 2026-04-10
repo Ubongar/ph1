@@ -68,9 +68,9 @@ const LEGAL_LINKS = [
   { to: '/settings', short: 'ST', label: 'Settings' },
   { to: '/legal', short: 'LC', label: 'Legal Center' },
   { to: '/legal/privacy', short: 'PP', label: 'Privacy Policy' },
-  { to: '/legal/faq', short: 'FAQ', label: 'Role FAQs' },
+  { to: '/legal/faq', short: 'FQ', label: 'Role Frequently Asked Questions' },
   { to: '/legal/data-requests', short: 'DR', label: 'Data Requests' },
-  { to: '/legal/pwa-diagnostics', short: 'PD', label: 'PWA Diagnostics' },
+  { to: '/legal/pwa-diagnostics', short: 'PW', label: 'Progressive Web App Diagnostics' },
 ] as const;
 
 interface SidebarProps {

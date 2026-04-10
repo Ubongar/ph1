@@ -352,8 +352,8 @@ export function Navbar({ onToggleMobileSidebar }: NavbarProps) {
     if (pathname.startsWith('/legal/data-requests')) return 'Data Request Center';
     if (pathname.startsWith('/legal/policy-updates')) return 'Policy Update Acceptance';
     if (pathname.startsWith('/legal/acceptance-history')) return 'Acceptance History';
-    if (pathname.startsWith('/legal/pwa-diagnostics')) return 'PWA Diagnostics';
-    return 'SHR System';
+    if (pathname.startsWith('/legal/pwa-diagnostics')) return 'Progressive Web App Diagnostics';
+    return 'Student Health Records System';
   }
 
   function getQuickActionForRole() {

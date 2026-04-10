@@ -237,7 +237,7 @@ export default function PwaInstallDiagnosticsPage() {
         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">PWA Diagnostics</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Progressive Web App Diagnostics</p>
               <h1 className="mt-1 text-2xl font-bold text-gray-900">Installability Checker</h1>
               <p className="mt-2 text-sm text-gray-600">
                 Use this page on your phone or laptop to quickly see what blocks installation.

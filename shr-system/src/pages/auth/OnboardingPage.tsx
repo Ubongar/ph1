@@ -21,7 +21,7 @@ export default function OnboardingPage() {
         <header className="mb-10 flex items-center justify-between">
           <div className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-lg font-semibold tracking-wider">SHR</div>
           <div className="rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-medium tracking-wide text-blue-100">
-            PWA Ready · iPhone + Android
+            Progressive Web App Ready · iPhone + Android
           </div>
         </header>
 
@@ -79,7 +79,7 @@ export default function OnboardingPage() {
                 <dd className="text-xs text-emerald-100/90">Role-aware workflows</dd>
               </dl>
               <dl className="rounded-xl border border-violet-300/30 bg-violet-500/10 px-3 py-2">
-                <dt className="text-lg font-bold text-violet-200">PWA</dt>
+                <dt className="text-lg font-bold text-violet-200">Progressive Web App</dt>
                 <dd className="text-xs text-violet-100/90">Mobile install support</dd>
               </dl>
               <dl className="rounded-xl border border-amber-300/30 bg-amber-500/10 px-3 py-2">
@@ -106,7 +106,7 @@ export default function OnboardingPage() {
             <div className="mt-4 flex flex-wrap gap-3 text-xs text-blue-100/90">
               <Link to="/legal/privacy" className="hover:text-white">Privacy</Link>
               <Link to="/legal/terms" className="hover:text-white">Terms</Link>
-              <Link to="/legal/faq" className="hover:text-white">FAQs</Link>
+              <Link to="/legal/faq" className="hover:text-white">Frequently Asked Questions</Link>
               <Link to="/legal" className="hover:text-white">Legal Center</Link>
             </div>
           </aside>

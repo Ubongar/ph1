@@ -4,7 +4,7 @@ export type FaqCategory =
   | 'Getting Started'
   | 'Account and Access'
   | 'Security and Privacy'
-  | 'PWA and Mobile'
+  | 'Progressive Web App and Mobile'
   | 'Offline and Sync'
   | 'Workflow and Operations'
   | 'Troubleshooting';
@@ -71,20 +71,20 @@ const COMMON_FAQS: FaqItem[] = [
       'Open Data Request Center and submit the request type with enough details. The request receives a ticket and moves through an admin review workflow.',
   },
   {
-    category: 'PWA and Mobile',
+    category: 'Progressive Web App and Mobile',
     question: 'Can I install SHR as an app on my phone?',
     answer:
-      'Yes. On supported browsers you can use Install App. On iOS Safari use Share then Add to Home Screen. If install is missing, open PWA Diagnostics for readiness checks.',
+      'Yes. On supported browsers you can use Install App. On iOS Safari use Share then Add to Home Screen. If install is missing, open Progressive Web App Diagnostics for readiness checks.',
   },
   {
-    category: 'PWA and Mobile',
+    category: 'Progressive Web App and Mobile',
     question: 'Why is install not showing on my mobile browser?',
     answer:
       'Typical reasons are unsupported browser behavior, insecure context, already installed app mode, or install prompt not yet captured. The diagnostics page explains each condition.',
   },
   {
-    category: 'PWA and Mobile',
-    question: 'What is the PWA Diagnostics page for?',
+    category: 'Progressive Web App and Mobile',
+    question: 'What is the Progressive Web App Diagnostics page for?',
     answer:
       'It validates secure context, manifest metadata, service worker registration, and install prompt readiness so users can quickly identify install blockers.',
   },
@@ -167,8 +167,8 @@ const ROLE_SPECIFIC_FAQS: Record<UserRole, FaqItem[]> = {
     makeFaq('Security and Privacy', 'How do I request deletion of specific personal data?', 'Use Data Request Center deletion flow and specify what should be removed and why.'),
     makeFaq('Security and Privacy', 'Can I know whether someone viewed my record?', 'Audit visibility is managed by administrators; raise a privacy concern with date, time, and suspected page context.'),
     makeFaq('Security and Privacy', 'What if I see data that does not look like mine?', 'Stop editing immediately and report a potential identity mismatch so administrators can investigate safely.'),
-    makeFaq('PWA and Mobile', 'Can I install SHR to my home screen as a student?', 'Yes. Use Install App where available, or iOS Share then Add to Home Screen in Safari.'),
-    makeFaq('PWA and Mobile', 'Installed app opens but shows stale information. What should I do?', 'Reconnect to internet and use Sync or refresh actions so pending updates are fetched and applied.'),
+    makeFaq('Progressive Web App and Mobile', 'Can I install SHR to my home screen as a student?', 'Yes. Use Install App where available, or iOS Share then Add to Home Screen in Safari.'),
+    makeFaq('Progressive Web App and Mobile', 'Installed app opens but shows stale information. What should I do?', 'Reconnect to internet and use Sync or refresh actions so pending updates are fetched and applied.'),
     makeFaq('Offline and Sync', 'What if I submitted while offline and closed the app?', 'Your pending changes queue locally and sync when you return online and reopen the app.'),
     makeFaq('Offline and Sync', 'How do I know if my offline change actually synced?', 'Look for pending count returning to zero in sync indicators and confirm updated status in the target page.'),
     makeFaq('Troubleshooting', 'What should I do if page buttons do not respond on mobile?', 'Reload first, then reopen from login if needed. If persistent, report device model, browser, and route.'),
@@ -306,7 +306,7 @@ const ROLE_SPECIFIC_FAQS: Record<UserRole, FaqItem[]> = {
     makeFaq('Offline and Sync', 'How do I triage widespread offline sync failures?', 'Check service health, identify common failure pattern, and communicate mitigation steps to all roles quickly.'),
     makeFaq('Offline and Sync', 'What if queue states diverge between users on the same record?', 'Use reconciliation tooling and authoritative audit chronology to resolve state ownership.'),
     makeFaq('Offline and Sync', 'How do I verify that a sync incident is fully resolved?', 'Confirm pending counters normalize, conflict backlog clears, and affected records reconcile to expected states.'),
-    makeFaq('Troubleshooting', 'How should I respond to broad PWA install complaints?', 'Direct users to diagnostics page, compare browser context, and validate manifest and service worker readiness.'),
+    makeFaq('Troubleshooting', 'How should I respond to broad Progressive Web App install complaints?', 'Direct users to diagnostics page, compare browser context, and validate manifest and service worker readiness.'),
     makeFaq('Troubleshooting', 'What is the escalation chain for major SHR outage?', 'Trigger incident response, communicate status cadence, prioritize safety-critical workflows, and record restoration timeline.'),
   ],
 };

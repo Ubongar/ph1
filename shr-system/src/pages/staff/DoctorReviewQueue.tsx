@@ -398,7 +398,7 @@ export default function DoctorReviewQueue() {
                     to={`/staff/patient/${selectedReq.studentId}`}
                     className="text-xs text-blue-600 hover:underline sm:self-start"
                   >
-                    View Full EHR →
+                    View Full Electronic Health Record →
                   </Link>
                 </div>
               </div>

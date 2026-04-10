@@ -10,7 +10,7 @@ export default function SecurityRetentionPage() {
       <section className="space-y-4 text-sm leading-6 text-slate-700">
         <div>
           <h2 className="text-lg font-semibold text-slate-900">1. Security Controls</h2>
-          <p>Recommended production controls include encrypted transit/storage, strict RBAC, least privilege, log monitoring, and incident playbooks.</p>
+          <p>Recommended production controls include encrypted transit/storage, strict role-based access control, least privilege, log monitoring, and incident playbooks.</p>
         </div>
 
         <div>

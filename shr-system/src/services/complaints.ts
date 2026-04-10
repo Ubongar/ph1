@@ -14,7 +14,7 @@ export const COMPLAINT_DEPARTMENTS = [
   'Pharmacy',
   'Laboratory / Technician',
   'Specialist',
-  'IT / Technical Support',
+  'Information Technology / Technical Support',
   'Administration',
 ] as const;
 
@@ -27,7 +27,7 @@ const COMPLAINT_DEPARTMENT_LABELS: Record<ComplaintDepartmentKey, string> = {
   pharmacy: 'Pharmacy',
   technician: 'Laboratory / Technician',
   specialist: 'Specialist',
-  it_support: 'IT / Technical Support',
+  it_support: 'Information Technology / Technical Support',
   administration: 'Administration',
 };
 
@@ -140,7 +140,7 @@ export function getComplaintDepartmentKey(department: string): ComplaintDepartme
   if (normalized.includes('pharmacy')) return 'pharmacy';
   if (normalized.includes('laboratory') || normalized.includes('technician') || normalized.includes('lab')) return 'technician';
   if (normalized.includes('specialist')) return 'specialist';
-  if (normalized.includes('it') || normalized.includes('technical')) return 'it_support';
+  if (/\bit\b/.test(normalized) || normalized.includes('technical')) return 'it_support';
 
   return 'administration';
 }
@@ -235,7 +235,7 @@ export function evaluateComplaintEscalation(
       shouldEscalate: true,
       nextLevel: 1,
       route: 'department-lead',
-      reason: 'SLA breached without sufficient update.',
+      reason: 'Service Level Agreement breached without sufficient update.',
     };
   }
 

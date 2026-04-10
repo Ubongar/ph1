@@ -74,7 +74,7 @@ export default function AdminGovernanceCenter() {
 
   function createKpiSnapshot() {
     const snapshot = generateKpiSnapshot();
-    toast(`KPI snapshot generated (${snapshot.metrics.length} metrics).`, 'success');
+    toast(`Key Performance Indicator snapshot generated (${snapshot.metrics.length} metrics).`, 'success');
   }
 
   function exportGovernanceReport() {
@@ -111,7 +111,7 @@ export default function AdminGovernanceCenter() {
               className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
             >
               <BarChart3 className="h-4 w-4" />
-              Generate KPI Snapshot
+              Generate Key Performance Indicator Snapshot
             </button>
             <button
               type="button"

@@ -115,7 +115,7 @@ export function runDataQualityScan(): DataQualityIssue[] {
         issue(
           'ref-request-stale',
           'medium',
-          'Referral request stale beyond SLA',
+          'Referral request stale beyond Service Level Agreement',
           `Referral ${ref.id} has remained requested for more than 48 hours.`,
           'Referral',
           ref.id,

@@ -575,7 +575,7 @@ export default function ComplaintsCenterPage() {
         if (assignee?.name) {
           assigneeLabel = ` (${assignee.name})`;
         }
-        escalationMessage = `SLA breach escalated to department lead${assigneeLabel}.`;
+        escalationMessage = `Service Level Agreement breach escalated to department lead${assigneeLabel}.`;
       } else if (escalationDecision.route === 'admin-lead') {
         let assigneeLabel = '';
         if (assignee?.name) {
@@ -1274,7 +1274,7 @@ export default function ComplaintsCenterPage() {
         title="Complaints Center"
         subtitle={
           isAdmin
-            ? 'Mock workflow mode: SLA matrix, escalation ladder, ownership controls, timeline, and quality tracking are active.'
+            ? 'Mock workflow mode: Service Level Agreement matrix, escalation ladder, ownership controls, timeline, and quality tracking are active.'
             : 'Submit complaints, attach evidence, monitor read receipts, and track admin-led resolution progress.'
         }
       />
@@ -1289,7 +1289,7 @@ export default function ComplaintsCenterPage() {
                 onClick={() => scrollToSection(adminSlaSectionRef.current)}
                 className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700"
               >
-                SLA & Ladder
+                Service Level Agreement Matrix
               </button>
               <button
                 type="button"
@@ -1466,7 +1466,7 @@ export default function ComplaintsCenterPage() {
 
       {isAdmin && (
         <section ref={adminSlaSectionRef} className="rounded-xl border border-slate-200 bg-white p-4">
-          <h2 className="text-base font-semibold text-gray-900">SLA Matrix And Escalation Ladder (Mock)</h2>
+          <h2 className="text-base font-semibold text-gray-900">Service Level Agreement Matrix And Escalation Ladder (Mock)</h2>
 
           <div className="mt-3 overflow-x-auto">
             <table className="w-full text-left text-sm">
@@ -1495,7 +1495,7 @@ export default function ComplaintsCenterPage() {
 
           <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900">
             <p className="font-semibold uppercase tracking-wide">Escalation Ladder</p>
-            <p className="mt-1">1) SLA breach auto-forwards to department lead.</p>
+            <p className="mt-1">1) Service Level Agreement breach auto-forwards to department lead.</p>
             <p className="mt-1">2) If unresolved after {escalationConfig.toAdminLeadHours}h, auto-forward to admin lead.</p>
             <p className="mt-1">3) If still unresolved after another {escalationConfig.toEmergencyHours}h on critical/life-threatening complaints, emergency path is triggered.</p>
             <p className="mt-1">4) Ownership acknowledgement is required within {escalationConfig.ownershipAckWindowHours}h or reassignment runs automatically.</p>
@@ -1635,7 +1635,7 @@ export default function ComplaintsCenterPage() {
                     <span className={`rounded-md px-2 py-1 font-semibold ${SEVERITY_STYLES[activeComplaint.severity]}`}>{activeComplaint.severity}</span>
                     <span className={`rounded-md px-2 py-1 font-semibold ${STATUS_STYLES[activeComplaint.status]}`}>{activeComplaint.status}</span>
                     <span className="rounded-md bg-slate-100 px-2 py-1 font-semibold text-slate-700">
-                      SLA: {getComplaintSlaHours(activeComplaint) ?? 'N/A'}h
+                      Service Level Agreement target: {getComplaintSlaHours(activeComplaint) ?? 'N/A'}h
                     </span>
                     <span className="rounded-md bg-indigo-100 px-2 py-1 font-semibold text-indigo-700">
                       Escalation Level {activeComplaint.escalationLevel ?? 0}
@@ -2194,7 +2194,7 @@ export default function ComplaintsCenterPage() {
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
             <p>
-              Critical complaints are active. Escalation ladder and emergency channel simulation run automatically when SLA and follow-up thresholds are breached.
+              Critical complaints are active. Escalation ladder and emergency channel simulation run automatically when service level agreement and follow-up thresholds are breached.
             </p>
           </div>
         </div>
@@ -2214,7 +2214,7 @@ export default function ComplaintsCenterPage() {
       {isAdmin && (
         <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900">
           <div className="flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-1 rounded-md bg-blue-100 px-2 py-1 font-semibold"><Clock3 className="h-3.5 w-3.5" /> SLA matrix by department + severity</span>
+            <span className="inline-flex items-center gap-1 rounded-md bg-blue-100 px-2 py-1 font-semibold"><Clock3 className="h-3.5 w-3.5" /> Service level agreement matrix by department + severity</span>
             <span className="inline-flex items-center gap-1 rounded-md bg-blue-100 px-2 py-1 font-semibold"><ArrowRightCircle className="h-3.5 w-3.5" /> Escalation ladder (dept lead to admin lead to emergency)</span>
             <span className="inline-flex items-center gap-1 rounded-md bg-blue-100 px-2 py-1 font-semibold"><PhoneCall className="h-3.5 w-3.5" /> Critical channel simulation</span>
             <span className="inline-flex items-center gap-1 rounded-md bg-blue-100 px-2 py-1 font-semibold"><Eye className="h-3.5 w-3.5" /> Read receipts</span>

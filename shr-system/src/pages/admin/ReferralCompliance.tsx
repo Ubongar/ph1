@@ -33,7 +33,7 @@ export default function ReferralCompliance() {
     <div className="p-6">
       <PageHeader
         title="Referral Compliance"
-        subtitle="Phase 12 quality assurance and SLA monitoring"
+        subtitle="Phase 12 quality assurance and Service Level Agreement monitoring"
         actions={(
           <button
             type="button"
